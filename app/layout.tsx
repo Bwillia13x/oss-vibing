@@ -9,8 +9,8 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import './globals.css'
 
-const title = 'OSS Vibe Coding Platform'
-const description = `This is a demo of an end-to-end coding platform where the user can enter text prompts, and the agent will create a full stack application. It uses Vercel's AI Cloud services like Sandbox for secure code execution, AI Gateway for GPT-5 and other models support, Fluid Compute for efficient rendering and streaming, and it's built with Next.js and the AI SDK.`
+const title = 'Mad Lab'
+const description = `Mad Lab is a natural language-first finance platform where analysts can express finance tasks in natural language and receive reproducible, cited outputs with low latency and explicit costs. It uses Vercel's AI Cloud services for secure execution and model routing.`
 
 export const metadata: Metadata = {
   title,

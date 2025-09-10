@@ -1,3 +1,46 @@
+# Mad Lab
+
+Natural language-first finance on top of the Vibe layout (Chat • Preview • Files • Logs).
+
+## Features
+
+- Prompt-to-Chart: time-series charts with drawdowns, CSV artifacts, citations
+- Prompt-to-DCF/EPV: valuation (scaffolded; implement Python worker next)
+- Ask-the-Filings: RAG over SEC/SEDAR filings (scaffolded)
+
+## Quickstart
+
+1. Install deps
+
+```sh
+pnpm install
+```
+
+1. Configure env
+
+```sh
+cp .env.example .env.local
+# Fill in keys
+```
+
+1. Dev server
+
+```sh
+pnpm dev
+```
+
+Key files:
+
+- `app/actions/runTask.ts` — plan/execute finance tasks
+- `lib/finance/*` — adapters and providers
+- `lib/pipelines` — chart pipeline (sandboxed viz)
+
+- Sandbox logs in UI; multi-series chart polish (axes, annotations)
+- Python FastAPI worker for DCF/EPV (wire to `WORKER_URL`)
+- Filings ingestion and embeddings
+
+This project is for educational purposes — not investment advice.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -6,9 +49,6 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
 pnpm dev
 # or
 bun dev

@@ -9,7 +9,9 @@ import { RunCommand } from './run-command'
 import { ReportErrors } from './report-errors'
 import { Reasoning } from './reasoning'
 import { Text } from './text'
-import { memo } from 'react'
+import { memo, useEffect } from 'react'
+import { DcfResults } from '@/components/panels/DcfResults'
+import { useSandboxStore } from '@/app/state'
 
 interface Props {
   part: UIMessage<Metadata, DataPart, ToolSet>['parts'][number]
@@ -20,6 +22,17 @@ export const MessagePart = memo(function MessagePart({
   part,
   partIndex,
 }: Props) {
+  const addArtifactPaths = useSandboxStore((s) => s.addArtifactPaths)
+
+  useEffect(() => {
+    if (part.type === 'data-dcf-result') {
+      const d = part.data as any
+      const artifacts: string[] = Array.isArray(d?.artifacts)
+        ? (d.artifacts as any[]).filter((p): p is string => typeof p === 'string')
+        : []
+      if (artifacts.length) addArtifactPaths(artifacts)
+    }
+  }, [part, addArtifactPaths])
   if (part.type === 'data-generating-files') {
     return <GenerateFiles message={part.data} />
   } else if (part.type === 'data-create-sandbox') {
@@ -34,6 +47,17 @@ export const MessagePart = memo(function MessagePart({
     return <ReportErrors message={part.data} />
   } else if (part.type === 'text') {
     return <Text part={part} />
+  } else if (part.type === 'data-dcf-result') {
+    const d = part.data as any
+    return (
+      <DcfResults
+        assumptions={d.assumptions}
+        pvByScenario={d.pvByScenario}
+        sensitivity={d.sensitivity}
+        artifacts={d.artifacts}
+        explain={d.explain}
+      />
+    )
   }
   return null
 })

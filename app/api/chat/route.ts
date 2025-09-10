@@ -65,7 +65,7 @@ export async function POST(req: Request) {
             })
           ),
           stopWhen: stepCountIs(20),
-          tools: tools({ modelId, writer }),
+          tools: tools({ writer }),
           onError: (error) => {
             console.error('Error communicating with AI')
             console.error(JSON.stringify(error, null, 2))

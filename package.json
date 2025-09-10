@@ -1,12 +1,13 @@
 {
-  "name": "vibe-coding-agent",
+  "name": "mad-lab",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/gateway": "1.0.7",
@@ -39,6 +40,7 @@
     "react-resizable-panels": "3.0.4",
     "react-spinners": "0.17.0",
     "react-syntax-highlighter": "15.6.1",
+    "recharts": "^3.2.0",
     "rehype-raw": "7.0.0",
     "remark-gfm": "4.0.1",
     "sonner": "^2.0.6",

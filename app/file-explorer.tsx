@@ -4,17 +4,21 @@ import { FileExplorer as FileExplorerComponent } from '@/components/file-explore
 import { useSandboxStore } from './state'
 
 interface Props {
-  className: string
+  readonly className: string
 }
 
 export function FileExplorer({ className }: Props) {
-  const { sandboxId, status, paths } = useSandboxStore()
+  const { sandboxId, status, paths, artifactPaths } = useSandboxStore()
+  const merged = [
+    ...paths,
+    ...artifactPaths.map((p) => (p.startsWith('/') ? `/artifacts${p}` : `/artifacts/${p}`)),
+  ]
   return (
     <FileExplorerComponent
       className={className}
       disabled={status === 'stopped'}
       sandboxId={sandboxId}
-      paths={paths}
+      paths={merged}
     />
   )
 }

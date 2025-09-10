@@ -8,12 +8,12 @@ import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Props {
-  className?: string
-  disabled?: boolean
-  url?: string
+  readonly className?: string
+  readonly disabled?: boolean
+  readonly url?: string
 }
 
-export function Preview({ className, disabled, url }: Props) {
+export function Preview({ className, disabled, url }: Readonly<Props>) {
   const [currentUrl, setCurrentUrl] = useState(url)
   const [error, setError] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState(url || '')
@@ -67,12 +67,33 @@ export function Preview({ className, disabled, url }: Props) {
     <Panel className={className}>
       <PanelHeader>
         <div className="absolute flex items-center space-x-1">
-          <a href={currentUrl} target="_blank" className="cursor-pointer px-1">
+          <a
+            href={currentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer px-1"
+            title="Open preview in new tab"
+            aria-label="Open preview in new tab"
+          >
             <CompassIcon className="w-4" />
           </a>
+          {currentUrl && (
+            <a
+              href={`${currentUrl.replace(/\/$/, '')}/data.csv`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer px-1 text-[11px] underline text-muted-foreground"
+              title="Download CSV"
+              aria-label="Download CSV"
+              download
+            >
+              CSV
+            </a>
+          )}
           <button
             onClick={refreshIframe}
             type="button"
+            title="Refresh preview"
             className={cn('cursor-pointer px-1', {
               'animate-spin': isLoading,
             })}
@@ -86,6 +107,7 @@ export function Preview({ className, disabled, url }: Props) {
             <input
               type="text"
               className="font-mono text-xs h-6 border border-gray-200 px-4 bg-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[300px]"
+              placeholder="Enter preview URL"
               onChange={(event) => setInputValue(event.target.value)}
               onClick={(event) => event.currentTarget.select()}
               onKeyDown={(event) => {
@@ -101,6 +123,9 @@ export function Preview({ className, disabled, url }: Props) {
       </PanelHeader>
 
       <div className="flex h-[calc(100%-2rem-1px)] relative">
+        <div className="absolute left-2 bottom-2 z-10 text-[10px] text-muted-foreground bg-secondary/70 px-2 py-1 rounded">
+          This is not investment advice.
+        </div>
         {currentUrl && !disabled && (
           <>
             <ScrollArea className="w-full">

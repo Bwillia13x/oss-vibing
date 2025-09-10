@@ -32,6 +32,15 @@ export const dataPartSchema = z.object({
     summary: z.string(),
     paths: z.array(z.string()).optional(),
   }),
+  'dcf-result': z.object({
+    assumptions: z.record(z.union([z.string(), z.number()])),
+    pvByScenario: z.record(z.number()),
+    sensitivity: z.array(
+      z.object({ wacc: z.number(), terminalG: z.number(), value: z.number() })
+    ),
+    artifacts: z.array(z.string()).optional(),
+    explain: z.string().optional(),
+  }),
 })
 
 export type DataPart = z.infer<typeof dataPartSchema>

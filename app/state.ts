@@ -9,11 +9,13 @@ interface SandboxStore {
   addGeneratedFiles: (files: string[]) => void
   addLog: (data: { sandboxId: string; cmdId: string; log: CommandLog }) => void
   addPaths: (paths: string[]) => void
+  addArtifactPaths: (paths: string[]) => void
   chatStatus: ChatStatus
   clearGeneratedFiles: () => void
   commands: Command[]
   generatedFiles: Set<string>
   paths: string[]
+  artifactPaths: string[]
   sandboxId?: string
   setChatStatus: (status: ChatStatus) => void
   setSandboxId: (id: string) => void
@@ -65,11 +67,14 @@ export const useSandboxStore = create<SandboxStore>()((set) => ({
   },
   addPaths: (paths) =>
     set((state) => ({ paths: [...new Set([...state.paths, ...paths])] })),
+  addArtifactPaths: (paths) =>
+    set((state) => ({ artifactPaths: [...new Set([...(state.artifactPaths ?? []), ...paths])] })),
   chatStatus: 'ready',
   clearGeneratedFiles: () => set(() => ({ generatedFiles: new Set<string>() })),
   commands: [],
   generatedFiles: new Set<string>(),
   paths: [],
+  artifactPaths: [],
   setChatStatus: (status) =>
     set((state) =>
       state.chatStatus === status ? state : { chatStatus: status }
@@ -80,6 +85,7 @@ export const useSandboxStore = create<SandboxStore>()((set) => ({
       status: 'running',
       commands: [],
       paths: [],
+  artifactPaths: [],
       url: undefined,
       generatedFiles: new Set<string>(),
     })),
@@ -120,38 +126,70 @@ export function useDataStateMapper() {
   const { errors } = useCommandErrorsLogs()
   const { setCursor } = useMonitorState()
 
+  const openLogsTab = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        if (url.searchParams.get('tab') !== 'logs') {
+          url.searchParams.set('tab', 'logs')
+          window.history.replaceState(null, '', url.toString())
+        }
+      }
+    } catch {
+      // no-op
+    }
+  }
+
+  const onCreateSandbox = (data: DataUIPart<DataPart>['data']) => {
+    if ('sandboxId' in data && data.sandboxId) {
+      setSandboxId(data.sandboxId)
+    }
+  }
+
+  const onGeneratingFiles = (data: DataUIPart<DataPart>['data']) => {
+    if ('status' in data && data.status === 'uploaded') {
+      setCursor(errors.length)
+      addPaths((data as any).paths)
+      addGeneratedFiles((data as any).paths)
+    }
+  }
+
+  const onRunCommand = (data: DataUIPart<DataPart>['data']) => {
+    if (
+      'commandId' in data &&
+      data.commandId &&
+      ('status' in data && (data.status === 'executing' || data.status === 'running'))
+    ) {
+      upsertCommand({
+        background: (data as any).status === 'running',
+        sandboxId: (data as any).sandboxId,
+        cmdId: (data as any).commandId,
+        command: (data as any).command,
+        args: (data as any).args,
+      })
+      openLogsTab()
+    }
+  }
+
+  const onGetSandboxUrl = (data: DataUIPart<DataPart>['data']) => {
+    if ('url' in data && data.url) {
+      setUrl(data.url, crypto.randomUUID())
+    }
+  }
+
   return (data: DataUIPart<DataPart>) => {
     switch (data.type) {
       case 'data-create-sandbox':
-        if (data.data.sandboxId) {
-          setSandboxId(data.data.sandboxId)
-        }
+        onCreateSandbox(data.data)
         break
       case 'data-generating-files':
-        if (data.data.status === 'uploaded') {
-          setCursor(errors.length)
-          addPaths(data.data.paths)
-          addGeneratedFiles(data.data.paths)
-        }
+        onGeneratingFiles(data.data)
         break
       case 'data-run-command':
-        if (
-          data.data.commandId &&
-          (data.data.status === 'executing' || data.data.status === 'running')
-        ) {
-          upsertCommand({
-            background: data.data.status === 'running',
-            sandboxId: data.data.sandboxId,
-            cmdId: data.data.commandId,
-            command: data.data.command,
-            args: data.data.args,
-          })
-        }
+        onRunCommand(data.data)
         break
       case 'data-get-sandbox-url':
-        if (data.data.url) {
-          setUrl(data.data.url, crypto.randomUUID())
-        }
+        onGetSandboxUrl(data.data)
         break
       default:
         break
