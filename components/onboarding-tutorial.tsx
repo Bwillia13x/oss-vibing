@@ -268,11 +268,20 @@ export function OnboardingTutorial() {
     setCurrentStep(0)
   }
 
+  const handleDialogChange = (newOpen: boolean) => {
+    // Only allow closing via explicit actions (skip/complete)
+    // Prevent accidental closes via escape or clicking outside
+    if (!newOpen) {
+      return
+    }
+    setOpen(newOpen)
+  }
+
   const progress = ((currentStep + 1) / steps.length) * 100
   const step = steps[currentStep]
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">

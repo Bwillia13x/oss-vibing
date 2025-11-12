@@ -31,11 +31,6 @@ export default function NotFound() {
                 🏠 Home
               </Link>
             </li>
-            <li>
-              <Link href="/api/templates" className="hover:underline">
-                📚 Templates
-              </Link>
-            </li>
           </ul>
         </div>
       </div>

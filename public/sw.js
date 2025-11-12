@@ -2,7 +2,6 @@
 const CACHE_NAME = 'vibe-university-v2'
 const STATIC_ASSETS = [
   '/',
-  '/globals.css',
   '/manifest.json',
   '/next.svg',
   '/vercel.svg',

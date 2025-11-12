@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -47,34 +47,53 @@ export function TemplateBrowser({ type, onSelect }: TemplateBrowserProps) {
   const [open, setOpen] = useState(false)
   const [templates, setTemplates] = useState<TemplateIndex | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<string>(type || 'docs')
 
+  // Keep selectedType in sync with type prop
   useEffect(() => {
-    if (open && !templates) {
-      loadTemplates()
+    if (type && type !== selectedType) {
+      setSelectedType(type)
     }
-  }, [open])
+  }, [type, selectedType])
 
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const response = await fetch('/api/templates')
       if (response.ok) {
         const data = await response.json()
         setTemplates(data)
+      } else {
+        setError('Failed to load templates. Please try again.')
       }
-    } catch (error) {
-      console.error('Failed to load templates:', error)
+    } catch (err) {
+      console.error('Failed to load templates:', err)
+      setError('Failed to load templates. Please check your connection.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (open && !templates) {
+      loadTemplates()
+    }
+  }, [open, templates, loadTemplates])
 
   const handleSelectTemplate = (template: Template) => {
     if (onSelect) {
       onSelect(template, selectedType)
     }
     setOpen(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent, template: Template) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleSelectTemplate(template)
+    }
   }
 
   const getTemplatesForType = () => {
@@ -99,7 +118,14 @@ export function TemplateBrowser({ type, onSelect }: TemplateBrowserProps) {
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <p className="text-destructive text-center">{error}</p>
+            <Button onClick={loadTemplates} variant="outline">
+              Try Again
+            </Button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -136,11 +162,15 @@ export function TemplateBrowser({ type, onSelect }: TemplateBrowserProps) {
                 {getTemplatesForType().map((template) => (
                   <div
                     key={template.id}
-                    className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                     onClick={() => handleSelectTemplate(template)}
+                    onKeyDown={(e) => handleKeyDown(e, template)}
+                    aria-label={`Select ${template.name} template`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="text-3xl">{template.icon}</div>
+                      <div className="text-3xl" aria-hidden="true">{template.icon}</div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg">
                           {template.name}
