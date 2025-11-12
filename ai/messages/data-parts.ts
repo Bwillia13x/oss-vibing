@@ -122,6 +122,22 @@ export const dataPartSchema = z.object({
     status: z.enum(['exporting', 'done', 'error']),
     error: errorSchema.optional(),
   }),
+  'uni-quiz': z.object({
+    action: z.enum(['create', 'grade', 'list']).optional(),
+    quizId: z.string().optional(),
+    title: z.string().optional(),
+    totalQuestions: z.number().optional(),
+    questions: z.array(z.any()).optional(),
+    savedPath: z.string().optional(),
+    score: z.number().optional(),
+    correctCount: z.number().optional(),
+    feedback: z.array(z.any()).optional(),
+    attemptSaved: z.string().optional(),
+    quizzes: z.array(z.any()).optional(),
+    count: z.number().optional(),
+    status: z.enum(['generating', 'grading', 'done', 'error']),
+    error: errorSchema.optional(),
+  }),
 })
 
 export type DataPart = z.infer<typeof dataPartSchema>
