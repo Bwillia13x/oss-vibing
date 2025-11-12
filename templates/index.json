@@ -27,6 +27,33 @@
         "discipline": "stem",
         "file": "lab-report-template.json",
         "icon": "🔬"
+      },
+      {
+        "id": "thesis",
+        "name": "Thesis Template",
+        "description": "Comprehensive graduate thesis/dissertation template with all standard sections",
+        "category": "research",
+        "discipline": "general",
+        "file": "thesis-template.json",
+        "icon": "🎓"
+      },
+      {
+        "id": "proposal",
+        "name": "Research Proposal Template",
+        "description": "Research proposal template for grant applications or thesis proposals",
+        "category": "research",
+        "discipline": "general",
+        "file": "proposal-template.json",
+        "icon": "📋"
+      },
+      {
+        "id": "case-study",
+        "name": "Case Study Template",
+        "description": "Business and social sciences case study analysis template",
+        "category": "case-study",
+        "discipline": "business",
+        "file": "case-study-template.json",
+        "icon": "💼"
       }
     ],
     "sheets": [
@@ -47,6 +74,24 @@
         "discipline": "general",
         "file": "budget-template.json",
         "icon": "💰"
+      },
+      {
+        "id": "project-timeline",
+        "name": "Project Timeline Template",
+        "description": "Gantt-style project timeline for managing academic projects and assignments",
+        "category": "project-management",
+        "discipline": "general",
+        "file": "project-timeline-template.json",
+        "icon": "📅"
+      },
+      {
+        "id": "grade-calculator",
+        "name": "Grade Calculator Template",
+        "description": "Track assignments, exams, and calculate final grades",
+        "category": "academic-planning",
+        "discipline": "general",
+        "file": "grade-calculator-template.json",
+        "icon": "🎯"
       }
     ],
     "decks": [
@@ -67,6 +112,15 @@
         "discipline": "general",
         "file": "class-presentation-template.json",
         "icon": "🎯"
+      },
+      {
+        "id": "thesis-defense",
+        "name": "Thesis Defense Presentation Template",
+        "description": "Comprehensive presentation template for graduate thesis or dissertation defense",
+        "category": "academic",
+        "discipline": "general",
+        "file": "thesis-defense-template.json",
+        "icon": "🎓"
       }
     ]
   },
@@ -74,8 +128,11 @@
     "essay": "Essays & Writing",
     "research": "Research Papers",
     "lab-report": "Lab Reports",
+    "case-study": "Case Studies",
     "analysis": "Data Analysis",
     "finance": "Finance & Budgeting",
+    "project-management": "Project Management",
+    "academic-planning": "Academic Planning",
     "academic": "Academic Presentations",
     "presentation": "General Presentations"
   },

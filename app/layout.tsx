@@ -7,6 +7,7 @@ import { ServiceWorkerRegistration } from '@/components/service-worker-registrat
 import { ThemeProvider } from '@/components/theme-provider'
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
 import { OnboardingTutorial } from '@/components/onboarding-tutorial'
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
 import { Toaster } from '@/components/ui/sonner'
 import type { ReactNode } from 'react'
 import type { Metadata, Viewport } from 'next'
@@ -62,6 +63,7 @@ export default function RootLayout({
           <ServiceWorkerRegistration />
           <KeyboardShortcuts />
           <OnboardingTutorial />
+          <PWAInstallPrompt />
           <Suspense fallback={null}>
             <NuqsAdapter>
               <ChatProvider>
