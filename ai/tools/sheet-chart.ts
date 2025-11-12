@@ -38,6 +38,18 @@ function extractChartData(table: { headers: string[]; data: any[][] }, range: st
   return chartData
 }
 
+// Predefined color palette with good contrast and accessibility
+const COLOR_PALETTE = [
+  { stroke: 'hsl(210, 70%, 50%)', fill: 'hsl(210, 70%, 50%)' }, // Blue
+  { stroke: 'hsl(340, 70%, 50%)', fill: 'hsl(340, 70%, 50%)' }, // Red
+  { stroke: 'hsl(120, 70%, 45%)', fill: 'hsl(120, 70%, 45%)' }, // Green
+  { stroke: 'hsl(280, 70%, 50%)', fill: 'hsl(280, 70%, 50%)' }, // Purple
+  { stroke: 'hsl(30, 70%, 50%)', fill: 'hsl(30, 70%, 50%)' },   // Orange
+  { stroke: 'hsl(180, 70%, 45%)', fill: 'hsl(180, 70%, 45%)' }, // Cyan
+  { stroke: 'hsl(50, 70%, 50%)', fill: 'hsl(50, 70%, 50%)' },   // Yellow
+  { stroke: 'hsl(300, 70%, 50%)', fill: 'hsl(300, 70%, 50%)' }, // Magenta
+]
+
 // Create chart configuration for Recharts
 function createChartConfig(
   kind: string,
@@ -65,12 +77,12 @@ function createChartConfig(
     yAxis: {
       label: yAxis || 'Value',
     },
-    series: yAxisKeys.map(key => ({
+    series: yAxisKeys.map((key, index) => ({
       dataKey: key,
       name: key,
-      // Generate a color for each series
-      stroke: `hsl(${Math.random() * 360}, 70%, 50%)`,
-      fill: `hsl(${Math.random() * 360}, 70%, 50%)`,
+      // Use predefined colors from palette, cycling if needed
+      stroke: COLOR_PALETTE[index % COLOR_PALETTE.length].stroke,
+      fill: COLOR_PALETTE[index % COLOR_PALETTE.length].fill,
     })),
     createdAt: new Date().toISOString(),
   }

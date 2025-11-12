@@ -23,6 +23,12 @@ interface SheetData {
 
 // Extract numeric data from a column
 function getNumericColumn(data: any[][], columnIndex: number): number[] {
+  // Validate column index
+  if (data.length === 0) return []
+  if (columnIndex < 0 || columnIndex >= data[0].length) {
+    throw new Error(`Invalid column index: ${columnIndex}. Valid range: 0-${data[0].length - 1}`)
+  }
+  
   return data
     .map(row => row[columnIndex])
     .filter(val => typeof val === 'number' || !isNaN(Number(val)))

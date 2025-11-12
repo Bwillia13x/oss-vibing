@@ -255,13 +255,13 @@ Based on the roadmap, the following Phase 1 items remain:
 
 ```json
 {
-  "simple-statistics": "^7.8.3",
+  "simple-statistics": "^7.8.8",
   "citation-js": "^0.7.16",
-  "recharts": "^2.15.0",
+  "recharts": "^3.4.1",
   "jspdf": "3.0.2",
   "docx": "^9.0.2",
   "pptxgenjs": "^3.13.0",
-  "xlsx-js-style": "latest"
+  "xlsx-js-style": "^1.2.0"
 }
 ```
 
