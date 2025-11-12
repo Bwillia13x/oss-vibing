@@ -17,6 +17,7 @@ import { sheetChart } from './sheet-chart'
 import { deckGenerate } from './deck-generate'
 import { notesToFlashcards } from './notes-to-flashcards'
 import { reviewFlashcards } from './review-flashcards'
+import { checkGrammar } from './check-grammar'
 import { planSchedule } from './plan-schedule'
 import { exportArtifact } from './export-artifact'
 
@@ -47,6 +48,7 @@ export function tools({ modelId, writer }: Params) {
     deckGenerate: deckGenerate({ writer }),
     notesToFlashcards: notesToFlashcards({ writer }),
     reviewFlashcards: reviewFlashcards({ writer }),
+    checkGrammar: checkGrammar({ writer }),
     planSchedule: planSchedule({ writer }),
     exportArtifact: exportArtifact({ writer }),
   }
