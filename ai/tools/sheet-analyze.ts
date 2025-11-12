@@ -114,8 +114,11 @@ function performTTest(sample1: number[], sample2: number[]) {
     mean2,
     meanDifference: mean1 - mean2,
     standardError,
-    // P-value approximation (simplified - would need t-distribution table for exact)
-    significant: Math.abs(tStat) > 2.0, // Rough approximation for 95% confidence
+    // Significance is determined using a rough approximation: |t| > 2.0 is used for 95% confidence.
+    // This is only appropriate for large sample sizes (degrees of freedom > 30). For small samples,
+    // the critical value is higher and this test may incorrectly indicate significance. For accurate
+    // results, use a proper t-distribution table or statistical library to compute the p-value.
+    significant: Math.abs(tStat) > 2.0,
   }
 }
 
@@ -163,7 +166,9 @@ function performANOVA(groups: number[][]) {
     ssw,
     msb,
     msw,
-    // Rough significance test (F > 4 for small samples)
+    // Rough significance test: F > 4.0 is a very approximate threshold for significance at α ≈ 0.05,
+    // assuming small samples (e.g., numerator df ≈ 1-3, denominator df ≈ 10-30).
+    // For accurate results, consult F-distribution tables or use a statistical library to compute the p-value.
     significant: fStat > 4.0,
   }
 }
@@ -198,13 +203,30 @@ function performChiSquare(observed: number[][]) {
   
   const df = (rows - 1) * (cols - 1)
   
+  // Get approximate critical value based on degrees of freedom
+  // These are rough approximations for p=0.05
+  const getCriticalValue = (df: number): number => {
+    if (df === 1) return 3.84
+    if (df === 2) return 5.99
+    if (df === 3) return 7.81
+    if (df === 4) return 9.49
+    if (df <= 6) return 12.59
+    if (df <= 9) return 16.92
+    // For larger df, use rough approximation
+    return df + Math.sqrt(2 * df) * 1.645
+  }
+  
+  const criticalValue = getCriticalValue(df)
+  
   return {
     chiSquare,
     degreesOfFreedom: df,
     expected,
     observed,
-    // Critical value approximation for df=1 at p=0.05 is ~3.84
-    significant: chiSquare > 3.84,
+    // Significance is determined using approximate critical values for p=0.05.
+    // For df=1: 3.84, df=2: 5.99, df=3: 7.81, etc.
+    // For accurate results, consult chi-square distribution tables.
+    significant: chiSquare > criticalValue,
   }
 }
 
@@ -217,10 +239,12 @@ function calculateConfidenceInterval(data: number[], confidenceLevel = 0.95) {
   const n = data.length
   
   // For 95% confidence, use z-score of ~1.96 (or t-score for small samples)
-  const zScore = 1.96 // Simplified - should use t-distribution for n < 30
+  // Note: This uses z-distribution which is only accurate for large samples (n >= 30).
+  // For small samples (n < 30), a t-distribution should be used for accurate results.
+  const zScore = 1.96
   const marginOfError = zScore * (stdDev / Math.sqrt(n))
   
-  return {
+  const result = {
     mean,
     confidenceLevel,
     marginOfError,
@@ -228,6 +252,16 @@ function calculateConfidenceInterval(data: number[], confidenceLevel = 0.95) {
     upperBound: mean + marginOfError,
     interval: `[${(mean - marginOfError).toFixed(4)}, ${(mean + marginOfError).toFixed(4)}]`,
   }
+  
+  // Add warning for small sample sizes
+  if (n < 30) {
+    return {
+      ...result,
+      warning: `Small sample size (n=${n}). For accurate results with n < 30, use t-distribution instead of z-distribution.`,
+    }
+  }
+  
+  return result
 }
 
 export const sheetAnalyze = ({ writer }: Params) =>

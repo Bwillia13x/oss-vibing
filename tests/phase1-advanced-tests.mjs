@@ -102,7 +102,6 @@ async function testMultiAPIReferences() {
       
       // Check for multi-API sources
       if (refData.sources && refData.sources.length > 0) {
-        const sources = refData.sources.slice(0, 3)
         const sourceCounts = {}
         refData.sources.forEach(source => {
           const api = source.source || 'Unknown'

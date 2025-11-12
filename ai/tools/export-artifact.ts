@@ -264,26 +264,45 @@ async function exportToPPTX(deckData: any, exportPath: string, options?: any) {
         })
       }
       
-      // Add slide content
-      if (slideData.content) {
-        const contentY = slideData.title ? 1.5 : 0.5
+      // Add slide content and bullets, ensuring no overlap
+      const hasContent = !!slideData.content
+      const hasBullets = slideData.bullets && Array.isArray(slideData.bullets) && slideData.bullets.length > 0
+      const baseY = slideData.title ? 1.5 : 0.5
+
+      if (hasContent && hasBullets) {
+        // Render content at baseY, bullets below content
         slide.addText(slideData.content, {
           x: 0.5,
-          y: contentY,
+          y: baseY,
+          w: 9,
+          h: 1.2,
+          fontSize: 18,
+          color: '444444',
+          valign: 'top',
+        })
+        slide.addText(slideData.bullets, {
+          x: 1,
+          y: baseY + 1.3, // Offset bullets below content
+          w: 8,
+          h: 3.2,
+          fontSize: 16,
+          bullet: true,
+          color: '444444',
+        })
+      } else if (hasContent) {
+        slide.addText(slideData.content, {
+          x: 0.5,
+          y: baseY,
           w: 9,
           h: 4.5,
           fontSize: 18,
           color: '444444',
           valign: 'top',
         })
-      }
-      
-      // Add bullet points if present
-      if (slideData.bullets && Array.isArray(slideData.bullets)) {
-        const bulletY = slideData.title ? 1.5 : 0.5
+      } else if (hasBullets) {
         slide.addText(slideData.bullets, {
           x: 1,
-          y: bulletY,
+          y: baseY,
           w: 8,
           h: 4.5,
           fontSize: 16,
@@ -336,6 +355,18 @@ async function exportToPPTX(deckData: any, exportPath: string, options?: any) {
   await pptx.writeFile({ fileName: exportPath })
 }
 
+// Helper function to escape HTML
+function escapeHtml(text: string): string {
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  }
+  return text.replace(/[&<>"']/g, (char) => map[char])
+}
+
 // Export to HTML
 async function exportToHTML(docData: any, exportPath: string, options?: any) {
   let html = `<!DOCTYPE html>
@@ -343,7 +374,7 @@ async function exportToHTML(docData: any, exportPath: string, options?: any) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${docData.title || 'Document'}</title>
+  <title>${escapeHtml(docData.title || 'Document')}</title>
   <style>
     body {
       font-family: 'Georgia', serif;
@@ -442,18 +473,6 @@ async function exportToHTML(docData: any, exportPath: string, options?: any) {
 </html>`
   
   await fs.writeFile(exportPath, html)
-}
-
-// Helper function to escape HTML
-function escapeHtml(text: string): string {
-  const map: { [key: string]: string } = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  }
-  return text.replace(/[&<>"']/g, (char) => map[char])
 }
 
 export const exportArtifact = ({ writer }: Params) =>

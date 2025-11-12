@@ -10,6 +10,20 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
+/**
+ * Represents the structure of a document for citation verification.
+ * 
+ * @interface DocumentData
+ * @property {string} [title] - The document title
+ * @property {string} [content] - The main document content/text
+ * @property {Array} [citations] - In-text citations with their positions
+ * @property {Object} [bibliography] - Bibliography/reference list with citation metadata
+ * 
+ * @remarks
+ * - `content` is required for coverage analysis and quote verification
+ * - `bibliography.items` should include DOI/URL for source verification
+ * - `citations` array is optional but improves verification accuracy
+ */
 interface DocumentData {
   title?: string
   content?: string
@@ -29,6 +43,9 @@ interface DocumentData {
   }
 }
 
+// Citation pattern regex - matches common citation formats like (Author, 2024) or [1]
+const CITATION_PATTERN = /\([^)]*\d{4}[^)]*\)|\[[^\]]*\d+[^\]]*\]/
+
 // Analyze citation coverage in document
 function analyzeCitationCoverage(content: string, citations: any[]): {
   totalSentences: number
@@ -43,8 +60,7 @@ function analyzeCitationCoverage(content: string, citations: any[]): {
     .filter(s => s.length > 20) // Ignore very short fragments
   
   // Find sentences with citations (containing numbers in parentheses or brackets)
-  const citationPattern = /\([^)]*\d{4}[^)]*\)|\[[^\]]*\d+[^\]]*\]/
-  const citedSentences = sentences.filter(s => citationPattern.test(s))
+  const citedSentences = sentences.filter(s => CITATION_PATTERN.test(s))
   
   // Find uncited claims (sentences with strong claim words but no citation)
   const claimKeywords = [
@@ -64,7 +80,7 @@ function analyzeCitationCoverage(content: string, citations: any[]): {
     const hasClaimKeyword = claimKeywords.some(keyword => 
       sentence.toLowerCase().includes(keyword)
     )
-    const hasCitation = citationPattern.test(sentence)
+    const hasCitation = CITATION_PATTERN.test(sentence)
     
     if (hasClaimKeyword && !hasCitation) {
       uncitedClaims.push(sentence.substring(0, 100) + '...')
@@ -103,8 +119,7 @@ function verifyQuotes(content: string, bibliography: any): Array<{
     const contextEnd = Math.min(content.length, match.index + match[0].length + 50)
     const context = content.substring(contextStart, contextEnd)
     
-    const citationPattern = /\([^)]*\d{4}[^)]*\)|\[[^\]]*\d+[^\]]*\]/
-    const hasCitation = citationPattern.test(context)
+    const hasCitation = CITATION_PATTERN.test(context)
     
     if (!hasCitation) {
       issues.push({

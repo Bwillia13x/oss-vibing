@@ -6,6 +6,10 @@ import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
+// Configuration constants
+const DEFAULT_SEARCH_LIMIT = 10 // Default number of results per API provider
+const MAX_TOTAL_RESULTS = 20 // Maximum total results to return
+
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
@@ -322,7 +326,7 @@ export const findSources = ({ writer }: Params) =>
         
         // Search across APIs with failover
         let allSources: UnifiedCitation[] = []
-        const searchLimit = 10
+        const searchLimit = DEFAULT_SEARCH_LIMIT
         
         if (provider === 'All' || provider === 'Crossref') {
           try {
@@ -382,8 +386,8 @@ export const findSources = ({ writer }: Params) =>
           return 0
         })
         
-        // Limit to top 20 results
-        sources = sources.slice(0, 20)
+        // Limit to top results
+        sources = sources.slice(0, MAX_TOTAL_RESULTS)
         
         // Save to references folder
         try {
