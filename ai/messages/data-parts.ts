@@ -122,60 +122,6 @@ export const dataPartSchema = z.object({
     status: z.enum(['exporting', 'done', 'error']),
     error: errorSchema.optional(),
   }),
-  'uni-grammar': z.object({
-    grammar: z.object({
-      totalIssues: z.number(),
-      errors: z.number(),
-      warnings: z.number(),
-      suggestions: z.number(),
-      passiveVoiceCount: z.number(),
-      issues: z.array(z.object({
-        type: z.string(),
-        severity: z.string(),
-        message: z.string(),
-        suggestion: z.string().optional(),
-        sentence: z.string().optional(),
-      })),
-    }).optional(),
-    readability: z.object({
-      statistics: z.object({
-        words: z.number(),
-        sentences: z.number(),
-        averageWordsPerSentence: z.number(),
-        complexWords: z.number(),
-      }),
-      scores: z.object({
-        fleschReadingEase: z.number(),
-        fleschKincaidGrade: z.number(),
-        gunningFog: z.number(),
-      }),
-      interpretation: z.string(),
-      academicRecommendation: z.string(),
-    }).optional(),
-    status: z.enum(['checking', 'done', 'error']),
-    error: errorSchema.optional(),
-  }),
-  'uni-plagiarism': z.object({
-    originalityScore: z.number(),
-    recommendation: z.string(),
-    statistics: z.object({
-      totalSentences: z.number(),
-      suspiciousSentences: z.number(),
-      uncitedQuotes: z.number(),
-      missingCitations: z.number(),
-      overallRisk: z.enum(['low', 'medium', 'high']),
-    }),
-    issues: z.array(z.object({
-      type: z.string(),
-      severity: z.string(),
-      text: z.string(),
-      context: z.string(),
-      suggestion: z.string(),
-      confidence: z.number(),
-    })),
-    status: z.enum(['checking', 'done', 'error']),
-    error: errorSchema.optional(),
-  }),
 })
 
 export type DataPart = z.infer<typeof dataPartSchema>

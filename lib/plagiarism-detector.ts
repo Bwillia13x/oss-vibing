@@ -33,8 +33,8 @@ export interface PlagiarismReport {
 export function detectUncitedQuotes(text: string): PlagiarismIssue[] {
   const issues: PlagiarismIssue[] = []
   
-  // Pattern: "quoted text" without (Author, Year) or [1] following
-  const quotePattern = /"([^"]{20,})"/g
+  // Pattern: "quoted text" or "quoted text" (curly quotes) or 'quoted text' without (Author, Year) or [1] following
+  const quotePattern = /["""']([^"""']{20,})["""']/g
   const matches = [...text.matchAll(quotePattern)]
   
   for (const match of matches) {
@@ -130,6 +130,8 @@ function nGramSimilarity(text1: string, text2: string, n: number = 3): number {
   const intersection = new Set([...ngrams1].filter(x => ngrams2.has(x)))
   const union = new Set([...ngrams1, ...ngrams2])
   
+  if (union.size === 0) return 0
+  
   return intersection.size / union.size
 }
 
@@ -144,16 +146,18 @@ export function detectCloseParaphrasing(text: string, referenceSources?: string[
     const sentences = getSentences(text)
     
     // Look for repetitive sentence structures
-    for (let i = 0; i < sentences.length; i++) {
-      for (let j = i + 1; j < sentences.length; j++) {
-        const similarity = nGramSimilarity(sentences[i], sentences[j], 3)
+    // Limit to first 50 sentences to avoid O(n²) performance issues on large documents
+    const sentencesToCheck = sentences.slice(0, 50)
+    for (let i = 0; i < sentencesToCheck.length; i++) {
+      for (let j = i + 1; j < sentencesToCheck.length; j++) {
+        const similarity = nGramSimilarity(sentencesToCheck[i], sentencesToCheck[j], 3)
         
         if (similarity > 0.6) {
           issues.push({
             type: 'close_paraphrase',
             severity: 'medium',
-            text: sentences[i].slice(0, 100),
-            context: `Similar to: ${sentences[j].slice(0, 100)}`,
+            text: sentencesToCheck[i].slice(0, 100),
+            context: `Similar to: ${sentencesToCheck[j].slice(0, 100)}`,
             suggestion: 'These sentences are very similar. If paraphrasing the same source, ensure proper citation and more substantial rewording.',
             confidence: similarity,
           })

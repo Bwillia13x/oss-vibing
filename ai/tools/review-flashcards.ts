@@ -153,7 +153,7 @@ export const reviewFlashcards = ({ writer }: Params) =>
           })
           
           const qualityText = ['blackout', 'incorrect', 'incorrect but familiar', 
-                               'correct with difficulty', 'correct with hesitation', 'perfect'][quality]
+                               'correct with difficulty', 'correct with hesitation', 'perfect'][quality] || 'unknown'
           
           return `Card updated! Quality: ${qualityText} (${quality}/5). Next review in ${updatedReviewData.interval} days. Ease factor: ${updatedReviewData.easeFactor.toFixed(2)}, Repetitions: ${updatedReviewData.repetitions}`
         }

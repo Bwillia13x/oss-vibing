@@ -41,8 +41,10 @@ export const detectPlagiarism = ({ writer }: Params) =>
             } else if (doc.content) {
               text = doc.content
             }
-          } catch {
-            // If JSON parsing fails, use raw content
+          } catch (parseError) {
+            // If JSON parsing fails, fall through to use raw content as plain text.
+            // This is safe because the document may be plain text or an unexpected format.
+            // If debugging is needed, consider logging the error here.
             text = content
           }
         }
@@ -71,28 +73,6 @@ export const detectPlagiarism = ({ writer }: Params) =>
         let filteredIssues = report.issues
         if (!includeMinorIssues) {
           filteredIssues = report.issues.filter(i => i.severity !== 'low')
-        }
-        
-        // Prepare results
-        const results = {
-          originalityScore: report.originalityScore,
-          recommendation: getOriginalityRecommendation(report.originalityScore),
-          statistics: {
-            totalSentences: report.statistics.totalSentences,
-            suspiciousSentences: report.statistics.suspiciousSentences,
-            uncitedQuotes: report.statistics.uncitedQuotes,
-            missingCitations: report.statistics.missingCitations,
-            overallRisk: report.statistics.overallRisk,
-          },
-          issues: filteredIssues.slice(0, 30).map(issue => ({
-            type: issue.type,
-            severity: issue.severity,
-            text: issue.text,
-            context: issue.context.slice(0, 150),
-            suggestion: issue.suggestion,
-            confidence: Math.round(issue.confidence * 100),
-          })),
-          status: 'done' as const,
         }
         
         // Build summary message

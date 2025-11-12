@@ -32,7 +32,6 @@ try {
     getSentences, 
     getWords,
     calculateStatistics,
-    calculateFleschReadingEase,
     calculateReadabilityScores 
   } = await import('../lib/readability-metrics.ts')
   

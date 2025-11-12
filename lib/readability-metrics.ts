@@ -23,11 +23,12 @@ interface TextStatistics {
 }
 
 /**
- * Count syllables in a word using a simplified algorithm
+ * Count syllables in a word using a simplified algorithm.
+ * Assumes all 1-2 letter words are monosyllabic (1 syllable).
  */
 export function countSyllables(word: string): number {
   word = word.toLowerCase().trim()
-  if (word.length <= 3) return 1
+  if (word.length <= 2) return 1
   
   // Remove trailing e
   word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '')
@@ -148,9 +149,10 @@ export function calculateGunningFog(stats: TextStatistics): number {
 /**
  * SMOG (Simple Measure of Gobbledygook) Index
  * Estimates years of education needed to understand the text
+ * Note: SMOG requires at least 30 sentences for accurate calculation
  */
 export function calculateSmogIndex(stats: TextStatistics): number {
-  if (stats.sentences < 3) return 0
+  if (stats.sentences < 30) return 0
   
   const polysyllables = stats.complexWords
   const smog = 1.0430 * Math.sqrt(polysyllables * (30 / stats.sentences)) + 3.1291

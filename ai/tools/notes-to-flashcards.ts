@@ -80,7 +80,7 @@ function generateFlashcardsFromConcepts(
   
   for (let i = 0; i < Math.min(concepts.length, maxCount); i++) {
     const { concept, definition } = concepts[i]
-    const id = `card-${Date.now()}-${i}`
+    const id = `card-${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${i}`
     
     let front: string
     let back: string
@@ -88,7 +88,15 @@ function generateFlashcardsFromConcepts(
     switch (policy) {
       case 'cloze':
         // Create cloze deletion: "The [...] is the powerhouse of the cell"
-        front = `${definition.substring(0, 50)}... [${concept}]`
+        const maxLength = 50
+        let truncated: string
+        if (definition.length > maxLength) {
+          const lastSpace = definition.lastIndexOf(' ', maxLength)
+          truncated = lastSpace > 0 ? definition.substring(0, lastSpace) : definition.substring(0, maxLength)
+        } else {
+          truncated = definition
+        }
+        front = `${truncated}... [${concept}]`
         back = `${definition} (Term: ${concept})`
         break
       

@@ -46,8 +46,9 @@ export const checkGrammar = ({ writer }: Params) =>
             } else if (doc.content) {
               text = doc.content
             }
-          } catch {
-            // If JSON parsing fails, use raw content
+          } catch (parseError) {
+            // If JSON parsing fails, log the error and use raw content as plain text.
+            console.warn(`Failed to parse JSON document at ${fullPath}:`, parseError)
             text = content
           }
         }

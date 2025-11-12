@@ -31,12 +31,17 @@ export function detectPassiveVoice(text: string): GrammarIssue[] {
     for (const pattern of passivePatterns) {
       const matches = sentence.matchAll(pattern)
       for (const match of matches) {
+        // match is an iterable Match object: [fullMatch, group1, group2, ...]
+        // match.index gives the start index of the match in the sentence
+        const start = match.index ?? 0
+        const end = start + (match[0]?.length ?? 0)
         issues.push({
           type: 'passive',
           severity: 'suggestion',
           message: 'Consider using active voice for clearer, more direct writing',
           sentence: sentence.substring(0, 100) + (sentence.length > 100 ? '...' : ''),
           suggestion: 'Rewrite in active voice (subject performs the action)',
+          position: { start, end },
         })
       }
     }
@@ -56,18 +61,12 @@ export function checkCommonGrammarErrors(text: string): GrammarIssue[] {
     {
       regex: /\b(their|they're|there)\b/gi,
       check: (match: string, context: string) => {
-        // Simple heuristic checks
-        if (match.toLowerCase() === 'their' && /\s+is\b/i.test(context)) {
-          return 'Possible confusion: "their" vs "there/they\'re"'
-        }
-        return null
-      },
-    },
-    {
-      regex: /\b(your|you're)\b/gi,
-      check: (match: string, context: string) => {
-        if (match.toLowerCase() === 'your' && /\s+(a|the|very)\b/i.test(context)) {
-          return 'Possible confusion: "your" vs "you\'re"'
+        // Improved heuristic: "their" followed immediately by "is" or "was" (no intervening noun)
+        if (
+          match.toLowerCase() === 'their' &&
+          /^['"]?\s+(is|was)\b/i.test(context.substring(match.length))
+        ) {
+          return 'Possible confusion: "their" (possessive) vs "there" (location/existential)'
         }
         return null
       },

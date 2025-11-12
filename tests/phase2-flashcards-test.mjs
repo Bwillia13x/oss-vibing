@@ -3,13 +3,11 @@
  * Tests for SM-2 algorithm implementation and flashcard generation
  */
 
-import { readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
-import path from 'path'
 
 // Test configuration
 const NOTES_PATH = 'notes/biology-cells.md'
-const EXPECTED_DECK_PATH = 'decks/biology-cells-flashcards.json'
 
 console.log('🧪 Phase 2: Enhanced Flashcard System Tests\n')
 
@@ -145,7 +143,6 @@ try {
   
   // Test Q&A format
   const qaFront = `What is ${testConcepts[0].concept}?`
-  const qaBack = testConcepts[0].definition
   
   if (!qaFront.includes('What is')) {
     throw new Error('Q&A format should include "What is"')
@@ -155,7 +152,6 @@ try {
   
   // Test Term format
   const termFront = testConcepts[1].concept
-  const termBack = testConcepts[1].definition
   
   if (termFront !== 'Photosynthesis') {
     throw new Error('Term format should use concept as front')
