@@ -49,6 +49,24 @@ templates/
    - Results, discussion, conclusion
    - STEM-focused
 
+4. **Thesis Template** 🎓
+   - Graduate thesis/dissertation format
+   - 6 comprehensive chapters
+   - Abstract through appendices
+   - Complete academic structure
+
+5. **Research Proposal Template** 📋
+   - Grant/thesis proposal format
+   - Executive summary, objectives
+   - Methodology, timeline, budget
+   - Ethical considerations
+
+6. **Case Study Template** 💼
+   - Business case study analysis
+   - Problem statement, analysis
+   - Recommendations, implementation
+   - Social sciences focused
+
 ### Spreadsheets (sheets/)
 
 1. **Data Analysis Template** 📊
@@ -61,6 +79,18 @@ templates/
    - Income and expense tracking
    - Transaction log
 
+3. **Project Timeline Template** 📅
+   - Gantt-style project tracker
+   - Task scheduling and milestones
+   - Status tracking and notes
+   - Academic project management
+
+4. **Grade Calculator Template** 🎯
+   - Course grade tracking
+   - Assignment and exam scores
+   - GPA calculation
+   - Grade scale reference
+
 ### Presentations (decks/)
 
 1. **Research Presentation Template** 🎓
@@ -72,6 +102,12 @@ templates/
    - General purpose presentation
    - Flexible structure
    - Professional design
+
+3. **Thesis Defense Presentation Template** 🎓
+   - Graduate defense presentation
+   - 20 comprehensive slides
+   - Full defense structure
+   - Committee-ready format
 
 ## Usage
 
@@ -206,8 +242,11 @@ import { TemplateBrowser } from '@/components/template-browser'
 - essay: Essays & Writing
 - research: Research Papers
 - lab-report: Lab Reports
+- case-study: Case Studies
 - analysis: Data Analysis
 - finance: Finance & Budgeting
+- project-management: Project Management
+- academic-planning: Academic Planning
 - academic: Academic Presentations
 - presentation: General Presentations
 
@@ -238,9 +277,11 @@ This feature implements:
   - Add discipline-specific templates ✅
   - Implement template selection UI ✅
 
-**Status**: ~30% of Phase 3.2.2 complete (basic library implemented)
+**Status**: ~45% of Phase 3.2.2 complete (expanded library implemented)
 
 **Next Steps**:
+- Template preview functionality
 - Smart auto-complete
 - Writing suggestions based on context
 - Citation style auto-detection
+- User custom templates
