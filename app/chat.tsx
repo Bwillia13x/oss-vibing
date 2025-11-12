@@ -94,6 +94,7 @@ export const Chat = memo(function Chat({ className }: Props) {
           event.preventDefault()
           validateAndSubmitMessage(input)
         }}
+        aria-label="Chat message form"
       >
         <Settings />
         <ModelSelector />
@@ -103,9 +104,20 @@ export const Chat = memo(function Chat({ className }: Props) {
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
           value={input}
+          aria-label="Chat message input"
+          aria-describedby="chat-status"
         />
-        <Button type="submit" disabled={status !== 'ready' || !input.trim()}>
-        <SendIcon className="w-4 h-4" />
+        <span id="chat-status" className="sr-only">
+          {status === 'streaming' ? 'Assistant is responding' : 
+           status === 'submitted' ? 'Message submitted' : 
+           'Ready to send message'}
+        </span>
+        <Button 
+          type="submit" 
+          disabled={status !== 'ready' || !input.trim()}
+          aria-label="Send message"
+        >
+          <SendIcon className="w-4 h-4" />
         </Button>
       </form>
     </Panel>
