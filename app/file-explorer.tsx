@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { FileExplorer as FileExplorerComponent } from '@/components/file-explorer/file-explorer'
 import { useSandboxStore } from './state'
 
@@ -7,7 +8,7 @@ interface Props {
   className: string
 }
 
-export function FileExplorer({ className }: Props) {
+export const FileExplorer = memo(function FileExplorer({ className }: Props) {
   const { sandboxId, status, paths } = useSandboxStore()
   return (
     <FileExplorerComponent
@@ -17,4 +18,4 @@ export function FileExplorer({ className }: Props) {
       paths={paths}
     />
   )
-}
+})
