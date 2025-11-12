@@ -1,0 +1,184 @@
+{
+  "name": "Research Paper Template",
+  "description": "Comprehensive research paper template with abstract, literature review, methodology, results, and discussion",
+  "category": "research",
+  "discipline": "general",
+  "content": {
+    "title": "Research Paper Title",
+    "sections": [
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Abstract"
+      },
+      {
+        "type": "paragraph",
+        "content": "Background: Briefly state the context and importance of the research."
+      },
+      {
+        "type": "paragraph",
+        "content": "Objectives: Clearly state the research questions or hypotheses."
+      },
+      {
+        "type": "paragraph",
+        "content": "Methods: Summarize the methodology used in the study."
+      },
+      {
+        "type": "paragraph",
+        "content": "Results: Highlight the key findings."
+      },
+      {
+        "type": "paragraph",
+        "content": "Conclusions: State the main conclusions and implications."
+      },
+      {
+        "type": "paragraph",
+        "content": "Keywords: List 3-5 keywords relevant to your research."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "1. Introduction"
+      },
+      {
+        "type": "paragraph",
+        "content": "1.1 Background: Provide context and explain why this topic is important. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "1.2 Problem Statement: Clearly identify the research problem or gap in knowledge."
+      },
+      {
+        "type": "paragraph",
+        "content": "1.3 Research Questions/Hypotheses: State your specific research questions or hypotheses."
+      },
+      {
+        "type": "paragraph",
+        "content": "1.4 Objectives: List the specific objectives of your research."
+      },
+      {
+        "type": "paragraph",
+        "content": "1.5 Significance: Explain the potential impact and contribution of your research."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "2. Literature Review"
+      },
+      {
+        "type": "paragraph",
+        "content": "2.1 Overview: Introduce the scope of the literature review."
+      },
+      {
+        "type": "paragraph",
+        "content": "2.2 Theoretical Framework: Discuss relevant theories and models. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "2.3 Previous Research: Summarize key studies related to your topic. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "2.4 Research Gap: Identify gaps in existing literature that your study addresses."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "3. Methodology"
+      },
+      {
+        "type": "paragraph",
+        "content": "3.1 Research Design: Describe the overall approach (experimental, observational, etc.)."
+      },
+      {
+        "type": "paragraph",
+        "content": "3.2 Participants/Sample: Describe the study population and sampling method."
+      },
+      {
+        "type": "paragraph",
+        "content": "3.3 Data Collection: Explain how data was collected."
+      },
+      {
+        "type": "paragraph",
+        "content": "3.4 Data Analysis: Describe analytical methods and statistical tests used."
+      },
+      {
+        "type": "paragraph",
+        "content": "3.5 Ethical Considerations: Address ethical issues and approvals."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "4. Results"
+      },
+      {
+        "type": "paragraph",
+        "content": "4.1 Descriptive Statistics: Present descriptive findings."
+      },
+      {
+        "type": "paragraph",
+        "content": "4.2 Main Findings: Report key results in relation to research questions."
+      },
+      {
+        "type": "paragraph",
+        "content": "4.3 Additional Findings: Present any unexpected or secondary findings."
+      },
+      {
+        "type": "paragraph",
+        "content": "[Include tables, figures, and graphs as needed]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "5. Discussion"
+      },
+      {
+        "type": "paragraph",
+        "content": "5.1 Interpretation: Interpret your findings in context of existing literature. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "5.2 Implications: Discuss theoretical and practical implications."
+      },
+      {
+        "type": "paragraph",
+        "content": "5.3 Limitations: Acknowledge limitations of your study."
+      },
+      {
+        "type": "paragraph",
+        "content": "5.4 Future Research: Suggest directions for future research."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "6. Conclusion"
+      },
+      {
+        "type": "paragraph",
+        "content": "Summary: Summarize the main findings and their significance."
+      },
+      {
+        "type": "paragraph",
+        "content": "Final Thoughts: Conclude with the broader implications of your research."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "References"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Citations will be automatically generated here in APA/MLA/Chicago format]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Appendices"
+      },
+      {
+        "type": "paragraph",
+        "content": "Appendix A: [Supplementary materials, raw data, etc.]"
+      }
+    ]
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "name": "Research Presentation Template",
+  "description": "Academic presentation template for research findings",
+  "category": "academic",
+  "discipline": "general",
+  "content": {
+    "title": "Research Presentation",
+    "slides": [
+      {
+        "type": "title",
+        "title": "Research Presentation Title",
+        "subtitle": "Your Name | Course | Date"
+      },
+      {
+        "type": "content",
+        "title": "Outline",
+        "bullets": [
+          "Introduction & Background",
+          "Research Questions",
+          "Methodology",
+          "Results",
+          "Discussion",
+          "Conclusions & Future Work"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Introduction",
+        "bullets": [
+          "Context and motivation",
+          "Problem statement",
+          "Significance of the research",
+          "Brief overview of approach"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Research Questions",
+        "bullets": [
+          "Primary research question(s)",
+          "Hypotheses (if applicable)",
+          "Expected outcomes"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Methodology",
+        "bullets": [
+          "Research design",
+          "Data collection methods",
+          "Sample/participants",
+          "Analysis techniques"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Results",
+        "bullets": [
+          "Key finding 1",
+          "Key finding 2",
+          "Key finding 3",
+          "[Include graphs/charts]"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Discussion",
+        "bullets": [
+          "Interpretation of results",
+          "Comparison with literature",
+          "Limitations",
+          "Implications"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Conclusions",
+        "bullets": [
+          "Summary of main findings",
+          "Contributions to field",
+          "Future research directions",
+          "Practical applications"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "References",
+        "bullets": [
+          "[Key citations will be listed here]",
+          "[Use appropriate citation format]"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Questions?",
+        "bullets": [
+          "Thank you for your attention",
+          "Contact: your.email@university.edu"
+        ]
+      }
+    ]
+  }
+}

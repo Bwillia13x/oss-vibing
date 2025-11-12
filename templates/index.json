@@ -1,0 +1,89 @@
+{
+  "templates": {
+    "docs": [
+      {
+        "id": "essay",
+        "name": "Academic Essay Template",
+        "description": "Standard 5-paragraph essay structure with introduction, body paragraphs, and conclusion",
+        "category": "essay",
+        "discipline": "general",
+        "file": "essay-template.json",
+        "icon": "📝"
+      },
+      {
+        "id": "research-paper",
+        "name": "Research Paper Template",
+        "description": "Comprehensive research paper template with abstract, literature review, methodology, results, and discussion",
+        "category": "research",
+        "discipline": "general",
+        "file": "research-paper-template.json",
+        "icon": "📄"
+      },
+      {
+        "id": "lab-report",
+        "name": "Lab Report Template",
+        "description": "Standard scientific lab report format for STEM courses",
+        "category": "lab-report",
+        "discipline": "stem",
+        "file": "lab-report-template.json",
+        "icon": "🔬"
+      }
+    ],
+    "sheets": [
+      {
+        "id": "data-analysis",
+        "name": "Data Analysis Template",
+        "description": "Statistical analysis template for quantitative research",
+        "category": "analysis",
+        "discipline": "general",
+        "file": "data-analysis-template.json",
+        "icon": "📊"
+      },
+      {
+        "id": "budget",
+        "name": "Budget Tracker Template",
+        "description": "Simple budget and expense tracker for students",
+        "category": "finance",
+        "discipline": "general",
+        "file": "budget-template.json",
+        "icon": "💰"
+      }
+    ],
+    "decks": [
+      {
+        "id": "research-presentation",
+        "name": "Research Presentation Template",
+        "description": "Academic presentation template for research findings",
+        "category": "academic",
+        "discipline": "general",
+        "file": "research-presentation-template.json",
+        "icon": "🎓"
+      },
+      {
+        "id": "class-presentation",
+        "name": "Class Presentation Template",
+        "description": "General purpose class presentation template",
+        "category": "presentation",
+        "discipline": "general",
+        "file": "class-presentation-template.json",
+        "icon": "🎯"
+      }
+    ]
+  },
+  "categories": {
+    "essay": "Essays & Writing",
+    "research": "Research Papers",
+    "lab-report": "Lab Reports",
+    "analysis": "Data Analysis",
+    "finance": "Finance & Budgeting",
+    "academic": "Academic Presentations",
+    "presentation": "General Presentations"
+  },
+  "disciplines": {
+    "general": "General",
+    "stem": "STEM",
+    "humanities": "Humanities",
+    "social-science": "Social Sciences",
+    "business": "Business"
+  }
+}
