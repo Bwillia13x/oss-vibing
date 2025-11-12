@@ -6,6 +6,7 @@ import { SandboxState } from '@/components/modals/sandbox-state'
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration'
 import { ThemeProvider } from '@/components/theme-provider'
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
+import { OnboardingTutorial } from '@/components/onboarding-tutorial'
 import { Toaster } from '@/components/ui/sonner'
 import type { ReactNode } from 'react'
 import type { Metadata, Viewport } from 'next'
@@ -60,6 +61,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ServiceWorkerRegistration />
           <KeyboardShortcuts />
+          <OnboardingTutorial />
           <Suspense fallback={null}>
             <NuqsAdapter>
               <ChatProvider>
