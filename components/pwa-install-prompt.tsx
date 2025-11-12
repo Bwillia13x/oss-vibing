@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Download, X } from 'lucide-react'
+import { Download } from 'lucide-react'
 
 /**
  * Phase 3.3.1: PWA Install Prompt
@@ -41,16 +41,25 @@ export function PWAInstallPrompt() {
     }
 
     // Check if user has dismissed before
-    const dismissed = localStorage.getItem('pwa-install-dismissed')
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed)
-      const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24)
-      
-      // Show again after 7 days
-      if (daysSinceDismissed < 7) {
-        return
+    try {
+      const dismissed = localStorage.getItem('pwa-install-dismissed')
+      if (dismissed) {
+        const dismissedTime = parseInt(dismissed, 10)
+        if (!isNaN(dismissedTime)) {
+          const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24)
+          
+          // Show again after 7 days
+          if (daysSinceDismissed < 7) {
+            return
+          }
+        }
       }
+    } catch (error) {
+      // localStorage not available, continue to show prompt
+      console.warn('localStorage not available:', error)
     }
+
+    let promptTimer: NodeJS.Timeout | null = null
 
     // Listen for the install prompt event
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -58,7 +67,7 @@ export function PWAInstallPrompt() {
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       
       // Show prompt after a delay
-      setTimeout(() => {
+      promptTimer = setTimeout(() => {
         setShowPrompt(true)
       }, 5000) // Wait 5 seconds before showing
     }
@@ -67,13 +76,16 @@ export function PWAInstallPrompt() {
 
     // Detect iOS devices (they don't support beforeinstallprompt)
     if (isIOSDevice && !isInStandaloneMode) {
-      setTimeout(() => {
+      promptTimer = setTimeout(() => {
         setShowPrompt(true)
       }, 5000)
     }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      if (promptTimer) {
+        clearTimeout(promptTimer)
+      }
     }
   }, [])
 
@@ -82,23 +94,32 @@ export function PWAInstallPrompt() {
       return
     }
 
-    // Show the install prompt
-    await deferredPrompt.prompt()
+    try {
+      // Show the install prompt
+      await deferredPrompt.prompt()
 
-    // Wait for the user to respond
-    const { outcome } = await deferredPrompt.userChoice
+      // Wait for the user to respond
+      const { outcome } = await deferredPrompt.userChoice
 
-    if (outcome === 'accepted') {
-      setIsInstalled(true)
+      if (outcome === 'accepted') {
+        setIsInstalled(true)
+      }
+
+      // Clear the prompt
+      setDeferredPrompt(null)
+      setShowPrompt(false)
+    } catch (error) {
+      console.warn('Failed to show install prompt:', error)
+      setShowPrompt(false)
     }
-
-    // Clear the prompt
-    setDeferredPrompt(null)
-    setShowPrompt(false)
   }
 
   const handleDismiss = () => {
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString())
+    try {
+      localStorage.setItem('pwa-install-dismissed', Date.now().toString())
+    } catch (error) {
+      console.warn('Failed to save dismissal state:', error)
+    }
     setShowPrompt(false)
   }
 
@@ -107,7 +128,7 @@ export function PWAInstallPrompt() {
   }
 
   return (
-    <Dialog open={showPrompt} onOpenChange={setShowPrompt}>
+    <Dialog open={showPrompt} onOpenChange={open => !open && handleDismiss()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

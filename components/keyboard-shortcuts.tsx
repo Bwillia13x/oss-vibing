@@ -117,10 +117,18 @@ export function KeyboardShortcuts() {
         e.preventDefault()
         if (document.fullscreenElement) {
           document.exitFullscreen()
-          announce('Exited fullscreen mode', 'polite')
+            .then(() => announce('Exited fullscreen mode', 'polite'))
+            .catch(err => {
+              console.warn('Failed to exit fullscreen:', err)
+              announce('Could not exit fullscreen mode', 'polite')
+            })
         } else {
           document.documentElement.requestFullscreen()
-          announce('Entered fullscreen mode', 'polite')
+            .then(() => announce('Entered fullscreen mode', 'polite'))
+            .catch(err => {
+              console.warn('Failed to enter fullscreen:', err)
+              announce('Could not enter fullscreen mode', 'polite')
+            })
         }
       }
 
@@ -138,7 +146,7 @@ export function KeyboardShortcuts() {
 
       // Alt + 1-9: Switch between tabs
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        const num = parseInt(e.key)
+        const num = parseInt(e.key, 10)
         if (num >= 1 && num <= 9) {
           e.preventDefault()
           const tabs = document.querySelectorAll('[role="tab"]')

@@ -34,11 +34,6 @@
   }
 }
 
-/* iOS momentum scrolling for smooth scrolling */
-* {
-  -webkit-overflow-scrolling: touch;
-}
-
 /* Prevent text size adjustment on mobile */
 @media (max-width: 768px) {
   body {
