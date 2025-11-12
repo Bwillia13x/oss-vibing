@@ -1,4 +1,14 @@
+# Vibe University
+
+**A comprehensive student workflow IDE for academic work with built-in academic integrity.**
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## 📚 Documentation
+
+- **[VIBE-UNIVERSITY.md](./VIBE-UNIVERSITY.md)** - Complete transformation summary and current features
+- **[ROADMAP.md](./ROADMAP.md)** - Detailed 18-24 month development roadmap
+- **[BLUEPRINT.md](./BLUEPRINT.md)** - Strategic overview and technical architecture
 
 ## Getting Started
 
