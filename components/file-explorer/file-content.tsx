@@ -1,5 +1,6 @@
 import { SyntaxHighlighter } from './syntax-highlighter'
 import { PulseLoader } from 'react-spinners'
+import { Skeleton } from '@/components/ui/skeleton'
 import { memo } from 'react'
 import useSWR from 'swr'
 
@@ -25,10 +26,15 @@ export const FileContent = memo(function FileContent({
 
   if (content.isLoading || !content.data) {
     return (
-      <div className="absolute w-full h-full flex items-center text-center">
-        <div className="flex-1">
-          <PulseLoader className="opacity-60" size={8} />
-        </div>
+      <div className="p-4 space-y-2" role="status" aria-live="polite" aria-label="Loading file content">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
+        <span className="sr-only">Loading file: {path}</span>
       </div>
     )
   }

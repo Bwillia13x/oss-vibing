@@ -47,6 +47,12 @@ export const Chat = memo(function Chat({ className }: Props) {
     setChatStatus(status)
   }, [status, setChatStatus])
 
+  // Announce status changes to screen readers
+  const statusMessage = 
+    status === 'streaming' ? 'Assistant is responding' : 
+    status === 'submitted' ? 'Message submitted, waiting for response' : 
+    'Ready to send message'
+
   return (
     <Panel className={className}>
       <PanelHeader>
@@ -56,6 +62,16 @@ export const Chat = memo(function Chat({ className }: Props) {
         </div>
         <div className="ml-auto font-mono text-xs opacity-50">[{status}]</div>
       </PanelHeader>
+
+      {/* Live region for screen reader announcements */}
+      <div 
+        role="status" 
+        aria-live="polite" 
+        aria-atomic="true" 
+        className="sr-only"
+      >
+        {statusMessage}
+      </div>
 
       {/* Messages Area */}
       {messages.length === 0 ? (
@@ -79,7 +95,7 @@ export const Chat = memo(function Chat({ className }: Props) {
         </div>
       ) : (
         <Conversation className="relative w-full">
-          <ConversationContent className="space-y-4">
+          <ConversationContent className="space-y-4" role="log" aria-live="polite" aria-label="Chat conversation">
             {messages.map((message) => (
               <Message key={message.id} message={message} />
             ))}
