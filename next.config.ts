@@ -31,11 +31,8 @@ const nextConfig: NextConfig = {
     
     // Phase 3.1.1: Optimize production builds
     if (process.env.NODE_ENV === 'production') {
-      config.optimization = {
-        ...config.optimization,
-        usedExports: true,
-        sideEffects: true,
-      }
+      config.optimization.usedExports = true
+      config.optimization.sideEffects = true
     }
     
     return config

@@ -18,9 +18,15 @@ const Preview = dynamic(() => import('./preview').then(mod => ({ default: mod.Pr
 const Logs = dynamic(() => import('./logs').then(mod => ({ default: mod.Logs })), {
   loading: () => <div className="flex items-center justify-center h-full">Loading Logs...</div>
 })
-const Horizontal = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Horizontal })))
-const Vertical = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Vertical })))
-const Welcome = dynamic(() => import('@/components/modals/welcome').then(mod => ({ default: mod.Welcome })))
+const Horizontal = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Horizontal })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Layout...</div>
+})
+const Vertical = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Vertical })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Layout...</div>
+})
+const Welcome = dynamic(() => import('@/components/modals/welcome').then(mod => ({ default: mod.Welcome })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Welcome...</div>
+})
 
 export default async function Page() {
   const store = await cookies()

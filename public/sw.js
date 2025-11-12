@@ -36,6 +36,11 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Only handle HTTP(S) requests
+  if (!event.request.url.startsWith('http')) {
+    return
+  }
+
   // Skip API calls (always fetch fresh)
   if (event.request.url.includes('/api/')) {
     return
@@ -51,13 +56,20 @@ self.addEventListener('fetch', (event) => {
               cache.put(event.request, response)
             })
           }
+        }).catch(() => {
+          // Silently ignore network errors during background update
         })
         return cachedResponse
       }
 
       // Not in cache, fetch from network
       return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type === 'error') {
+        if (
+          !response ||
+          response.status !== 200 ||
+          response.type === 'error' ||
+          response.type === 'opaque'
+        ) {
           return response
         }
 
