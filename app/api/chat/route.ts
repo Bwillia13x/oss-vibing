@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 import { getAvailableModels, getModelOptions } from '@/ai/gateway'
 import { checkBotId } from 'botid/server'
 import { tools } from '@/ai/tools'
+import { apiRateLimiter } from '@/lib/cache'
 import prompt from './prompt.md'
 
 interface BodyData {
@@ -20,9 +21,28 @@ interface BodyData {
 }
 
 export async function POST(req: Request) {
+  // Bot detection
   const checkResult = await checkBotId()
   if (checkResult.isBot) {
     return NextResponse.json({ error: `Bot detected` }, { status: 403 })
+  }
+
+  // Rate limiting - use IP address or session identifier
+  const forwardedFor = req.headers.get('x-forwarded-for')
+  const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
+  
+  if (!apiRateLimiter.isAllowed(ip)) {
+    const remaining = apiRateLimiter.remaining(ip)
+    return NextResponse.json(
+      { error: `Rate limit exceeded. Try again later.` },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': remaining.toString(),
+          'Retry-After': '60'
+        }
+      }
+    )
   }
 
   const [models, { messages, modelId = DEFAULT_MODEL, reasoningEffort }] =
