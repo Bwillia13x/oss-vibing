@@ -9,7 +9,9 @@ import { announce } from '@/lib/accessibility'
  * 
  * Keyboard shortcuts:
  * - Ctrl/Cmd + K: Focus search/chat input
- * - Ctrl/Cmd + B: Toggle sidebar
+ * - Ctrl/Cmd + B: Toggle sidebar visibility (UI integration needed)
+ * - Ctrl/Cmd + E: Focus file explorer
+ * - Ctrl/Cmd + P: Focus preview panel
  * - Ctrl/Cmd + /: Show keyboard shortcuts help
  * - Ctrl/Cmd + Shift + T: Toggle theme (handled by ThemeToggle component)
  * - Escape: Close modals/dialogs
@@ -29,6 +31,53 @@ export function KeyboardShortcuts() {
         if (chatInput) {
           chatInput.focus()
           announce('Chat input focused', 'polite')
+        }
+      }
+
+      // Ctrl/Cmd + B: Toggle sidebar (UI integration needed)
+      if (modKey && e.key === 'b') {
+        e.preventDefault()
+        const sidebar = document.querySelector('[data-panel-id="sidebar"]') as HTMLElement
+        if (sidebar) {
+          // Toggle visibility - panel API integration would be better
+          sidebar.classList.toggle('hidden')
+          const isHidden = sidebar.classList.contains('hidden')
+          announce(isHidden ? 'Sidebar hidden' : 'Sidebar shown', 'polite')
+        } else {
+          announce('Sidebar not found', 'polite')
+        }
+      }
+
+      // Ctrl/Cmd + E: Focus file explorer
+      if (modKey && e.key === 'e') {
+        e.preventDefault()
+        const fileExplorer = document.querySelector('[data-component="file-explorer"]') as HTMLElement
+        if (fileExplorer) {
+          const firstItem = fileExplorer.querySelector('button, a, [tabindex="0"]') as HTMLElement
+          if (firstItem) {
+            firstItem.focus()
+            announce('File explorer focused', 'polite')
+          } else {
+            announce('No focusable items in file explorer', 'polite')
+          }
+        } else {
+          announce('File explorer not found', 'polite')
+        }
+      }
+
+      // Ctrl/Cmd + P: Focus preview panel
+      if (modKey && e.key === 'p') {
+        e.preventDefault()
+        const preview = document.querySelector('[data-component="preview"]') as HTMLElement
+        if (preview) {
+          // Ensure preview is focusable
+          if (!preview.hasAttribute('tabindex')) {
+            preview.setAttribute('tabindex', '-1')
+          }
+          preview.focus()
+          announce('Preview panel focused', 'polite')
+        } else {
+          announce('Preview panel not found', 'polite')
         }
       }
 
@@ -64,6 +113,9 @@ function showShortcutsHelp() {
   
   const shortcuts = [
     { key: `${modKey} + K`, action: 'Focus chat input' },
+    { key: `${modKey} + B`, action: 'Toggle sidebar (requires panel API)' },
+    { key: `${modKey} + E`, action: 'Focus file explorer' },
+    { key: `${modKey} + P`, action: 'Focus preview panel' },
     { key: `${modKey} + Shift + T`, action: 'Toggle theme (dark/light)' },
     { key: `${modKey} + /`, action: 'Show this help' },
     { key: 'Escape', action: 'Close dialogs and modals' },
