@@ -21,10 +21,10 @@ export default async function Page() {
       <div className="flex flex-col h-screen max-h-screen overflow-hidden p-2 space-x-2">
         <Header className="flex items-center w-full" />
         <ul className="flex space-x-5 font-mono text-sm tracking-tight px-1 py-2 md:hidden">
-          <TabItem tabId="chat">Chat</TabItem>
-          <TabItem tabId="preview">Preview</TabItem>
-          <TabItem tabId="file-explorer">File Explorer</TabItem>
-          <TabItem tabId="logs">Logs</TabItem>
+          <TabItem tabId="chat">Student Copilot</TabItem>
+          <TabItem tabId="preview">Artifact Preview</TabItem>
+          <TabItem tabId="file-explorer">Artifacts</TabItem>
+          <TabItem tabId="logs">Provenance & Runs</TabItem>
         </ul>
 
         {/* Mobile layout tabs taking the whole space*/}

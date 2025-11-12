@@ -9,6 +9,14 @@ import { RunCommand } from './run-command'
 import { ReportErrors } from './report-errors'
 import { Reasoning } from './reasoning'
 import { Text } from './text'
+import { UniOutline } from './uni-outline'
+import { UniCitations } from './uni-citations'
+import { UniPdfSummary } from './uni-pdf-summary'
+import { UniSheetAnalyze } from './uni-sheet-analyze'
+import { UniDeckGenerate } from './uni-deck-generate'
+import { UniFlashcards } from './uni-flashcards'
+import { UniIntegrity } from './uni-integrity'
+import { UniExport } from './uni-export'
 import { memo } from 'react'
 
 interface Props {
@@ -32,6 +40,22 @@ export const MessagePart = memo(function MessagePart({
     return <Reasoning part={part} partIndex={partIndex} />
   } else if (part.type === 'data-report-errors') {
     return <ReportErrors message={part.data} />
+  } else if (part.type === 'data-uni-outline') {
+    return <UniOutline message={part.data} />
+  } else if (part.type === 'data-uni-citations') {
+    return <UniCitations message={part.data} />
+  } else if (part.type === 'data-uni-pdf-summary') {
+    return <UniPdfSummary message={part.data} />
+  } else if (part.type === 'data-uni-sheet-analyze') {
+    return <UniSheetAnalyze message={part.data} />
+  } else if (part.type === 'data-uni-deck-generate') {
+    return <UniDeckGenerate message={part.data} />
+  } else if (part.type === 'data-uni-flashcards') {
+    return <UniFlashcards message={part.data} />
+  } else if (part.type === 'data-uni-integrity') {
+    return <UniIntegrity message={part.data} />
+  } else if (part.type === 'data-uni-export') {
+    return <UniExport message={part.data} />
   } else if (part.type === 'text') {
     return <Text part={part} />
   }
