@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { fileIndexer, initializeFileIndex, searchArtifacts } from '@/lib/file-indexer'
 import { perfMonitor } from '@/lib/performance'
-import { apiCache } from '@/lib/cache'
+import { apiCache, apiRateLimiter } from '@/lib/cache'
 
 // Prevent concurrent initializations
 let initializing = false
@@ -14,6 +14,24 @@ let initializing = false
  */
 export async function GET(req: NextRequest) {
   return perfMonitor.time('api.files', async () => {
+    // Rate limiting - use IP address
+    const forwardedFor = req.headers.get('x-forwarded-for')
+    const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
+    
+    if (!apiRateLimiter.isAllowed(ip)) {
+      const remaining = apiRateLimiter.remaining(ip)
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+            'Retry-After': '60'
+          }
+        }
+      )
+    }
+
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('search')
     const typeParam = searchParams.get('type')
@@ -78,8 +96,26 @@ export async function GET(req: NextRequest) {
 /**
  * Rebuild file index (POST to refresh)
  */
-export async function POST() {
+export async function POST(req: Request) {
   return perfMonitor.time('api.files.rebuild', async () => {
+    // Rate limiting - use IP address
+    const forwardedFor = req.headers.get('x-forwarded-for')
+    const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
+    
+    if (!apiRateLimiter.isAllowed(ip)) {
+      const remaining = apiRateLimiter.remaining(ip)
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+            'Retry-After': '60'
+          }
+        }
+      )
+    }
+
     await initializeFileIndex()
     
     // Clear cache

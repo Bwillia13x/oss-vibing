@@ -1,14 +1,32 @@
 import { SUPPORTED_MODELS } from '@/ai/constants'
 import { getAvailableModels } from '@/ai/gateway'
 import { NextResponse } from 'next/server'
-import { apiCache } from '@/lib/cache'
+import { apiCache, apiRateLimiter } from '@/lib/cache'
 import { perfMonitor } from '@/lib/performance'
 
 // Cache key for available models
 const MODELS_CACHE_KEY = 'available_models'
 
-export async function GET() {
+export async function GET(req: Request) {
   return perfMonitor.time('api.models.get', async () => {
+    // Rate limiting - use IP address
+    const forwardedFor = req.headers.get('x-forwarded-for')
+    const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
+    
+    if (!apiRateLimiter.isAllowed(ip)) {
+      const remaining = apiRateLimiter.remaining(ip)
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': remaining.toString(),
+            'Retry-After': '60'
+          }
+        }
+      )
+    }
+
     // Try to get from cache first
     const cached = apiCache.get(MODELS_CACHE_KEY)
     if (cached !== null) {
