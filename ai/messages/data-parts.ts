@@ -155,6 +155,27 @@ export const dataPartSchema = z.object({
     status: z.enum(['checking', 'done', 'error']),
     error: errorSchema.optional(),
   }),
+  'uni-plagiarism': z.object({
+    originalityScore: z.number(),
+    recommendation: z.string(),
+    statistics: z.object({
+      totalSentences: z.number(),
+      suspiciousSentences: z.number(),
+      uncitedQuotes: z.number(),
+      missingCitations: z.number(),
+      overallRisk: z.enum(['low', 'medium', 'high']),
+    }),
+    issues: z.array(z.object({
+      type: z.string(),
+      severity: z.string(),
+      text: z.string(),
+      context: z.string(),
+      suggestion: z.string(),
+      confidence: z.number(),
+    })),
+    status: z.enum(['checking', 'done', 'error']),
+    error: errorSchema.optional(),
+  }),
 })
 
 export type DataPart = z.infer<typeof dataPartSchema>
