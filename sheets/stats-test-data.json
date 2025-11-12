@@ -1,0 +1,62 @@
+{
+  "name": "Statistical Test Data",
+  "tables": {
+    "Test Data": {
+      "headers": [
+        "Group A",
+        "Group B",
+        "Group C",
+        "Category1",
+        "Category2"
+      ],
+      "data": [
+        [
+          23,
+          28,
+          31,
+          10,
+          15
+        ],
+        [
+          25,
+          30,
+          29,
+          12,
+          18
+        ],
+        [
+          22,
+          27,
+          33,
+          8,
+          14
+        ],
+        [
+          24,
+          29,
+          30,
+          11,
+          16
+        ],
+        [
+          26,
+          31,
+          32,
+          9,
+          17
+        ],
+        [
+          21,
+          26,
+          28,
+          13,
+          19
+        ]
+      ]
+    }
+  },
+  "metadata": {
+    "created": "2025-11-12T04:13:56.419Z",
+    "description": "Test data for advanced statistics"
+  }
+}

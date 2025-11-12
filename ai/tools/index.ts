@@ -11,6 +11,7 @@ import { summarizePdf } from './summarize-pdf'
 import { paraphraseWithCitation } from './paraphrase-with-citation'
 import { formatBibliography } from './format-bibliography'
 import { checkIntegrity } from './check-integrity'
+import { verifyCitations } from './verify-citations'
 import { sheetAnalyze } from './sheet-analyze'
 import { sheetChart } from './sheet-chart'
 import { deckGenerate } from './deck-generate'
@@ -39,6 +40,7 @@ export function tools({ modelId, writer }: Params) {
     paraphraseWithCitation: paraphraseWithCitation({ writer }),
     formatBibliography: formatBibliography({ writer }),
     checkIntegrity: checkIntegrity({ writer }),
+    verifyCitations: verifyCitations({ writer }),
     sheetAnalyze: sheetAnalyze({ writer }),
     sheetChart: sheetChart({ writer }),
     deckGenerate: deckGenerate({ writer }),
