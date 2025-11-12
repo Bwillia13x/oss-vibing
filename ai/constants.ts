@@ -21,6 +21,9 @@ export const SUPPORTED_MODELS: GatewayModelId[] = [
 ]
 
 export const TEST_PROMPTS = [
-  'Generate a Next.js app that allows to list and search Pokemons',
-  'Create a `golang` server that responds with "Hello World" to any request',
+  'Create an essay outline with APA citations on climate change impacts',
+  'Import lab CSV data, analyze with correlation matrix, and create charts',
+  'Summarize this lecture PDF and generate flashcards for study',
+  'Generate a presentation deck from my research paper',
+  'Plan my semester schedule with courses and assignment deadlines',
 ]

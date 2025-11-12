@@ -1,0 +1,31 @@
+{
+  "id": "smith2024",
+  "type": "article-journal",
+  "title": "Climate Change Impacts on Global Agriculture: A Comprehensive Review",
+  "author": [
+    {
+      "family": "Smith",
+      "given": "John"
+    },
+    {
+      "family": "Johnson",
+      "given": "Alice"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2024]]
+  },
+  "container-title": "Journal of Environmental Science",
+  "volume": "45",
+  "issue": "3",
+  "page": "234-256",
+  "DOI": "10.1234/jes.2024.45.234",
+  "URL": "https://doi.org/10.1234/jes.2024.45.234",
+  "abstract": "This comprehensive review examines the current state of research on climate change impacts to agricultural systems worldwide.",
+  "provenance": {
+    "fetchedAt": "2025-11-12T02:23:55.806Z",
+    "source": "Crossref",
+    "verified": true,
+    "confidence": "high"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "Lab 3 - Temperature Data Analysis",
+  "created": "2025-11-12T02:23:55.806Z",
+  "provenance": {
+    "sourceURLs": ["https://data.gov/climate/temperature"],
+    "fetchedAt": "2025-11-12T02:23:55.806Z",
+    "snapshotHash": "abc123def456",
+    "license": "Public Domain"
+  },
+  "tables": {
+    "raw_data": {
+      "description": "Monthly temperature readings",
+      "range": "A1:C13",
+      "headers": ["Month", "TempC", "TempF"],
+      "data": [
+        ["January", 5, 41],
+        ["February", 7, 45],
+        ["March", 12, 54],
+        ["April", 16, 61],
+        ["May", 21, 70],
+        ["June", 25, 77],
+        ["July", 28, 82],
+        ["August", 27, 81],
+        ["September", 23, 73],
+        ["October", 17, 63],
+        ["November", 11, 52],
+        ["December", 6, 43]
+      ]
+    }
+  },
+  "analysis": {
+    "descriptive": {
+      "operation": "describe",
+      "computedAt": "2025-11-12T02:23:55.806Z",
+      "results": {
+        "mean": 16.5,
+        "median": 16.5,
+        "stdDev": 8.1,
+        "min": 5,
+        "max": 28,
+        "q1": 10.5,
+        "q3": 23.5
+      }
+    }
+  },
+  "charts": [
+    {
+      "id": "temp-line-chart",
+      "type": "line",
+      "title": "Monthly Temperature Trend",
+      "xAxis": "Month",
+      "yAxis": "TempC",
+      "data": "raw_data"
+    }
+  ]
+}

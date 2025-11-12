@@ -1,0 +1,23 @@
+{
+  "id": "essay-climate-change",
+  "title": "Research Essay on Climate Change and Agriculture",
+  "description": "Write a 10-page research paper on climate change impacts on agricultural sustainability with at least 10 scholarly sources in APA format",
+  "course": "ENV-101",
+  "dueAt": "2025-12-15T23:59:59.000Z",
+  "priority": "high",
+  "status": "in-progress",
+  "artifacts": {
+    "outline": "docs/climate-change-essay-outline.mdx",
+    "draft": "docs/climate-change-essay-sample.mdx",
+    "references": ["references/smith2024.json"]
+  },
+  "checklist": [
+    {"item": "Create outline", "done": true},
+    {"item": "Find 10 sources", "done": false},
+    {"item": "Write first draft", "done": false},
+    {"item": "Run integrity check", "done": false},
+    {"item": "Submit final version", "done": false}
+  ],
+  "created": "2025-11-01T10:00:00.000Z",
+  "updated": "2025-11-12T02:23:55.806Z"
+}
