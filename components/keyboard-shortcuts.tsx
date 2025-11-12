@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { announce } from '@/lib/accessibility'
+import { ShortcutsHelpDialog } from '@/components/shortcuts-help-dialog'
 
 /**
  * Global keyboard shortcuts for Phase 3.2.1 - UI/UX improvements
@@ -18,6 +19,7 @@ import { announce } from '@/lib/accessibility'
  */
 export function KeyboardShortcuts() {
   const router = useRouter()
+  const [showHelp, setShowHelp] = useState(false)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -84,7 +86,8 @@ export function KeyboardShortcuts() {
       // Ctrl/Cmd + /: Show shortcuts help
       if (modKey && e.key === '/') {
         e.preventDefault()
-        showShortcutsHelp()
+        setShowHelp(true)
+        announce('Keyboard shortcuts dialog opened', 'polite')
       }
 
       // Escape: Close modals
@@ -104,30 +107,5 @@ export function KeyboardShortcuts() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [router])
 
-  return null
-}
-
-function showShortcutsHelp() {
-  const isMac = navigator.platform.includes('Mac')
-  const modKey = isMac ? '⌘' : 'Ctrl'
-  
-  const shortcuts = [
-    { key: `${modKey} + K`, action: 'Focus chat input' },
-    { key: `${modKey} + B`, action: 'Toggle sidebar (requires panel API)' },
-    { key: `${modKey} + E`, action: 'Focus file explorer' },
-    { key: `${modKey} + P`, action: 'Focus preview panel' },
-    { key: `${modKey} + Shift + T`, action: 'Toggle theme (dark/light)' },
-    { key: `${modKey} + /`, action: 'Show this help' },
-    { key: 'Escape', action: 'Close dialogs and modals' },
-  ]
-
-  const message = shortcuts
-    .map(({ key, action }) => `${key}: ${action}`)
-    .join('\n')
-
-  // Announce to screen readers
-  announce('Keyboard shortcuts dialog opened', 'polite')
-
-  // Use native alert for simplicity - could be enhanced with a modal component
-  alert(`Keyboard Shortcuts\n\n${message}\n\nThese shortcuts work throughout the application.`)
+  return <ShortcutsHelpDialog open={showHelp} onOpenChange={setShowHelp} />
 }
