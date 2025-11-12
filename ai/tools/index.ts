@@ -16,6 +16,9 @@ import { sheetAnalyze } from './sheet-analyze'
 import { sheetChart } from './sheet-chart'
 import { deckGenerate } from './deck-generate'
 import { notesToFlashcards } from './notes-to-flashcards'
+import { reviewFlashcards } from './review-flashcards'
+import { checkGrammar } from './check-grammar'
+import { detectPlagiarism } from './detect-plagiarism'
 import { planSchedule } from './plan-schedule'
 import { exportArtifact } from './export-artifact'
 
@@ -45,6 +48,9 @@ export function tools({ modelId, writer }: Params) {
     sheetChart: sheetChart({ writer }),
     deckGenerate: deckGenerate({ writer }),
     notesToFlashcards: notesToFlashcards({ writer }),
+    reviewFlashcards: reviewFlashcards({ writer }),
+    checkGrammar: checkGrammar({ writer }),
+    detectPlagiarism: detectPlagiarism({ writer }),
     planSchedule: planSchedule({ writer }),
     exportArtifact: exportArtifact({ writer }),
   }
