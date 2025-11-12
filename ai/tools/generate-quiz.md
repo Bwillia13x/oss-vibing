@@ -1,0 +1,1 @@
+Generate a practice quiz from study notes to help students test their knowledge. Supports multiple question types (multiple choice, true/false, fill-in-the-blank) and automatically grades attempts. Ideal for exam preparation and self-assessment.
