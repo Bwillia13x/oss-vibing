@@ -6,10 +6,17 @@ import { getSandboxURL } from './get-sandbox-url'
 import { runCommand } from './run-command'
 import { outlineDoc } from './outline-doc'
 import { findSources } from './find-sources'
+import { insertCitations } from './insert-citations'
+import { summarizePdf } from './summarize-pdf'
+import { paraphraseWithCitation } from './paraphrase-with-citation'
+import { formatBibliography } from './format-bibliography'
 import { checkIntegrity } from './check-integrity'
 import { sheetAnalyze } from './sheet-analyze'
+import { sheetChart } from './sheet-chart'
 import { deckGenerate } from './deck-generate'
 import { notesToFlashcards } from './notes-to-flashcards'
+import { planSchedule } from './plan-schedule'
+import { exportArtifact } from './export-artifact'
 
 interface Params {
   modelId: string
@@ -27,10 +34,17 @@ export function tools({ modelId, writer }: Params) {
     // Academic workflow tools
     outlineDoc: outlineDoc({ writer }),
     findSources: findSources({ writer }),
+    insertCitations: insertCitations({ writer }),
+    summarizePdf: summarizePdf({ writer }),
+    paraphraseWithCitation: paraphraseWithCitation({ writer }),
+    formatBibliography: formatBibliography({ writer }),
     checkIntegrity: checkIntegrity({ writer }),
     sheetAnalyze: sheetAnalyze({ writer }),
+    sheetChart: sheetChart({ writer }),
     deckGenerate: deckGenerate({ writer }),
     notesToFlashcards: notesToFlashcards({ writer }),
+    planSchedule: planSchedule({ writer }),
+    exportArtifact: exportArtifact({ writer }),
   }
 }
 
