@@ -138,6 +138,24 @@ export const dataPartSchema = z.object({
     status: z.enum(['generating', 'grading', 'done', 'error']),
     error: errorSchema.optional(),
   }),
+  'uni-lms': z.object({
+    action: z.enum(['list-courses', 'list-assignments', 'import-assignment', 'submit', 'get-grades']).optional(),
+    platform: z.enum(['canvas', 'blackboard', 'moodle']).optional(),
+    courseId: z.string().optional(),
+    assignmentId: z.string().optional(),
+    assignmentName: z.string().optional(),
+    taskPath: z.string().optional(),
+    dueAt: z.string().optional(),
+    points: z.number().optional(),
+    submissionId: z.string().optional(),
+    submittedAt: z.string().optional(),
+    courses: z.array(z.any()).optional(),
+    assignments: z.array(z.any()).optional(),
+    grades: z.array(z.any()).optional(),
+    count: z.number().optional(),
+    status: z.enum(['connecting', 'done', 'error']),
+    error: errorSchema.optional(),
+  }),
 })
 
 export type DataPart = z.infer<typeof dataPartSchema>
