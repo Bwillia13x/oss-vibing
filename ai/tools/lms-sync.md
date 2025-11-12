@@ -1,0 +1,1 @@
+Sync assignments and submissions with Learning Management Systems (Canvas, Blackboard, Moodle). Import assignments as tasks, submit completed work, and sync grades.

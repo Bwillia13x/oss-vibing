@@ -22,6 +22,7 @@ import { detectPlagiarism } from './detect-plagiarism'
 import { planSchedule } from './plan-schedule'
 import { exportArtifact } from './export-artifact'
 import { generateQuiz } from './generate-quiz'
+import { lmsSync } from './lms-sync'
 
 interface Params {
   modelId: string
@@ -55,6 +56,7 @@ export function tools({ modelId, writer }: Params) {
     planSchedule: planSchedule({ writer }),
     exportArtifact: exportArtifact({ writer }),
     generateQuiz: generateQuiz({ writer }),
+    lmsSync: lmsSync({ writer }),
   }
 }
 
