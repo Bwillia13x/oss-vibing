@@ -3,9 +3,10 @@ import { ChatProvider } from '@/lib/chat-context'
 import { CommandLogsStream } from '@/components/commands-logs/commands-logs-stream'
 import { ErrorMonitor } from '@/components/error-monitor/error-monitor'
 import { SandboxState } from '@/components/modals/sandbox-state'
+import { ServiceWorkerRegistration } from '@/components/service-worker-registration'
 import { Toaster } from '@/components/ui/sonner'
 import type { ReactNode } from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import './globals.css'
 
@@ -15,6 +16,13 @@ const description = `Unified student workflow IDE: docs, sheets, decks, notes, r
 export const metadata: Metadata = {
   title,
   description,
+  // Phase 3.1.1: PWA support
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Vibe University',
+  },
   openGraph: {
     images: [
       {
@@ -32,12 +40,22 @@ export const metadata: Metadata = {
   },
 }
 
+// Phase 3.1.1: Separate viewport export (Next.js 15 requirement)
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#000000',
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
       <body className="antialiased">
+        <ServiceWorkerRegistration />
         <Suspense fallback={null}>
           <NuqsAdapter>
             <ChatProvider>

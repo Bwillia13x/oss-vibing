@@ -1,14 +1,26 @@
-import { Chat } from './chat'
-import { FileExplorer } from './file-explorer'
+import dynamic from 'next/dynamic'
 import { Header } from './header'
-import { Horizontal, Vertical } from '@/components/layout/panels'
-import { Logs } from './logs'
-import { Preview } from './preview'
 import { TabContent, TabItem } from '@/components/tabs'
-import { Welcome } from '@/components/modals/welcome'
 import { cookies } from 'next/headers'
 import { getHorizontal, getVertical } from '@/components/layout/sizing'
 import { hideBanner } from '@/app/actions'
+
+// Lazy load heavy components for better performance
+const Chat = dynamic(() => import('./chat').then(mod => ({ default: mod.Chat })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Chat...</div>
+})
+const FileExplorer = dynamic(() => import('./file-explorer').then(mod => ({ default: mod.FileExplorer })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Explorer...</div>
+})
+const Preview = dynamic(() => import('./preview').then(mod => ({ default: mod.Preview })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Preview...</div>
+})
+const Logs = dynamic(() => import('./logs').then(mod => ({ default: mod.Logs })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Logs...</div>
+})
+const Horizontal = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Horizontal })))
+const Vertical = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Vertical })))
+const Welcome = dynamic(() => import('@/components/modals/welcome').then(mod => ({ default: mod.Welcome })))
 
 export default async function Page() {
   const store = await cookies()
