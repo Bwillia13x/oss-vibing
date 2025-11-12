@@ -31,13 +31,13 @@ The LMS integration feature allows students to seamlessly connect Vibe Universit
 
 ### 🔄 Coming in Phase 3
 
-- Blackboard Learn integration
-- Moodle integration
-- Course material import (syllabus, readings)
-- Calendar sync with assignment due dates
-- File upload submissions
-- Group assignment support
-- Discussion board integration
+- 🔵 Blackboard Learn integration
+- 🔵 Moodle integration
+- 🔵 Course material import (syllabus, readings)
+- 🔵 Calendar sync with assignment due dates
+- 🔵 File upload submissions
+- 🔵 Group assignment support
+- 🔵 Discussion board integration
 
 ## Setup
 
@@ -369,19 +369,19 @@ Grades appear automatically when the instructor releases them.
 ## Roadmap
 
 ### Phase 3 (Months 13-18)
-- ✅ Blackboard Learn integration
-- ✅ Moodle integration
-- ✅ File upload submissions
-- ✅ Course material import (syllabus, readings)
-- ✅ Calendar sync and reminders
-- ✅ Discussion board integration
+- 🔵 Blackboard Learn integration
+- 🔵 Moodle integration
+- 🔵 File upload submissions
+- 🔵 Course material import (syllabus, readings)
+- 🔵 Calendar sync and reminders
+- 🔵 Discussion board integration
 
 ### Phase 4 (Months 19-24)
-- ✅ LTI (Learning Tools Interoperability) standard support
-- ✅ Grade analytics and predictions
-- ✅ Instructor dashboard features
-- ✅ Bulk assignment operations
-- ✅ Mobile app integration
+- 🔵 LTI (Learning Tools Interoperability) standard support
+- 🔵 Grade analytics and predictions
+- 🔵 Instructor dashboard features
+- 🔵 Bulk assignment operations
+- 🔵 Mobile app integration
 
 ## Support
 

@@ -38,12 +38,6 @@ function test(name, fn) {
   }
 }
 
-function assert(condition, message) {
-  if (!condition) {
-    throw new Error(message)
-  }
-}
-
 function assertExists(filePath, message) {
   if (!existsSync(filePath)) {
     throw new Error(message || `File does not exist: ${filePath}`)
