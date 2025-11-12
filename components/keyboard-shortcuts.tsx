@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { announce } from '@/lib/accessibility'
 
 /**
  * Global keyboard shortcuts for Phase 3.2.1 - UI/UX improvements
@@ -24,9 +25,10 @@ export function KeyboardShortcuts() {
       // Ctrl/Cmd + K: Focus chat input
       if (modKey && e.key === 'k') {
         e.preventDefault()
-        const chatInput = document.querySelector('textarea[placeholder*="chat"]') as HTMLTextAreaElement
+        const chatInput = document.querySelector('textarea[placeholder*="message"], input[placeholder*="message"]') as HTMLTextAreaElement | HTMLInputElement
         if (chatInput) {
           chatInput.focus()
+          announce('Chat input focused', 'polite')
         }
       }
 
@@ -43,6 +45,7 @@ export function KeyboardShortcuts() {
           const closeButton = activeDialog.querySelector('[aria-label*="close"], [aria-label*="Close"]') as HTMLButtonElement
           if (closeButton) {
             closeButton.click()
+            announce('Dialog closed', 'polite')
           }
         }
       }
@@ -57,19 +60,22 @@ export function KeyboardShortcuts() {
 
 function showShortcutsHelp() {
   const isMac = navigator.platform.includes('Mac')
-  const modKey = isMac ? 'Cmd' : 'Ctrl'
+  const modKey = isMac ? '⌘' : 'Ctrl'
   
   const shortcuts = [
     { key: `${modKey} + K`, action: 'Focus chat input' },
-    { key: `${modKey} + Shift + T`, action: 'Toggle theme' },
-    { key: `${modKey} + /`, action: 'Show keyboard shortcuts' },
-    { key: 'Escape', action: 'Close modals' },
+    { key: `${modKey} + Shift + T`, action: 'Toggle theme (dark/light)' },
+    { key: `${modKey} + /`, action: 'Show this help' },
+    { key: 'Escape', action: 'Close dialogs and modals' },
   ]
 
   const message = shortcuts
     .map(({ key, action }) => `${key}: ${action}`)
     .join('\n')
 
+  // Announce to screen readers
+  announce('Keyboard shortcuts dialog opened', 'polite')
+
   // Use native alert for simplicity - could be enhanced with a modal component
-  alert(`Keyboard Shortcuts:\n\n${message}`)
+  alert(`Keyboard Shortcuts\n\n${message}\n\nThese shortcuts work throughout the application.`)
 }
