@@ -22,6 +22,7 @@ export interface FileIndex {
   byType: Map<string, Set<string>>
   byExtension: Map<string, Set<string>>
   lastUpdated: Date
+  errors: Array<{ path: string; error: string }>
 }
 
 class FileIndexer {
@@ -30,6 +31,7 @@ class FileIndexer {
     byType: new Map(),
     byExtension: new Map(),
     lastUpdated: new Date(),
+    errors: [],
   }
 
   private artifactDirs = [
@@ -76,6 +78,7 @@ class FileIndexer {
       byType: new Map(),
       byExtension: new Map(),
       lastUpdated: new Date(),
+      errors: [],
     }
 
     for (const dir of this.artifactDirs) {
@@ -83,7 +86,9 @@ class FileIndexer {
       try {
         await this.indexDirectory(dirPath, dir)
       } catch (error) {
-        // Directory might not exist, skip
+        // Directory might not exist, log and continue
+        const errorMsg = error instanceof Error ? error.message : String(error)
+        this.index.errors.push({ path: dirPath, error: errorMsg })
         continue
       }
     }
@@ -110,7 +115,9 @@ class FileIndexer {
         }
       }
     } catch (error) {
-      // Skip unreadable directories
+      // Log unreadable directories for debugging
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      this.index.errors.push({ path: dirPath, error: errorMsg })
     }
   }
 
@@ -148,7 +155,9 @@ class FileIndexer {
       }
       this.index.byExtension.get(ext)!.add(relativePath)
     } catch (error) {
-      // Skip unreadable files
+      // Log unreadable files for debugging
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      this.index.errors.push({ path: fullPath, error: errorMsg })
     }
   }
 
@@ -199,6 +208,7 @@ class FileIndexer {
       byExtension: {} as Record<string, number>,
       totalSize: 0,
       lastUpdated: this.index.lastUpdated,
+      errors: this.index.errors.length,
     }
 
     // Count by type
@@ -220,6 +230,13 @@ class FileIndexer {
   }
 
   /**
+   * Get indexing errors for debugging
+   */
+  getErrors() {
+    return this.index.errors
+  }
+
+  /**
    * Clear index
    */
   clear(): void {
@@ -228,6 +245,7 @@ class FileIndexer {
       byType: new Map(),
       byExtension: new Map(),
       lastUpdated: new Date(),
+      errors: [],
     }
   }
 }

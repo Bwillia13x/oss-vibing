@@ -3,6 +3,9 @@ import { fileIndexer, initializeFileIndex, searchArtifacts } from '@/lib/file-in
 import { perfMonitor } from '@/lib/performance'
 import { apiCache } from '@/lib/cache'
 
+// Prevent concurrent initializations
+let initializing = false
+
 /**
  * File management API for Phase 3.4.1 Database Optimization
  * GET /api/files - Get file statistics
@@ -13,22 +16,43 @@ export async function GET(req: NextRequest) {
   return perfMonitor.time('api.files', async () => {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('search')
-    const type = searchParams.get('type') as any
+    const typeParam = searchParams.get('type')
+    
+    // Validate type parameter
+    const validTypes = ['document', 'sheet', 'deck', 'note', 'reference', 'quiz', 'course', 'other']
+    if (typeParam && !validTypes.includes(typeParam)) {
+      return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 })
+    }
 
     // Initialize index if empty (first request)
     const stats = fileIndexer.getStats()
-    if (stats.totalFiles === 0) {
-      await initializeFileIndex()
+    if (stats.totalFiles === 0 && !initializing) {
+      initializing = true
+      try {
+        await initializeFileIndex()
+      } finally {
+        initializing = false
+      }
     }
 
     // Handle search queries
     if (search) {
-      const results = searchArtifacts(search, type)
+      // Validate search parameter
+      if (search.length < 2) {
+        return NextResponse.json({ error: 'Search query must be at least 2 characters' }, { status: 400 })
+      }
+      if (search.length > 100) {
+        return NextResponse.json({ error: 'Search query too long' }, { status: 400 })
+      }
+      
+      const results = searchArtifacts(search, typeParam as any)
       return NextResponse.json({
         query: search,
-        type: type || 'all',
+        type: typeParam || 'all',
         count: results.length,
         results: results.slice(0, 50), // Limit to 50 results
+        hasMore: results.length > 50,
+        totalCount: results.length,
       })
     }
 

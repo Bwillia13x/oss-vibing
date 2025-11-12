@@ -45,14 +45,30 @@ class PerformanceMonitor {
   ): Promise<T> {
     const start = performance.now()
     try {
-      const result = await fn()
-      const duration = performance.now() - start
-      this.record(name, duration, metadata)
-      return result
+      const result = fn()
+      if (result && typeof (result as any).then === 'function') {
+        // Async case
+        return (result as Promise<T>)
+          .then((value) => {
+            const duration = performance.now() - start
+            this.record(name, duration, metadata)
+            return value
+          })
+          .catch((error) => {
+            const duration = performance.now() - start
+            this.record(name, duration, { ...metadata, error: true })
+            throw error
+          })
+      } else {
+        // Sync case
+        const duration = performance.now() - start
+        this.record(name, duration, metadata)
+        return Promise.resolve(result as T)
+      }
     } catch (error) {
       const duration = performance.now() - start
       this.record(name, duration, { ...metadata, error: true })
-      throw error
+      return Promise.reject(error)
     }
   }
 
@@ -69,9 +85,9 @@ class PerformanceMonitor {
     const sum = durations.reduce((a, b) => a + b, 0)
     const avg = sum / durations.length
     const sorted = [...durations].sort((a, b) => a - b)
-    const p50 = sorted[Math.floor(sorted.length * 0.5)]
-    const p95 = sorted[Math.floor(sorted.length * 0.95)]
-    const p99 = sorted[Math.floor(sorted.length * 0.99)]
+    const p50 = sorted[Math.ceil(sorted.length * 0.5) - 1]
+    const p95 = sorted[Math.ceil(sorted.length * 0.95) - 1]
+    const p99 = sorted[Math.ceil(sorted.length * 0.99) - 1]
 
     return {
       count: filtered.length,
