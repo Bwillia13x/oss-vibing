@@ -1,0 +1,51 @@
+{
+  "name": "Data Analysis Template",
+  "description": "Statistical analysis template for quantitative research",
+  "category": "analysis",
+  "discipline": "general",
+  "content": {
+    "title": "Data Analysis Spreadsheet",
+    "sheets": [
+      {
+        "name": "Raw Data",
+        "rows": [
+          ["Variable 1", "Variable 2", "Variable 3", "Notes"],
+          ["", "", "", ""],
+          ["", "", "", ""]
+        ]
+      },
+      {
+        "name": "Descriptive Statistics",
+        "rows": [
+          ["Statistic", "Variable 1", "Variable 2", "Variable 3"],
+          ["Count", "", "", ""],
+          ["Mean", "", "", ""],
+          ["Median", "", "", ""],
+          ["Mode", "", "", ""],
+          ["Std Dev", "", "", ""],
+          ["Min", "", "", ""],
+          ["Max", "", "", ""],
+          ["Range", "", "", ""]
+        ]
+      },
+      {
+        "name": "Correlation Analysis",
+        "rows": [
+          ["", "Variable 1", "Variable 2", "Variable 3"],
+          ["Variable 1", "1.00", "", ""],
+          ["Variable 2", "", "1.00", ""],
+          ["Variable 3", "", "", "1.00"]
+        ]
+      },
+      {
+        "name": "Hypothesis Testing",
+        "rows": [
+          ["Test Type", "Null Hypothesis", "p-value", "Result", "Conclusion"],
+          ["t-test", "", "", "", ""],
+          ["ANOVA", "", "", "", ""],
+          ["Chi-square", "", "", "", ""]
+        ]
+      }
+    ]
+  }
+}

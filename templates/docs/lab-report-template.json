@@ -1,0 +1,202 @@
+{
+  "name": "Lab Report Template",
+  "description": "Standard scientific lab report format for STEM courses",
+  "category": "lab-report",
+  "discipline": "stem",
+  "content": {
+    "title": "Lab Report Title",
+    "sections": [
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Title"
+      },
+      {
+        "type": "paragraph",
+        "content": "Experiment Title: [Descriptive title of the experiment]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Student Name: [Your name]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Lab Partner(s): [Partner names]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Course: [Course name and number]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Date Performed: [Date]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Date Submitted: [Date]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Abstract"
+      },
+      {
+        "type": "paragraph",
+        "content": "Brief summary of the experiment (150-250 words): Include the purpose, methods, key results, and main conclusions. Write this section last."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Introduction"
+      },
+      {
+        "type": "paragraph",
+        "content": "Background: Provide relevant scientific background and theory. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Purpose: State the specific objectives of the experiment."
+      },
+      {
+        "type": "paragraph",
+        "content": "Hypothesis: Present your hypothesis or prediction."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Materials and Methods"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "Materials"
+      },
+      {
+        "type": "paragraph",
+        "content": "List all equipment, chemicals, and materials used:"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Item 1"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Item 2"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Item 3"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "Procedure"
+      },
+      {
+        "type": "paragraph",
+        "content": "Describe the experimental procedure in past tense, passive voice. Be detailed enough that someone could replicate your experiment."
+      },
+      {
+        "type": "paragraph",
+        "content": "Step 1: [First step of procedure]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Step 2: [Second step]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Step 3: [Continue as needed]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Results"
+      },
+      {
+        "type": "paragraph",
+        "content": "Present your data objectively without interpretation. Include:"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Tables of raw data"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Graphs and figures"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Calculations (show one example)"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Statistical analysis if applicable"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Table 1: Sample data table]"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Figure 1: Sample graph or figure]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Discussion"
+      },
+      {
+        "type": "paragraph",
+        "content": "Interpretation: Explain what the results mean and whether they support your hypothesis."
+      },
+      {
+        "type": "paragraph",
+        "content": "Comparison: Compare your results with expected values or literature. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Sources of Error: Discuss potential sources of experimental error and their impact."
+      },
+      {
+        "type": "paragraph",
+        "content": "Improvements: Suggest how the experiment could be improved."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Conclusion"
+      },
+      {
+        "type": "paragraph",
+        "content": "Summarize the main findings and state whether the hypothesis was supported. Keep it concise (2-3 sentences)."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "References"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Citations will be automatically generated here in appropriate scientific format]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Appendices"
+      },
+      {
+        "type": "paragraph",
+        "content": "Appendix A: Raw Data Tables"
+      },
+      {
+        "type": "paragraph",
+        "content": "Appendix B: Sample Calculations"
+      },
+      {
+        "type": "paragraph",
+        "content": "Appendix C: Additional Figures"
+      }
+    ]
+  }
+}

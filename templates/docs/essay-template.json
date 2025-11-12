@@ -1,0 +1,113 @@
+{
+  "name": "Academic Essay Template",
+  "description": "Standard 5-paragraph essay structure with introduction, body paragraphs, and conclusion",
+  "category": "essay",
+  "discipline": "general",
+  "content": {
+    "title": "Essay Title",
+    "sections": [
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Introduction"
+      },
+      {
+        "type": "paragraph",
+        "content": "Hook: Start with an engaging opening sentence that captures the reader's attention."
+      },
+      {
+        "type": "paragraph",
+        "content": "Background: Provide necessary context and background information on your topic."
+      },
+      {
+        "type": "paragraph",
+        "content": "Thesis Statement: Clearly state your main argument or claim that you will support throughout the essay."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Body Paragraph 1"
+      },
+      {
+        "type": "paragraph",
+        "content": "Topic Sentence: Introduce the first main point that supports your thesis."
+      },
+      {
+        "type": "paragraph",
+        "content": "Evidence: Provide evidence from credible sources to support your point. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Analysis: Explain how this evidence supports your thesis and why it is important."
+      },
+      {
+        "type": "paragraph",
+        "content": "Transition: Connect this point to the next paragraph."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Body Paragraph 2"
+      },
+      {
+        "type": "paragraph",
+        "content": "Topic Sentence: Introduce your second main point."
+      },
+      {
+        "type": "paragraph",
+        "content": "Evidence: Provide additional evidence from credible sources. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Analysis: Analyze how this evidence strengthens your argument."
+      },
+      {
+        "type": "paragraph",
+        "content": "Transition: Connect to the next paragraph."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Body Paragraph 3"
+      },
+      {
+        "type": "paragraph",
+        "content": "Topic Sentence: Introduce your third main point or counterargument."
+      },
+      {
+        "type": "paragraph",
+        "content": "Evidence: Provide supporting evidence or address counterarguments. [Citation needed]"
+      },
+      {
+        "type": "paragraph",
+        "content": "Analysis: Explain the significance and relate it back to your thesis."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Conclusion"
+      },
+      {
+        "type": "paragraph",
+        "content": "Restate Thesis: Rephrase your thesis in light of the evidence presented."
+      },
+      {
+        "type": "paragraph",
+        "content": "Summary: Briefly summarize the main points you made in your body paragraphs."
+      },
+      {
+        "type": "paragraph",
+        "content": "Closing Thought: End with a thought-provoking statement or call to action that leaves a lasting impression."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "References"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Citations will be automatically generated here]"
+      }
+    ]
+  }
+}

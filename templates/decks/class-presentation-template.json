@@ -1,0 +1,103 @@
+{
+  "name": "Class Presentation Template",
+  "description": "General purpose class presentation template",
+  "category": "presentation",
+  "discipline": "general",
+  "content": {
+    "title": "Class Presentation",
+    "slides": [
+      {
+        "type": "title",
+        "title": "Presentation Title",
+        "subtitle": "Student Name | Course Name | Date"
+      },
+      {
+        "type": "content",
+        "title": "Agenda",
+        "bullets": [
+          "Topic overview",
+          "Main point 1",
+          "Main point 2",
+          "Main point 3",
+          "Conclusion"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Introduction",
+        "bullets": [
+          "Hook or interesting fact",
+          "Background information",
+          "Why this topic matters",
+          "Preview of what's to come"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Main Point 1",
+        "bullets": [
+          "Key concept or idea",
+          "Supporting detail",
+          "Example or illustration",
+          "Connection to topic"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Main Point 2",
+        "bullets": [
+          "Second key concept",
+          "Supporting detail",
+          "Evidence or example",
+          "Significance"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Main Point 3",
+        "bullets": [
+          "Third key concept",
+          "Supporting detail",
+          "Real-world application",
+          "Impact or implications"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Summary",
+        "bullets": [
+          "Recap main point 1",
+          "Recap main point 2",
+          "Recap main point 3",
+          "Overall takeaway"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Conclusion",
+        "bullets": [
+          "Final thoughts",
+          "Call to action or next steps",
+          "Questions to ponder"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "References",
+        "bullets": [
+          "[Citation 1]",
+          "[Citation 2]",
+          "[Citation 3]"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Questions?",
+        "bullets": [
+          "Thank you!",
+          "Open for discussion"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "Budget Tracker Template",
+  "description": "Simple budget and expense tracker for students",
+  "category": "finance",
+  "discipline": "general",
+  "content": {
+    "title": "Student Budget Tracker",
+    "sheets": [
+      {
+        "name": "Monthly Budget",
+        "rows": [
+          ["Category", "Budgeted", "Actual", "Difference", "Notes"],
+          ["Income", "", "", "", ""],
+          ["  Salary/Stipend", "", "", "", ""],
+          ["  Financial Aid", "", "", "", ""],
+          ["  Other Income", "", "", "", ""],
+          ["Total Income", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["Expenses", "", "", "", ""],
+          ["  Housing/Rent", "", "", "", ""],
+          ["  Utilities", "", "", "", ""],
+          ["  Groceries", "", "", "", ""],
+          ["  Transportation", "", "", "", ""],
+          ["  Books/Supplies", "", "", "", ""],
+          ["  Entertainment", "", "", "", ""],
+          ["  Other", "", "", "", ""],
+          ["Total Expenses", "", "", "", ""],
+          ["", "", "", "", ""],
+          ["Net (Income - Expenses)", "", "", "", ""]
+        ]
+      },
+      {
+        "name": "Transaction Log",
+        "rows": [
+          ["Date", "Description", "Category", "Amount", "Balance"],
+          ["", "", "", "", ""]
+        ]
+      }
+    ]
+  }
+}

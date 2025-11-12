@@ -1,8 +1,11 @@
 // Phase 3.1.1: Service Worker for Offline Support and Caching
-const CACHE_NAME = 'vibe-university-v1'
+const CACHE_NAME = 'vibe-university-v2'
 const STATIC_ASSETS = [
   '/',
   '/globals.css',
+  '/manifest.json',
+  '/next.svg',
+  '/vercel.svg',
 ]
 
 // Install event - cache static assets
