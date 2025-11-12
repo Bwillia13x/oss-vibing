@@ -68,7 +68,7 @@ export const dataPartSchema = z.object({
   }),
   'uni-sheet-analyze': z.object({
     range: z.string(),
-    ops: z.array(z.enum(['describe', 'pivot', 'regress', 'corr', 'clean'])),
+    ops: z.array(z.enum(['describe', 'pivot', 'regress', 'corr', 'clean', 'ttest', 'anova', 'chisquare', 'confidence'])),
     tables: z.array(z.object({
       name: z.string(),
       data: z.any(),

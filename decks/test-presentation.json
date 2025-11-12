@@ -1,0 +1,31 @@
+{
+  "title": "Test Presentation",
+  "author": "Test Author",
+  "date": "2025-11-12",
+  "description": "A test presentation for PPTX export",
+  "slides": [
+    {
+      "title": "Introduction",
+      "content": "This is a test slide for PPTX export functionality.",
+      "bullets": [
+        "First point about testing",
+        "Second point about exports",
+        "Third point about quality"
+      ],
+      "notes": "These are speaker notes for the introduction slide."
+    },
+    {
+      "title": "Key Findings",
+      "content": "This slide contains our main findings from the research.",
+      "bullets": [
+        "Finding number one",
+        "Finding number two",
+        "Conclusion based on findings"
+      ]
+    }
+  ],
+  "metadata": {
+    "created": "2025-11-12T13:31:37.095Z",
+    "version": "1.0"
+  }
+}
