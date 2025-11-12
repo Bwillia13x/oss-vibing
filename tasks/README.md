@@ -15,7 +15,7 @@ Each task includes:
 {
   "id": "essay-climate-change",
   "title": "Research Essay on Climate Change",
-  "description": "Write a 10-page research paper on climate change impacts",
+  "description": "Write a 10-page research paper on climate change impacts on agricultural sustainability with at least 10 scholarly sources in APA format",
   "course": "ENV-101",
   "dueAt": "2025-12-01T23:59:59.000Z",
   "priority": "high",
