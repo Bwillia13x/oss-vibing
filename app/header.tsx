@@ -1,5 +1,6 @@
 import { ToggleWelcome } from '@/components/modals/welcome'
 import { VercelDashed } from '@/components/icons/vercel-dashed'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -16,6 +17,7 @@ export async function Header({ className }: Props) {
         </span>
       </div>
       <div className="flex items-center ml-auto space-x-1.5">
+        <ThemeToggle />
         <ToggleWelcome />
       </div>
     </header>
