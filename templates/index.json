@@ -54,6 +54,51 @@
         "discipline": "business",
         "file": "case-study-template.json",
         "icon": "💼"
+      },
+      {
+        "id": "literature-review",
+        "name": "Literature Review Template",
+        "description": "Comprehensive literature review template for academic research papers",
+        "category": "research",
+        "discipline": "general",
+        "file": "literature-review-template.json",
+        "icon": "📚"
+      },
+      {
+        "id": "annotated-bibliography",
+        "name": "Annotated Bibliography Template",
+        "description": "Annotated bibliography template with summary, evaluation, and reflection for each source",
+        "category": "research",
+        "discipline": "general",
+        "file": "annotated-bibliography-template.json",
+        "icon": "📖"
+      },
+      {
+        "id": "reflection-paper",
+        "name": "Reflection Paper Template",
+        "description": "Reflective essay template for analyzing personal learning experiences and growth",
+        "category": "essay",
+        "discipline": "humanities",
+        "file": "reflection-paper-template.json",
+        "icon": "💭"
+      },
+      {
+        "id": "book-review",
+        "name": "Book Review Template",
+        "description": "Academic book review template for critical analysis of scholarly works",
+        "category": "review",
+        "discipline": "humanities",
+        "file": "book-review-template.json",
+        "icon": "📕"
+      },
+      {
+        "id": "policy-brief",
+        "name": "Policy Brief Template",
+        "description": "Professional policy brief template for analyzing issues and recommending solutions",
+        "category": "policy",
+        "discipline": "social-science",
+        "file": "policy-brief-template.json",
+        "icon": "📋"
       }
     ],
     "sheets": [
@@ -129,6 +174,8 @@
     "research": "Research Papers",
     "lab-report": "Lab Reports",
     "case-study": "Case Studies",
+    "review": "Reviews & Critiques",
+    "policy": "Policy & Analysis",
     "analysis": "Data Analysis",
     "finance": "Finance & Budgeting",
     "project-management": "Project Management",

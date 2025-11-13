@@ -1,0 +1,70 @@
+{
+  "id": "reflection-paper",
+  "name": "Reflection Paper Template",
+  "type": "doc",
+  "category": "essay",
+  "discipline": "humanities",
+  "description": "Reflective essay template for analyzing personal learning experiences and growth",
+  "icon": "💭",
+  "content": {
+    "title": "Reflection Paper",
+    "sections": [
+      {
+        "id": "introduction",
+        "title": "Introduction",
+        "content": "## Introduction\n\n### Context\n[Briefly introduce the experience, course, reading, or event you are reflecting upon]\n\n### Purpose\n[Explain the purpose of this reflection and what you hope to explore or learn]\n\n### Thesis Statement\n[State your main insight or learning from the experience]\n\n*Example: \"Through [experience], I discovered that [main insight], which has fundamentally changed how I approach [topic/skill].\"*",
+        "placeholder": "Introduce what you're reflecting on and your main insight..."
+      },
+      {
+        "id": "description",
+        "title": "Description of Experience",
+        "content": "## Description of Experience\n\n### What Happened\n[Provide an objective description of the experience, event, reading, or activity]\n\n### Key Moments\n[Identify the most significant moments or aspects]\n- **Moment 1**: [Description]\n- **Moment 2**: [Description]\n- **Moment 3**: [Description]\n\n### Initial Reactions\n[Describe your initial thoughts and feelings]",
+        "placeholder": "Describe the experience you're reflecting on..."
+      },
+      {
+        "id": "analysis",
+        "title": "Analysis and Reflection",
+        "content": "## Analysis and Reflection\n\n### What Did I Learn?\n[Analyze what you learned from this experience]\n\n### How Did I Learn It?\n[Reflect on the learning process itself]\n\n### Why Is It Important?\n[Explain the significance of what you learned]\n\n### Connections to Course Material\n[Connect your experience to theories, concepts, or readings from the course]\n- **Concept 1**: [How it relates to your experience]\n- **Concept 2**: [How it relates to your experience]\n\n### Critical Insights\n[Provide deeper analysis and critical thinking about the experience]",
+        "placeholder": "Analyze what you learned and why it matters..."
+      },
+      {
+        "id": "personal-growth",
+        "title": "Personal Growth and Change",
+        "content": "## Personal Growth and Change\n\n### Before vs. After\n[Compare your understanding or perspective before and after the experience]\n\n**Before**: [Your previous understanding/beliefs]\n\n**After**: [Your new understanding/beliefs]\n\n### Skills Developed\n[Identify specific skills you developed or improved]\n- Skill 1: [Description and examples]\n- Skill 2: [Description and examples]\n- Skill 3: [Description and examples]\n\n### Challenges Overcome\n[Discuss challenges you faced and how you addressed them]\n\n### Changed Perspectives\n[Explain how your perspective has changed]",
+        "placeholder": "Reflect on your personal growth..."
+      },
+      {
+        "id": "application",
+        "title": "Application and Future Action",
+        "content": "## Application and Future Action\n\n### How Will I Apply This Learning?\n[Discuss how you will apply what you've learned in future situations]\n\n### Specific Action Steps\n1. [Action step 1]\n2. [Action step 2]\n3. [Action step 3]\n\n### Goals for Continued Growth\n[Set goals for continuing to develop in this area]\n\n### Areas for Further Exploration\n[Identify topics or skills you want to explore further]",
+        "placeholder": "Explain how you'll apply your learning..."
+      },
+      {
+        "id": "conclusion",
+        "title": "Conclusion",
+        "content": "## Conclusion\n\n### Summary of Key Insights\n[Summarize your main insights and learning]\n\n### Significance\n[Reflect on the overall significance of this experience for your personal and academic development]\n\n### Final Thoughts\n[Provide closing reflections on the experience and your growth]",
+        "placeholder": "Conclude your reflection..."
+      }
+    ]
+  },
+  "metadata": {
+    "author": "Vibe University",
+    "version": "1.0",
+    "created": "2025-11-13",
+    "tags": ["reflection", "essay", "personal-growth", "learning", "experience", "humanities"],
+    "citationStyle": "apa",
+    "estimatedLength": "3-5 pages",
+    "targetAudience": "undergraduate"
+  },
+  "instructions": [
+    "Use first-person perspective (I, my, me)",
+    "Balance description with analysis and reflection",
+    "Connect personal experiences to academic concepts",
+    "Be honest and authentic in your reflections",
+    "Show evidence of critical thinking and self-awareness",
+    "Use specific examples to illustrate your points",
+    "Demonstrate learning and growth",
+    "Consider multiple perspectives",
+    "Maintain a thoughtful, analytical tone while being personal"
+  ]
+}

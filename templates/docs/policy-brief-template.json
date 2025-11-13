@@ -1,0 +1,85 @@
+{
+  "id": "policy-brief",
+  "name": "Policy Brief Template",
+  "type": "doc",
+  "category": "policy",
+  "discipline": "social-science",
+  "description": "Professional policy brief template for analyzing issues and recommending solutions",
+  "icon": "📋",
+  "content": {
+    "title": "Policy Brief: [Policy Issue Title]",
+    "sections": [
+      {
+        "id": "executive-summary",
+        "title": "Executive Summary",
+        "content": "## Executive Summary\n\n[Provide a concise overview (150-200 words) of the policy issue, key findings, and main recommendations. This should be a standalone section that busy decision-makers can read quickly.]\n\n**Issue**: [One sentence describing the problem]\n\n**Key Findings**: [2-3 bullet points of critical findings]\n- Finding 1\n- Finding 2\n- Finding 3\n\n**Recommendations**: [2-3 key policy recommendations]\n1. Recommendation 1\n2. Recommendation 2\n3. Recommendation 3",
+        "placeholder": "Write a concise executive summary..."
+      },
+      {
+        "id": "introduction",
+        "title": "Introduction and Context",
+        "content": "## Introduction and Context\n\n### Policy Issue\n[Clearly define the policy problem or issue]\n\n### Importance and Urgency\n[Explain why this issue matters now and why it requires attention]\n\n### Scope\n[Define the scope of the brief - geographical area, time frame, affected populations]\n\n### Background\n[Provide relevant historical or contextual background]",
+        "placeholder": "Introduce the policy issue..."
+      },
+      {
+        "id": "problem-statement",
+        "title": "Problem Statement",
+        "content": "## Problem Statement\n\n### Current Situation\n[Describe the current state of affairs]\n\n### Key Statistics and Evidence\n- **Statistic 1**: [Data point with source]\n- **Statistic 2**: [Data point with source]\n- **Statistic 3**: [Data point with source]\n\n### Affected Stakeholders\n[Identify who is affected by this issue and how]\n- **Stakeholder Group 1**: [Impact description]\n- **Stakeholder Group 2**: [Impact description]\n- **Stakeholder Group 3**: [Impact description]\n\n### Consequences of Inaction\n[Explain what will happen if the problem is not addressed]",
+        "placeholder": "Define the problem clearly..."
+      },
+      {
+        "id": "policy-landscape",
+        "title": "Current Policy Landscape",
+        "content": "## Current Policy Landscape\n\n### Existing Policies\n[Describe current relevant policies and regulations]\n\n### Policy Gaps\n[Identify gaps in current policy approaches]\n\n### Previous Interventions\n[Discuss what has been tried before and the results]\n\n### Jurisdictional Considerations\n[Note relevant jurisdictional issues - federal, state, local]",
+        "placeholder": "Analyze the current policy landscape..."
+      },
+      {
+        "id": "policy-options",
+        "title": "Policy Options",
+        "content": "## Policy Options\n\n### Option 1: [Policy Option Name]\n\n**Description**: [Detailed description of the policy option]\n\n**Pros**:\n- Pro 1\n- Pro 2\n- Pro 3\n\n**Cons**:\n- Con 1\n- Con 2\n- Con 3\n\n**Implementation**: [Key implementation considerations]\n\n**Cost**: [Estimated costs]\n\n---\n\n### Option 2: [Policy Option Name]\n\n**Description**: [Detailed description of the policy option]\n\n**Pros**:\n- Pro 1\n- Pro 2\n- Pro 3\n\n**Cons**:\n- Con 1\n- Con 2\n- Con 3\n\n**Implementation**: [Key implementation considerations]\n\n**Cost**: [Estimated costs]\n\n---\n\n### Option 3: [Policy Option Name]\n\n**Description**: [Detailed description of the policy option]\n\n**Pros**:\n- Pro 1\n- Pro 2\n- Pro 3\n\n**Cons**:\n- Con 1\n- Con 2\n- Con 3\n\n**Implementation**: [Key implementation considerations]\n\n**Cost**: [Estimated costs]",
+        "placeholder": "Present policy options..."
+      },
+      {
+        "id": "recommendations",
+        "title": "Recommendations",
+        "content": "## Recommendations\n\n### Primary Recommendation: [Recommended Option]\n\n[Clearly state which policy option you recommend and why]\n\n### Rationale\n[Provide detailed justification for your recommendation based on:\n- Evidence and research\n- Cost-effectiveness\n- Feasibility\n- Political viability\n- Stakeholder support]\n\n### Implementation Strategy\n\n**Phase 1**: [Short-term actions (0-6 months)]\n- Action 1\n- Action 2\n- Action 3\n\n**Phase 2**: [Medium-term actions (6-18 months)]\n- Action 1\n- Action 2\n- Action 3\n\n**Phase 3**: [Long-term actions (18+ months)]\n- Action 1\n- Action 2\n- Action 3\n\n### Resource Requirements\n- **Financial**: [Budget estimate]\n- **Personnel**: [Staffing needs]\n- **Infrastructure**: [Infrastructure needs]\n- **Technology**: [Technology requirements]\n\n### Success Metrics\n[Define measurable outcomes to evaluate policy success]\n1. Metric 1: [Specific, measurable indicator]\n2. Metric 2: [Specific, measurable indicator]\n3. Metric 3: [Specific, measurable indicator]",
+        "placeholder": "Make your recommendations..."
+      },
+      {
+        "id": "conclusion",
+        "title": "Conclusion",
+        "content": "## Conclusion\n\n### Summary\n[Briefly summarize the issue and your recommendations]\n\n### Call to Action\n[State clearly what action you want decision-makers to take]\n\n### Next Steps\n[Outline immediate next steps]\n\n### Contact Information\n[Provide contact information for follow-up]",
+        "placeholder": "Conclude with a strong call to action..."
+      },
+      {
+        "id": "references",
+        "title": "References and Resources",
+        "content": "## References and Resources\n\n### Sources Cited\n[List all sources cited in the brief]\n\n### Additional Resources\n[Provide links to additional relevant resources]\n\n### Data Sources\n[List data sources used]",
+        "placeholder": "Add references..."
+      }
+    ]
+  },
+  "metadata": {
+    "author": "Vibe University",
+    "version": "1.0",
+    "created": "2025-11-13",
+    "tags": ["policy-brief", "policy-analysis", "recommendations", "social-science", "government", "public-policy"],
+    "citationStyle": "chicago",
+    "estimatedLength": "6-10 pages",
+    "targetAudience": "graduate-professional"
+  },
+  "instructions": [
+    "Keep language clear, concise, and jargon-free",
+    "Use headings and bullet points for easy scanning",
+    "Lead with the most important information",
+    "Support all claims with credible evidence",
+    "Be objective and balanced in presenting options",
+    "Make specific, actionable recommendations",
+    "Include cost estimates when possible",
+    "Consider implementation feasibility",
+    "Identify key stakeholders and their positions",
+    "Use graphics and charts to illustrate key data",
+    "Keep the executive summary brief and powerful",
+    "Target length: 6-10 pages maximum"
+  ]
+}

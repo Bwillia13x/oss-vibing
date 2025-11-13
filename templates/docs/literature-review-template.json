@@ -1,0 +1,80 @@
+{
+  "id": "literature-review",
+  "name": "Literature Review Template",
+  "type": "doc",
+  "category": "research",
+  "discipline": "general",
+  "description": "Comprehensive literature review template for academic research papers",
+  "icon": "📚",
+  "content": {
+    "title": "Literature Review",
+    "sections": [
+      {
+        "id": "introduction",
+        "title": "Introduction",
+        "content": "## Introduction\n\nProvide an overview of the topic and the scope of the literature review. Explain the purpose and significance of reviewing the existing literature on this subject.\n\n### Research Question/Thesis\n[State your research question or thesis statement here]\n\n### Scope and Organization\nThis literature review covers [time period/geographical scope/theoretical framework] and is organized [thematically/chronologically/methodologically].",
+        "placeholder": "Introduce your literature review topic and explain its significance..."
+      },
+      {
+        "id": "theoretical-framework",
+        "title": "Theoretical Framework",
+        "content": "## Theoretical Framework\n\nDiscuss the theoretical foundations and key concepts that underpin your literature review.\n\n### Key Concepts\n- **Concept 1**: [Definition and importance]\n- **Concept 2**: [Definition and importance]\n- **Concept 3**: [Definition and importance]\n\n### Theoretical Perspectives\n[Discuss the main theoretical approaches relevant to your topic]",
+        "placeholder": "Establish the theoretical foundations of your review..."
+      },
+      {
+        "id": "theme-1",
+        "title": "Theme 1: [Your Theme]",
+        "content": "## [First Major Theme]\n\n### Overview\n[Introduce this thematic section]\n\n### Key Findings\n- **Study 1** (Author, Year): [Key findings and contribution]\n- **Study 2** (Author, Year): [Key findings and contribution]\n- **Study 3** (Author, Year): [Key findings and contribution]\n\n### Critical Analysis\n[Analyze the strengths, limitations, and gaps in this body of literature]",
+        "placeholder": "Discuss your first major theme..."
+      },
+      {
+        "id": "theme-2",
+        "title": "Theme 2: [Your Theme]",
+        "content": "## [Second Major Theme]\n\n### Overview\n[Introduce this thematic section]\n\n### Key Findings\n- **Study 1** (Author, Year): [Key findings and contribution]\n- **Study 2** (Author, Year): [Key findings and contribution]\n- **Study 3** (Author, Year): [Key findings and contribution]\n\n### Critical Analysis\n[Analyze the strengths, limitations, and gaps in this body of literature]",
+        "placeholder": "Discuss your second major theme..."
+      },
+      {
+        "id": "theme-3",
+        "title": "Theme 3: [Your Theme]",
+        "content": "## [Third Major Theme]\n\n### Overview\n[Introduce this thematic section]\n\n### Key Findings\n- **Study 1** (Author, Year): [Key findings and contribution]\n- **Study 2** (Author, Year): [Key findings and contribution]\n- **Study 3** (Author, Year): [Key findings and contribution]\n\n### Critical Analysis\n[Analyze the strengths, limitations, and gaps in this body of literature]",
+        "placeholder": "Discuss your third major theme..."
+      },
+      {
+        "id": "synthesis",
+        "title": "Synthesis and Critical Analysis",
+        "content": "## Synthesis and Critical Analysis\n\n### Synthesis of Key Findings\n[Synthesize the main findings across themes and identify patterns, agreements, and contradictions]\n\n### Methodological Considerations\n[Discuss the research methods used in the reviewed literature and their implications]\n\n### Research Gaps\n[Identify gaps in the current literature]\n\n### Debates and Controversies\n[Highlight areas of disagreement or ongoing debates in the field]",
+        "placeholder": "Synthesize findings and identify research gaps..."
+      },
+      {
+        "id": "conclusion",
+        "title": "Conclusion",
+        "content": "## Conclusion\n\n### Summary of Key Insights\n[Summarize the main insights from your literature review]\n\n### Implications\n[Discuss the implications for future research, practice, or policy]\n\n### Future Research Directions\n[Suggest directions for future research based on identified gaps]\n\n### Contribution\n[Explain how this literature review contributes to the field]",
+        "placeholder": "Conclude your literature review..."
+      },
+      {
+        "id": "references",
+        "title": "References",
+        "content": "## References\n\n[Your references will be automatically formatted here based on your citation style]",
+        "placeholder": "Add your references..."
+      }
+    ]
+  },
+  "metadata": {
+    "author": "Vibe University",
+    "version": "1.0",
+    "created": "2025-11-13",
+    "tags": ["literature-review", "research", "academic", "review", "synthesis"],
+    "citationStyle": "apa",
+    "estimatedLength": "15-25 pages",
+    "targetAudience": "undergraduate-graduate"
+  },
+  "instructions": [
+    "Use a clear organizational structure (thematic, chronological, or methodological)",
+    "Critically analyze sources rather than just summarizing them",
+    "Identify patterns, themes, and gaps in the literature",
+    "Synthesize findings across studies",
+    "Maintain an objective, analytical tone",
+    "Use proper citations for all sources",
+    "Connect the literature to your research question"
+  ]
+}
