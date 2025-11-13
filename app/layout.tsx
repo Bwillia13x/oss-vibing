@@ -45,13 +45,14 @@ export const metadata: Metadata = {
   },
 }
 
-// Phase 3.1.1: Separate viewport export (Next.js 15 requirement)
+// Phase 3.1.1 & 3.3.1: Separate viewport export (Next.js 15 requirement) with mobile optimizations
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
   themeColor: '#000000',
+  viewportFit: 'cover', // Phase 3.3.1: Support for devices with notches (iPhone X+)
 }
 
 export default function RootLayout({
