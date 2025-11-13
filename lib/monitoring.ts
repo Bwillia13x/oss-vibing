@@ -43,7 +43,7 @@ class MonitoringService {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('[METRIC]', name, ':', value, tags || '')
+      console.log('[METRIC]', name, ':', value, tags ? JSON.stringify(tags) : '')
     }
   }
 

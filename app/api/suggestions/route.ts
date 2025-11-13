@@ -36,8 +36,35 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url)
   const type = searchParams.get('type')
-  const input = searchParams.get('input') || ''
-  const content = searchParams.get('content') || ''
+  const inputRaw = searchParams.get('input')
+  const contentRaw = searchParams.get('content')
+
+  // Validate and sanitize input parameters
+  function validateParam(param: string | null, paramName: string, maxLength: number): string {
+    if (param === null) {
+      return ''
+    }
+    if (typeof param !== 'string') {
+      throw new Error(`Parameter "${paramName}" must be a string.`)
+    }
+    if (param.length > maxLength) {
+      throw new Error(`Parameter "${paramName}" exceeds maximum length of ${maxLength} characters.`)
+    }
+    // Remove control characters (except newline/tab)
+    return param.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
+  }
+
+  let input = ''
+  let content = ''
+  try {
+    input = validateParam(inputRaw, 'input', 1000)
+    content = validateParam(contentRaw, 'content', 10000)
+  } catch (validationError: any) {
+    return NextResponse.json(
+      { error: validationError.message },
+      { status: 400 }
+    )
+  }
 
   try {
     switch (type) {

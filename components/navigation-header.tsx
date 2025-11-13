@@ -26,12 +26,12 @@ export function NavigationHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const navigation = [
-    { name: 'Documents', href: '#', icon: FileText, description: 'Write essays and papers' },
-    { name: 'Sheets', href: '#', icon: PieChart, description: 'Analyze data' },
-    { name: 'Decks', href: '#', icon: Presentation, description: 'Create presentations' },
-    { name: 'Notes', href: '#', icon: StickyNote, description: 'Take notes' },
-    { name: 'References', href: '#', icon: BookMarked, description: 'Manage citations' },
-    { name: 'Courses', href: '#', icon: BookOpen, description: 'View courses' },
+    { name: 'Documents', href: 'javascript:void(0)', icon: FileText, description: 'Write essays and papers' },
+    { name: 'Sheets', href: 'javascript:void(0)', icon: PieChart, description: 'Analyze data' },
+    { name: 'Decks', href: 'javascript:void(0)', icon: Presentation, description: 'Create presentations' },
+    { name: 'Notes', href: 'javascript:void(0)', icon: StickyNote, description: 'Take notes' },
+    { name: 'References', href: 'javascript:void(0)', icon: BookMarked, description: 'Manage citations' },
+    { name: 'Courses', href: 'javascript:void(0)', icon: BookOpen, description: 'View courses' },
   ]
 
   return (
@@ -65,19 +65,27 @@ export function NavigationHeader() {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
+          {/* TODO: Wire up Help button to open help/documentation dialog */}
           <Button
             variant="ghost"
             size="icon"
             title="Help & Documentation"
             aria-label="Help & Documentation"
+            onClick={() => {
+              console.log('Help button clicked - TODO: Open help dialog')
+            }}
           >
             <HelpCircle className="h-5 w-5" />
           </Button>
+          {/* TODO: Wire up Settings button to open settings dialog */}
           <Button
             variant="ghost"
             size="icon"
             title="Settings"
             aria-label="Settings"
+            onClick={() => {
+              console.log('Settings button clicked - TODO: Open settings dialog')
+            }}
           >
             <Settings className="h-5 w-5" />
           </Button>

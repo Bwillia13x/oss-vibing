@@ -35,22 +35,35 @@ export async function POST(req: Request) {
       )
     }
 
+    // Validate email format if provided
+    if (data.email && typeof data.email === 'string' && data.email.trim() !== '') {
+      // More strict email regex to avoid ReDoS - limits repetition
+      const emailRegex = /^[a-zA-Z0-9._-]{1,64}@[a-zA-Z0-9.-]{1,255}\.[a-zA-Z]{2,}$/
+      if (!emailRegex.test(data.email)) {
+        return NextResponse.json(
+          { error: 'Invalid email format.' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Track feedback metrics
     monitoring.trackMetric('user_feedback_rating', data.rating, {
       hasComment: data.feedback ? 'true' : 'false',
       hasEmail: data.email ? 'true' : 'false',
     })
 
-    // Log feedback (in production, this would go to a database or service)
+    // WARNING: Do NOT log sensitive user data (email, IP) in production.
+    // The following log redacts sensitive fields. Remove or further secure in production.
     console.log('[USER FEEDBACK]', {
       rating: data.rating,
       feedback: data.feedback,
       feature: data.feature,
-      email: data.email,
+      email: data.email ? '[REDACTED]' : undefined,
       timestamp: data.timestamp,
       userAgent: data.userAgent,
       url: data.url,
-      ip,
+      ip: ip !== 'anonymous' ? '[REDACTED]' : 'anonymous',
     })
 
     // In production, you would:

@@ -140,7 +140,7 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [currentIndex, isFlipped])
+  }, [currentIndex, isFlipped, handleFlip, handlePrevious, handleNext, handleAnswer])
 
   if (!currentCard) {
     return (
@@ -206,6 +206,12 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
         <div
           className="w-full max-w-2xl cursor-pointer"
           onClick={handleFlip}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              handleFlip()
+            }
+          }}
           role="button"
           tabIndex={0}
           aria-label={isFlipped ? 'Show front' : 'Show back'}

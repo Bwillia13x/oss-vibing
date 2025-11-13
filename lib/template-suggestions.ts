@@ -199,17 +199,17 @@ export function getAutoCompleteSuggestions(input: string): AutoCompleteItem[] {
  */
 export function detectCitationStyle(content: string): 'APA' | 'MLA' | 'Chicago' | 'unknown' {
   // APA: (Author, Year) or Author (Year)
-  if (content.match(/\([A-Z][a-z]+,\s*\d{4}\)/)) {
+  if (content.match(/\(\b[A-Z][a-z]{2,}\b,\s*\d{4}\)/)) {
     return 'APA'
   }
 
   // MLA: (Author page) or (Author page-page)
-  if (content.match(/\([A-Z][a-z]+\s+\d+(-\d+)?\)/)) {
+  if (content.match(/\(\b[A-Z][a-z]{2,}\b\s+\d+(-\d+)?\)/)) {
     return 'MLA'
   }
 
   // Chicago: superscript numbers or (Author Year, page)
-  if (content.match(/\([A-Z][a-z]+\s+\d{4},\s*\d+\)/)) {
+  if (content.match(/\(\b[A-Z][a-z]{2,}\b\s+\d{4},\s*\d+\)/)) {
     return 'Chicago'
   }
 
@@ -243,9 +243,10 @@ export function getWritingSuggestions(content: string): WritingSuggestion[] {
     const lowerLine = line.toLowerCase()
     for (const indicator of claimIndicators) {
       if (lowerLine.includes(indicator)) {
-        // Check if there's a citation nearby
+        // Check if there's a citation nearby (numeric references or author-year format)
         const hasCitation = line.match(/\([A-Z][a-z]+,?\s+\d{4}\)/) || 
-                           line.match(/\[[^\]]{1,100}\]/)
+                           line.match(/\[\d+(,\s*\d+)*\]/) || 
+                           line.match(/\[[A-Za-z]+(,?\s*\d{4})+\]/)
         if (!hasCitation) {
           suggestions.push({
             type: 'citation',
@@ -267,8 +268,24 @@ export function getWritingSuggestions(content: string): WritingSuggestion[] {
       })
     }
 
-    // Check for passive voice
-    if (line.match(/\b(was|were|is|are|been)\s+\w+ed\b/)) {
+    // Check for passive voice with common irregular participles
+    const irregularParticiples = [
+      'given', 'taken', 'written', 'known', 'seen', 'made', 'shown', 'found', 'built', 
+      'bought', 'caught', 'done', 'driven', 'eaten', 'fallen', 'felt', 'gone', 'grown', 
+      'heard', 'held', 'kept', 'left', 'lost', 'met', 'paid', 'put', 'read', 'run', 
+      'said', 'sent', 'set', 'sold', 'spent', 'stood', 'taught', 'told', 'thought', 
+      'understood', 'won', 'brought', 'chosen', 'dealt', 'drawn', 'fed', 'fought', 
+      'forgotten', 'forgiven', 'hidden', 'laid', 'led', 'lent', 'let', 'meant', 'proven', 
+      'ridden', 'risen', 'shaken', 'shut', 'sung', 'sat', 'slept', 'spoken', 'stolen', 
+      'swum', 'thrown', 'worn', 'woken'
+    ]
+    const passiveRegex = new RegExp(
+      `\\b(was|were|is|are|been)\\s+(` +
+        `\\w+ed\\b|${irregularParticiples.join('|')}\\b` +
+      `)`,
+      'i'
+    )
+    if (line.match(passiveRegex)) {
       suggestions.push({
         type: 'clarity',
         message: 'Consider using active voice for clarity',

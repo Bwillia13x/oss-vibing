@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Star, MessageSquare, X } from 'lucide-react'
+import { Star, MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface FeedbackDialogProps {
@@ -120,6 +120,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
               placeholder="Tell us about your experience..."
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
+              maxLength={1000}
             />
           </div>
 
@@ -133,6 +134,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
               placeholder="e.g., Better citation tools, dark mode, etc."
               value={feature}
               onChange={(e) => setFeature(e.target.value)}
+              maxLength={200}
             />
           </div>
 

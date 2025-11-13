@@ -20,7 +20,7 @@ interface OfflineDocument {
 }
 
 interface SyncQueueItem {
-  id: string
+  id: number
   documentId: string
   action: 'create' | 'update' | 'delete'
   timestamp: number
@@ -194,14 +194,16 @@ export async function syncToServer(): Promise<{ synced: number; failed: number }
     return { synced: 0, failed: 0 }
   }
 
+  const db = await initDB()
   const queue = await getSyncQueue()
   let synced = 0
   let failed = 0
+  const syncedIds: number[] = []
 
   for (const item of queue) {
     try {
       // Make API call based on action
-      let response: Response
+      let response: Response | undefined
       switch (item.action) {
         case 'create':
         case 'update':
@@ -216,14 +218,18 @@ export async function syncToServer(): Promise<{ synced: number; failed: number }
             method: 'DELETE',
           })
           break
+        default:
+          console.error(`Unknown action type in sync queue: ${item.action}`)
+          failed++
+          continue
       }
 
-      if (response.ok) {
+      if (response && response.ok) {
         synced++
+        syncedIds.push(item.id)
         // Mark document as clean by updating directly in DB
         const doc = await getDocumentOffline(item.documentId)
         if (doc) {
-          const db = await initDB()
           const transaction = db.transaction([DOCS_STORE], 'readwrite')
           const store = transaction.objectStore(DOCS_STORE)
           store.put({
@@ -241,9 +247,13 @@ export async function syncToServer(): Promise<{ synced: number; failed: number }
     }
   }
 
-  // Clear successfully synced items
-  if (synced > 0) {
-    await clearSyncQueue()
+  // Only clear successfully synced items from the queue
+  if (syncedIds.length > 0) {
+    const transaction = db.transaction([SYNC_QUEUE_STORE], 'readwrite')
+    const store = transaction.objectStore(SYNC_QUEUE_STORE)
+    for (const id of syncedIds) {
+      store.delete(id)
+    }
   }
 
   return { synced, failed }
