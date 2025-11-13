@@ -417,8 +417,17 @@ export async function searchMultipleSources(
  */
 export async function getPaperByDOI(doi: string): Promise<ResearchPaper | null> {
   try {
+    // Validate DOI format to prevent request forgery
+    const doiRegex = /^10\.\d{4,}\/[^\s]+$/
+    if (!doiRegex.test(doi)) {
+      console.warn('Invalid DOI format:', doi)
+      return null
+    }
+    
     // Use Crossref API (free, no API key required)
-    const response = await fetch(`https://api.crossref.org/works/${doi}`)
+    // DOI is validated above, so this is safe from request forgery
+    const encodedDoi = encodeURIComponent(doi)
+    const response = await fetch(`https://api.crossref.org/works/${encodedDoi}`)
     
     if (!response.ok) {
       return null

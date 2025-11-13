@@ -443,9 +443,16 @@ export function convertFromLaTeX(latex: string): DocumentContent {
  * Helper: Escape LaTeX special characters
  */
 function escapeLatex(text: string): string {
+  // Escape backslash first, then other special characters
   return text
     .replace(/\\/g, '\\textbackslash{}')
-    .replace(/[&%$#_{}]/g, '\\$&')
+    .replace(/&/g, '\\&')
+    .replace(/%/g, '\\%')
+    .replace(/\$/g, '\\$')
+    .replace(/#/g, '\\#')
+    .replace(/_/g, '\\_')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}')
     .replace(/~/g, '\\textasciitilde{}')
     .replace(/\^/g, '\\textasciicircum{}')
 }
@@ -454,18 +461,29 @@ function escapeLatex(text: string): string {
  * Helper: Unescape LaTeX special characters
  */
 function unescapeLatex(text: string): string {
+  // Unescape in reverse order to avoid double-unescaping
   return text
-    .replace(/\\textbackslash\{\}/g, '\\')
-    .replace(/\\([&%$#_{}])/g, '$1')
-    .replace(/\\textasciitilde\{\}/g, '~')
     .replace(/\\textasciicircum\{\}/g, '^')
+    .replace(/\\textasciitilde\{\}/g, '~')
+    .replace(/\\\}/g, '}')
+    .replace(/\\\{/g, '{')
+    .replace(/\\_/g, '_')
+    .replace(/\\#/g, '#')
+    .replace(/\\\$/g, '$')
+    .replace(/\\%/g, '%')
+    .replace(/\\&/g, '&')
+    .replace(/\\textbackslash\{\}/g, '\\')
 }
 
 /**
  * Helper: Convert HTML to Markdown (simplified)
+ * Note: This is for trusted HTML content from document imports only
  */
 function convertHtmlToMarkdown(html: string): string {
-  return html
+  // Strip all script tags first for safety
+  const sanitized = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+  
+  return sanitized
     .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
     .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
     .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
@@ -476,12 +494,12 @@ function convertHtmlToMarkdown(html: string): string {
     .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
     .replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
+    .replace(/<[^>]+>/g, '') // Remove remaining tags
     .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&') // Decode & last to avoid double-decoding
     .trim()
 }
 
