@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getInstitutionAnalytics, generateAnalyticsReport } from '@/lib/admin-analytics'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
+import { requireInstitutionAccess } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -36,8 +37,11 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication check
-    // Verify user has admin access to this institution
+    // Authentication and authorization check
+    const authResult = await requireInstitutionAccess(req, institutionId, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult // Return error response
+    }
 
     let result
 
@@ -108,7 +112,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication check
+    // Authentication check - any authenticated user can track their own activity
+    const authResult = await requireInstitutionAccess(req, activity.institutionId, ['admin', 'institution-admin', 'instructor', 'student'])
+    if (authResult instanceof NextResponse) {
+      return authResult // Return error response
+    }
+
     // TODO: Track activity in database
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {

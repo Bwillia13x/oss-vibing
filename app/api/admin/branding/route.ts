@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import type { InstitutionBranding } from '@/lib/types/institutional'
+import { requireInstitutionAccess } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -32,7 +33,8 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication check (can be public for reading branding)
+    // Note: Branding retrieval can be public (no auth required)
+    // This allows the platform to display custom branding on login pages
     // TODO: Query database for branding
 
     const branding: InstitutionBranding = {
@@ -101,7 +103,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - admins only
+    const authResult = await requireInstitutionAccess(req, branding.institutionId, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     // TODO: Save branding to database
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
@@ -170,7 +177,12 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - admins only
+    const authResult = await requireInstitutionAccess(req, updates.institutionId, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     // TODO: Update branding in database
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {

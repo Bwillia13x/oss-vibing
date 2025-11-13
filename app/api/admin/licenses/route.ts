@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import type { License } from '@/lib/types/institutional'
+import { requireRole, requireInstitutionAccess } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -26,7 +27,11 @@ export async function GET(req: NextRequest) {
     const institutionId = searchParams.get('institutionId')
     const licenseId = searchParams.get('licenseId')
 
-    // TODO: Add authentication and authorization check
+    // Authentication check - admins only
+    const authResult = await requireRole(req, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     if (licenseId) {
       // Get specific license
@@ -103,7 +108,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - admins only
+    const authResult = await requireInstitutionAccess(req, licenseData.institutionId, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     // TODO: Create license in database
 
     const license: License = {
@@ -164,7 +174,12 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - admins only
+    const authResult = await requireRole(req, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     // TODO: Update license in database
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {

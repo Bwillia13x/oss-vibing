@@ -13,6 +13,7 @@ import {
 } from '@/lib/instructor-tools'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
+import { requireRole } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -33,7 +34,11 @@ export async function GET(req: NextRequest) {
     const assignmentId = searchParams.get('assignmentId')
     const includeStats = searchParams.get('stats') === 'true'
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - instructors and admins only
+    const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     if (assignmentId) {
       const assignment = await getAssignment(assignmentId)
@@ -111,7 +116,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - instructors and admins only
+    const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     const assignment = await createAssignment(assignmentData)
 
@@ -166,7 +175,11 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - instructors and admins only
+    const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     const assignment = await updateAssignment(id, updates)
 

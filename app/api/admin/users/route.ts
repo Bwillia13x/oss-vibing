@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import type { BulkUserProvisionRequest, BulkUserProvisionResult } from '@/lib/types/institutional'
+import { requireInstitutionAccess } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -41,7 +42,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - admins only
+    const authResult = await requireInstitutionAccess(req, provisionRequest.institutionId, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     // TODO: Check license capacity
     // TODO: Create users in database
 
@@ -129,7 +135,12 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization - admins only
+    const authResult = await requireInstitutionAccess(req, institutionId, ['admin', 'institution-admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     // TODO: Query database for users
 
     const users: any[] = []
