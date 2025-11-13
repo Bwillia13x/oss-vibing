@@ -28,6 +28,8 @@ import { evaluateThesisStrength } from './evaluate-thesis-strength'
 import { identifyResearchGaps } from './identify-research-gaps'
 import { visualizeCitationNetwork } from './visualize-citation-network'
 import { semanticSearchPapers } from './semantic-search-papers'
+import { analyzeResearchTrends } from './analyze-research-trends'
+import { synthesizeLiteratureReview } from './synthesize-literature-review'
 
 interface Params {
   modelId: string
@@ -69,6 +71,8 @@ export function tools({ modelId, writer }: Params) {
     identifyResearchGaps: identifyResearchGaps({ writer }),
     visualizeCitationNetwork: visualizeCitationNetwork({ writer }),
     semanticSearchPapers: semanticSearchPapers({ writer }),
+    analyzeResearchTrends: analyzeResearchTrends({ writer }),
+    synthesizeLiteratureReview: synthesizeLiteratureReview({ writer }),
   }
 }
 

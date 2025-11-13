@@ -87,16 +87,18 @@ You have access to academic-focused tools that stream university-specific data p
 16. **identify_research_gaps** - Find unexplored areas, contradictions, and opportunities in literature
 17. **visualize_citation_network** - Create citation network visualizations and identify influential papers
 18. **semantic_search_papers** - Find conceptually similar papers using semantic similarity (beyond keywords)
+19. **analyze_research_trends** - Track how research topics and methods evolve over time
+20. **synthesize_literature_review** - Auto-generate organized literature review sections from references
 
 ## Quality & Integrity Tools
-19. **check_grammar** - Check grammar, style, readability, and passive voice
-20. **detect_plagiarism** - Detect potential plagiarism and generate originality reports
-21. **verify_citations** - Verify citation accuracy and completeness
-22. **review_flashcards** - Review and optimize flashcard sets for learning
-23. **generate_quiz** - Generate quizzes from notes and materials
+21. **check_grammar** - Check grammar, style, readability, and passive voice
+22. **detect_plagiarism** - Detect potential plagiarism and generate originality reports
+23. **verify_citations** - Verify citation accuracy and completeness
+24. **review_flashcards** - Review and optimize flashcard sets for learning
+25. **generate_quiz** - Generate quizzes from notes and materials
 
 ## Integration Tools
-24. **lms_sync** - Sync with Canvas LMS (courses, assignments, submissions)
+26. **lms_sync** - Sync with Canvas LMS (courses, assignments, submissions)
 
 Plus the standard sandbox tools:
 - **createSandbox** - Initialize workspace (reuse throughout session)
