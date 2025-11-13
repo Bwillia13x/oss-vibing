@@ -1,0 +1,235 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// User Management
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(USER)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  documents      Document[]
+  references     Reference[]
+  citations      Citation[]
+  auditLogs      AuditLog[]
+  
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
+}
+
+enum Role {
+  USER
+  ADMIN
+  INSTRUCTOR
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+// ============================================================================
+// Content Management
+// ============================================================================
+
+model Document {
+  id          String       @id @default(cuid())
+  userId      String
+  title       String
+  content     String       // MDX content
+  type        DocumentType @default(NOTE)
+  status      DocumentStatus @default(DRAFT)
+  folder      String?      // Path like "docs/research"
+  tags        String?      // JSON array
+  metadata    String?      // JSON object
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  citations   Citation[]
+  
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([folder])
+  @@index([createdAt])
+}
+
+enum DocumentType {
+  NOTE
+  ESSAY
+  THESIS
+  LAB_REPORT
+  PRESENTATION
+  SPREADSHEET
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+// ============================================================================
+// Citation & Reference Management
+// ============================================================================
+
+model Reference {
+  id          String   @id @default(cuid())
+  userId      String
+  doi         String?
+  url         String?
+  title       String
+  authors     String   // JSON array
+  year        Int?
+  journal     String?
+  volume      String?
+  pages       String?
+  publisher   String?
+  type        String   @default("article-journal")
+  metadata    String?  // Full CSL JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  citations   Citation[]
+  
+  @@index([userId])
+  @@index([doi])
+  @@index([createdAt])
+}
+
+model Citation {
+  id          String   @id @default(cuid())
+  documentId  String
+  referenceId String
+  userId      String
+  location    String?  // Page number or section
+  context     String?  // Surrounding text
+  type        CitationType @default(IN_TEXT)
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  reference   Reference @relation(fields: [referenceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([documentId])
+  @@index([referenceId])
+  @@index([userId])
+}
+
+enum CitationType {
+  IN_TEXT
+  FOOTNOTE
+  ENDNOTE
+  BIBLIOGRAPHY
+}
+
+// ============================================================================
+// Admin & Institution Management
+// ============================================================================
+
+model AdminSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   // JSON value
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+  
+  @@index([category])
+}
+
+model License {
+  id            String   @id @default(cuid())
+  institutionId String   @unique
+  institution   String
+  seats         Int
+  usedSeats     Int      @default(0)
+  status        LicenseStatus @default(ACTIVE)
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([institutionId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+}
+
+// ============================================================================
+// Audit & Monitoring
+// ============================================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String?  // e.g., "user", "document", "license"
+  resourceId String?
+  details   String?  // JSON details
+  severity  AuditSeverity @default(INFO)
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+  
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([severity])
+  @@index([timestamp])
+}
+
+enum AuditSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+// ============================================================================
+// Analytics & Usage
+// ============================================================================
+
+model UsageMetric {
+  id        String   @id @default(cuid())
+  userId    String?
+  metric    String   // e.g., "document_created", "citation_added"
+  value     Float    @default(1)
+  metadata  String?  // JSON metadata
+  timestamp DateTime @default(now())
+  
+  @@index([userId])
+  @@index([metric])
+  @@index([timestamp])
+}
