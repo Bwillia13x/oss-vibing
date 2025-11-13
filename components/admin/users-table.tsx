@@ -18,10 +18,30 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MoreHorizontal, Search } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { MoreHorizontal, Search, Pencil, Trash2, Ban, CheckCircle } from 'lucide-react'
+import { UserFormDialog } from './user-form-dialog'
+import { DeleteUserDialog } from './delete-user-dialog'
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: 'student' | 'instructor' | 'admin'
+  department: string
+  lastActive: string
+  status: 'active' | 'inactive'
+}
 
 // Mock data
-const mockUsers = [
+const mockUsers: User[] = [
   {
     id: '1',
     name: 'Alice Johnson',
@@ -72,7 +92,11 @@ const mockUsers = [
 export function UsersTable() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const [users] = useState(mockUsers)
+  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [deletingUser, setDeletingUser] = useState<User | null>(null)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -80,6 +104,89 @@ export function UsersTable() {
     const matchesRole = roleFilter === 'all' || user.role === roleFilter
     return matchesSearch && matchesRole
   })
+
+  const handleCreateUser = async (userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
+    // TODO: Call API to create user
+    const newUser: User = {
+      ...userData,
+      id: `usr_${Date.now()}`,
+      lastActive: 'Just now',
+      status: 'active',
+    }
+    setUsers([...users, newUser])
+  }
+
+  const handleUpdateUser = async (userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
+    // TODO: Call API to update user
+    if (!editingUser) return
+    
+    const previousUsers = [...users]
+    
+    try {
+      // Optimistically update UI
+      setUsers(users.map(user => 
+        user.id === editingUser.id 
+          ? { ...user, ...userData }
+          : user
+      ))
+      setEditingUser(null)
+      
+      // When API is implemented:
+      // await updateUserApi(editingUser.id, userData)
+    } catch (error) {
+      // Revert on error
+      setUsers(previousUsers)
+      throw error
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    // TODO: Call API to delete user
+    const previousUsers = [...users]
+    
+    try {
+      // Optimistically update UI
+      setUsers(users.filter(user => user.id !== userId))
+      
+      // When API is implemented:
+      // await deleteUserApi(userId)
+    } catch (error) {
+      // Revert on error
+      setUsers(previousUsers)
+      throw error
+    }
+  }
+
+  const handleToggleStatus = async (userId: string) => {
+    // TODO: Call API to toggle user status
+    const previousUsers = [...users]
+    
+    try {
+      // Optimistically update UI
+      setUsers(users.map(user =>
+        user.id === userId
+          ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' as const }
+          : user
+      ))
+      
+      // When API is implemented:
+      // await toggleUserStatusApi(userId)
+    } catch (error) {
+      // Revert on error
+      setUsers(previousUsers)
+      throw error
+    }
+  }
+
+  const openEditDialog = (user: User) => {
+    setEditingUser(user)
+    setIsFormOpen(true)
+  }
+
+  const openDeleteDialog = (user: User) => {
+    setDeletingUser(user)
+    setIsDeleteOpen(true)
+  }
 
   return (
     <div className="space-y-4">
@@ -139,9 +246,42 @@ export function UsersTable() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Edit User
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleStatus(user.id)}>
+                        {user.status === 'active' ? (
+                          <>
+                            <Ban className="mr-2 h-4 w-4" />
+                            Suspend User
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Activate User
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => openDeleteDialog(user)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete User
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
@@ -153,6 +293,26 @@ export function UsersTable() {
       <div className="text-sm text-muted-foreground">
         Showing {filteredUsers.length} of {users.length} users
       </div>
+
+      {/* Dialogs */}
+      <UserFormDialog
+        open={isFormOpen}
+        onOpenChange={(open) => {
+          setIsFormOpen(open)
+          if (!open) setEditingUser(null)
+        }}
+        user={editingUser || undefined}
+        onSave={editingUser ? handleUpdateUser : handleCreateUser}
+      />
+
+      {deletingUser && (
+        <DeleteUserDialog
+          open={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+          user={deletingUser}
+          onDelete={handleDeleteUser}
+        />
+      )}
     </div>
   )
 }
