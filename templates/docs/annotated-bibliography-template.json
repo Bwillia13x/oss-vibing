@@ -1,0 +1,64 @@
+{
+  "id": "annotated-bibliography",
+  "name": "Annotated Bibliography Template",
+  "type": "doc",
+  "category": "research",
+  "discipline": "general",
+  "description": "Annotated bibliography template with summary, evaluation, and reflection for each source",
+  "icon": "📖",
+  "content": {
+    "title": "Annotated Bibliography",
+    "sections": [
+      {
+        "id": "introduction",
+        "title": "Introduction",
+        "content": "## Introduction\n\n### Topic\n[State your research topic]\n\n### Purpose\nThis annotated bibliography provides a comprehensive review of sources related to [topic]. Each entry includes a citation, summary, evaluation, and reflection on the source's relevance to the research question.\n\n### Research Question\n[State your research question or focus]\n\n### Scope\n[Explain the scope and selection criteria for sources included]",
+        "placeholder": "Introduce your annotated bibliography..."
+      },
+      {
+        "id": "entry-1",
+        "title": "Entry 1",
+        "content": "## Entry 1\n\n### Citation\nAuthor, A. A. (Year). *Title of work*. Publisher.\n\n### Summary\n[Provide a concise summary of the main arguments, findings, or themes of the source. What are the key points?]\n\n### Evaluation\n[Evaluate the source's credibility, relevance, and quality. Consider:\n- Author's credentials and expertise\n- Publication venue and peer review status\n- Research methodology and evidence quality\n- Strengths and limitations\n- Potential biases]\n\n### Reflection\n[Reflect on how this source relates to your research:\n- How does it contribute to your understanding of the topic?\n- How does it relate to other sources?\n- How will you use it in your research?]",
+        "placeholder": "Add your first annotated entry..."
+      },
+      {
+        "id": "entry-2",
+        "title": "Entry 2",
+        "content": "## Entry 2\n\n### Citation\nAuthor, B. B. (Year). *Title of work*. Publisher.\n\n### Summary\n[Provide a concise summary of the main arguments, findings, or themes of the source. What are the key points?]\n\n### Evaluation\n[Evaluate the source's credibility, relevance, and quality. Consider:\n- Author's credentials and expertise\n- Publication venue and peer review status\n- Research methodology and evidence quality\n- Strengths and limitations\n- Potential biases]\n\n### Reflection\n[Reflect on how this source relates to your research:\n- How does it contribute to your understanding of the topic?\n- How does it relate to other sources?\n- How will you use it in your research?]",
+        "placeholder": "Add your second annotated entry..."
+      },
+      {
+        "id": "entry-3",
+        "title": "Entry 3",
+        "content": "## Entry 3\n\n### Citation\nAuthor, C. C. (Year). *Title of work*. Publisher.\n\n### Summary\n[Provide a concise summary of the main arguments, findings, or themes of the source. What are the key points?]\n\n### Evaluation\n[Evaluate the source's credibility, relevance, and quality. Consider:\n- Author's credentials and expertise\n- Publication venue and peer review status\n- Research methodology and evidence quality\n- Strengths and limitations\n- Potential biases]\n\n### Reflection\n[Reflect on how this source relates to your research:\n- How does it contribute to your understanding of the topic?\n- How does it relate to other sources?\n- How will you use it in your research?]",
+        "placeholder": "Add your third annotated entry..."
+      },
+      {
+        "id": "conclusion",
+        "title": "Conclusion",
+        "content": "## Conclusion\n\n### Synthesis\n[Synthesize the key themes and insights from your annotated sources]\n\n### Research Gaps\n[Identify any gaps in the literature based on your review]\n\n### Next Steps\n[Explain how this bibliography will inform your research project]",
+        "placeholder": "Conclude your annotated bibliography..."
+      }
+    ]
+  },
+  "metadata": {
+    "author": "Vibe University",
+    "version": "1.0",
+    "created": "2025-11-13",
+    "tags": ["annotated-bibliography", "research", "sources", "evaluation", "academic"],
+    "citationStyle": "apa",
+    "estimatedLength": "5-15 pages",
+    "targetAudience": "undergraduate-graduate",
+    "typicalEntryCount": "10-20"
+  },
+  "instructions": [
+    "Use consistent citation format (APA, MLA, or Chicago)",
+    "Keep summaries concise (150-200 words per entry)",
+    "Provide critical evaluation, not just description",
+    "Organize entries alphabetically by author's last name",
+    "Include all required citation elements",
+    "Maintain an objective, analytical tone",
+    "Explain the relevance of each source to your research",
+    "Add as many entries as needed for your assignment"
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "id": "book-review",
+  "name": "Book Review Template",
+  "type": "doc",
+  "category": "review",
+  "discipline": "humanities",
+  "description": "Academic book review template for critical analysis of scholarly works",
+  "icon": "📕",
+  "content": {
+    "title": "Book Review: [Book Title]",
+    "sections": [
+      {
+        "id": "bibliographic-info",
+        "title": "Bibliographic Information",
+        "content": "## Bibliographic Information\n\n**Title**: [Full book title]\n\n**Author(s)**: [Author name(s)]\n\n**Publisher**: [Publisher name]\n\n**Year**: [Publication year]\n\n**Pages**: [Page count]\n\n**ISBN**: [ISBN number]\n\n**Edition**: [Edition information, if applicable]",
+        "placeholder": "Enter bibliographic details..."
+      },
+      {
+        "id": "introduction",
+        "title": "Introduction",
+        "content": "## Introduction\n\n### Context\n[Introduce the book's subject matter, its place in the field, and its intended audience]\n\n### Author Background\n[Briefly discuss the author's credentials, expertise, and previous work relevant to this book]\n\n### Thesis Statement\n[State your overall assessment of the book]\n\n*Example: \"While [Author]'s work provides valuable insights into [topic], it falls short in addressing [limitation], making it most useful for [audience].\"*",
+        "placeholder": "Introduce the book and provide context..."
+      },
+      {
+        "id": "summary",
+        "title": "Summary of Content",
+        "content": "## Summary of Content\n\n### Main Argument\n[Summarize the book's central argument or thesis]\n\n### Structure and Organization\n[Describe how the book is organized and its major sections]\n\n### Key Chapters/Sections\n\n**Chapter/Part 1**: [Brief summary]\n\n**Chapter/Part 2**: [Brief summary]\n\n**Chapter/Part 3**: [Brief summary]\n\n### Methodology\n[If applicable, describe the research methodology or theoretical framework used]\n\n### Key Evidence and Examples\n[Highlight the most important evidence or examples the author uses]",
+        "placeholder": "Summarize the book's content..."
+      },
+      {
+        "id": "critical-analysis",
+        "title": "Critical Analysis",
+        "content": "## Critical Analysis\n\n### Strengths\n\n1. **[Strength 1]**: [Detailed explanation]\n2. **[Strength 2]**: [Detailed explanation]\n3. **[Strength 3]**: [Detailed explanation]\n\n### Weaknesses\n\n1. **[Weakness 1]**: [Detailed explanation]\n2. **[Weakness 2]**: [Detailed explanation]\n3. **[Weakness 3]**: [Detailed explanation]\n\n### Argument Evaluation\n[Evaluate the effectiveness and persuasiveness of the author's argument]\n\n### Evidence Quality\n[Assess the quality and sufficiency of the evidence provided]\n\n### Writing Style\n[Comment on the clarity, accessibility, and quality of the writing]",
+        "placeholder": "Provide critical analysis..."
+      },
+      {
+        "id": "contribution",
+        "title": "Contribution to the Field",
+        "content": "## Contribution to the Field\n\n### Originality\n[Discuss what is new or original about this work]\n\n### Relationship to Existing Literature\n[Explain how this book relates to and builds upon existing scholarship]\n\n### Significance\n[Assess the book's importance and potential impact on the field]\n\n### Comparison with Similar Works\n[Compare this book to other works on the same topic]",
+        "placeholder": "Evaluate the book's contribution..."
+      },
+      {
+        "id": "audience",
+        "title": "Intended Audience and Accessibility",
+        "content": "## Intended Audience and Accessibility\n\n### Target Audience\n[Identify who would benefit most from reading this book]\n\n### Accessibility\n[Discuss how accessible the book is to different audiences]\n\n### Prerequisites\n[Note any background knowledge needed to understand the book]\n\n### Practical Applications\n[If applicable, discuss practical applications or use cases]",
+        "placeholder": "Discuss audience and accessibility..."
+      },
+      {
+        "id": "conclusion",
+        "title": "Conclusion",
+        "content": "## Conclusion\n\n### Overall Assessment\n[Provide your overall evaluation of the book]\n\n### Recommendation\n[State clearly whether you recommend this book and for whom]\n\n### Future Directions\n[If applicable, suggest areas for future research or questions raised by the book]\n\n### Final Thoughts\n[Conclude with any final reflections on the book's value and impact]",
+        "placeholder": "Conclude your review..."
+      },
+      {
+        "id": "references",
+        "title": "References",
+        "content": "## References\n\n[Include the full citation for the reviewed book and any other sources cited in your review]",
+        "placeholder": "Add references..."
+      }
+    ]
+  },
+  "metadata": {
+    "author": "Vibe University",
+    "version": "1.0",
+    "created": "2025-11-13",
+    "tags": ["book-review", "review", "critical-analysis", "humanities", "scholarship"],
+    "citationStyle": "mla",
+    "estimatedLength": "5-7 pages",
+    "targetAudience": "undergraduate-graduate"
+  },
+  "instructions": [
+    "Balance summary with critical analysis",
+    "Support your evaluation with specific examples from the book",
+    "Consider the book's context and intended audience",
+    "Maintain an objective, scholarly tone",
+    "Be fair and constructive in criticism",
+    "Avoid excessive plot summary in favor of analysis",
+    "Compare to other works in the field when appropriate",
+    "State your evaluation clearly and justify it",
+    "Use proper citations for direct quotes from the book"
+  ]
+}
