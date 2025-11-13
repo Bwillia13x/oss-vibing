@@ -13,7 +13,7 @@
 import { trackApiPerformance } from '@/lib/monitoring'
 
 const OPENALEX_API_BASE = 'https://api.openalex.org'
-const POLITE_EMAIL = 'support@vibeuniversity.com'
+const POLITE_EMAIL = process.env.POLITE_EMAIL || 'support@vibeuniversity.com'
 const USER_AGENT = `VibeUniversity/0.1 (mailto:${POLITE_EMAIL})`
 
 export interface OpenAlexWork {
@@ -397,6 +397,10 @@ export function extractAbstract(work: OpenAlexWork): string {
 
 /**
  * Extract citation metadata from OpenAlex work
+ * 
+ * Note: Author name parsing uses a simple "last word is family name" heuristic,
+ * which may not work correctly for names with particles (e.g., "van Gogh", "de la Cruz").
+ * This is a known limitation inherited from the OpenAlex API's name format.
  */
 export function extractCitationMetadata(work: OpenAlexWork) {
   const authors = work.authorships?.map((a) => ({

@@ -12,7 +12,7 @@
 import { trackApiPerformance } from '@/lib/monitoring'
 
 const CROSSREF_API_BASE = 'https://api.crossref.org'
-const POLITE_EMAIL = 'support@vibeuniversity.com' // Used for polite pool
+const POLITE_EMAIL = process.env.POLITE_EMAIL || 'support@vibeuniversity.com' // Used for polite pool
 const USER_AGENT = `VibeUniversity/0.1 (mailto:${POLITE_EMAIL})`
 
 export interface CrossrefWork {
@@ -254,15 +254,16 @@ export function formatAuthors(
 export async function batchLookupDOIs(dois: string[]): Promise<Map<string, CrossrefWork | null>> {
   const results = new Map<string, CrossrefWork | null>()
   
-  // Rate limit: 50 req/sec means ~20ms between requests
-  const DELAY_MS = 25 // 40 requests/second to be safe
+  // Rate limit: 50 req/sec (polite pool); using 25ms delay for 40 requests/second (conservative buffer from 50/sec limit)
+  const DELAY_MS = 25 // 40 requests/second (conservative buffer from 50/sec limit)
   
-  for (const doi of dois) {
+  for (let i = 0; i < dois.length; i++) {
+    const doi = dois[i]
     const work = await lookupDOI(doi)
     results.set(doi, work)
     
     // Add delay between requests to respect rate limits
-    if (dois.indexOf(doi) < dois.length - 1) {
+    if (i < dois.length - 1) {
       await new Promise(resolve => setTimeout(resolve, DELAY_MS))
     }
   }

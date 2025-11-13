@@ -45,6 +45,8 @@ export interface CitationAPIOptions {
 }
 
 // In-memory cache (in production, use Redis)
+// Note: This cache will grow until entries expire (24h TTL). For production,
+// consider implementing an LRU cache with max size or migrating to Redis.
 const cache = new Map<string, { data: any; timestamp: number }>()
 const CACHE_TTL = 1000 * 60 * 60 * 24 // 24 hours
 
@@ -299,6 +301,10 @@ export async function getWorksByAuthor(
 
 /**
  * Get citation network for a paper
+ * 
+ * Note: This function uses Semantic Scholar exclusively as it provides the most
+ * comprehensive citation network data. Other providers (Crossref, OpenAlex) have
+ * limited or no direct citation graph APIs, so no failover is implemented.
  */
 export async function getCitationNetwork(
   doi: string
@@ -336,12 +342,9 @@ function getProviderOrder(
   ]
 
   if (preferredProvider) {
-    // Move preferred to front
-    const index = providers.indexOf(preferredProvider)
-    if (index > 0) {
-      providers.splice(index, 1)
-      providers.unshift(preferredProvider)
-    }
+    // Move preferred to front without mutating providers
+    const others = providers.filter(p => p !== preferredProvider)
+    return [preferredProvider, ...others]
   }
 
   return providers

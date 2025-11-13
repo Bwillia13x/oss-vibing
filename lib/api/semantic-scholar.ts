@@ -15,6 +15,11 @@ import { trackApiPerformance } from '@/lib/monitoring'
 const SEMANTIC_SCHOLAR_API_BASE = 'https://api.semanticscholar.org/graph/v1'
 const API_KEY = process.env.SEMANTIC_SCHOLAR_API_KEY // Optional for higher rate limits
 
+// Warn developers if API key is missing in development mode
+if (!API_KEY && process.env.NODE_ENV === 'development') {
+  console.warn('SEMANTIC_SCHOLAR_API_KEY not set. Using lower rate limits (100 req/5min).')
+}
+
 export interface SemanticScholarPaper {
   paperId: string
   corpusId?: number
@@ -152,7 +157,11 @@ export async function searchPapers(
 
       return await response.json()
     } catch (error) {
-      console.error('Error searching Semantic Scholar:', error)
+      console.error('Error searching Semantic Scholar:', {
+        query,
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      })
       return null
     }
   })
@@ -445,6 +454,10 @@ export async function getRecommendations(
 
 /**
  * Extract citation metadata from Semantic Scholar paper
+ * 
+ * Note: Author name parsing uses a simple "last word is family name" heuristic,
+ * which may not work correctly for names with particles (e.g., "van der Waals").
+ * This is a known limitation inherited from the Semantic Scholar API's name format.
  */
 export function extractCitationMetadata(paper: SemanticScholarPaper) {
   const authors = paper.authors?.map((a) => {
