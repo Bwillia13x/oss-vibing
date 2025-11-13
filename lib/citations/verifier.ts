@@ -694,7 +694,7 @@ export async function verifyCitations(
   // Run all checks in parallel
   const [
     coverageResult,
-    quoteIssues,
+    quoteResult,
     staleCitations,
     fabricatedCitations,
   ] = await Promise.all([
@@ -703,7 +703,7 @@ export async function verifyCitations(
       : Promise.resolve({ totalSentences: 0, citedSentences: 0, coveragePct: 0, uncitedClaims: [] }),
     opts.checkQuotes
       ? Promise.resolve(verifyQuotes(content))
-      : Promise.resolve([]),
+      : Promise.resolve({ totalQuotes: 0, issues: [] }),
     opts.checkStaleness
       ? detectStaleCitations(citations, opts)
       : Promise.resolve([]),
@@ -720,7 +720,7 @@ export async function verifyCitations(
     totalSentences: coverageResult.totalSentences,
     citedSentences: coverageResult.citedSentences,
     uncitedClaims: coverageResult.uncitedClaims,
-    quoteIssues,
+    quoteIssues: quoteResult.issues,
     staleCitations,
     fabricatedCitations,
     qualityScore,
