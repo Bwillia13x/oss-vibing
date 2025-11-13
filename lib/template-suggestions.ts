@@ -245,7 +245,7 @@ export function getWritingSuggestions(content: string): WritingSuggestion[] {
       if (lowerLine.includes(indicator)) {
         // Check if there's a citation nearby
         const hasCitation = line.match(/\([A-Z][a-z]+,?\s+\d{4}\)/) || 
-                           line.match(/\[[^\]]+\]/)
+                           line.match(/\[[^\]]{1,100}\]/)
         if (!hasCitation) {
           suggestions.push({
             type: 'citation',
