@@ -1,0 +1,193 @@
+{
+  "name": "Case Study Template",
+  "description": "Business and social sciences case study analysis template",
+  "category": "case-study",
+  "discipline": "business",
+  "content": {
+    "title": "Case Study: [Company/Organization/Situation Name]",
+    "sections": [
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Executive Summary"
+      },
+      {
+        "type": "paragraph",
+        "content": "Brief overview of the case (2-3 paragraphs). Include: the organization/situation, main problem, key findings, and recommendations."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "1. Introduction"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "1.1 Case Overview"
+      },
+      {
+        "type": "paragraph",
+        "content": "Introduce the organization, industry, or situation being studied."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "1.2 Purpose of Analysis"
+      },
+      {
+        "type": "paragraph",
+        "content": "Explain why this case is being analyzed and what you hope to learn."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "2. Background Information"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "2.1 Company/Organization Profile"
+      },
+      {
+        "type": "paragraph",
+        "content": "Provide relevant background: history, size, structure, market position, etc."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "2.2 Industry Context"
+      },
+      {
+        "type": "paragraph",
+        "content": "Describe the industry environment, competitive landscape, and market conditions."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "3. Problem Statement"
+      },
+      {
+        "type": "paragraph",
+        "content": "Clearly identify and describe the key problem or challenge faced. What is the core issue that needs to be addressed?"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "4. Analysis"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "4.1 Situation Analysis"
+      },
+      {
+        "type": "paragraph",
+        "content": "Analyze the current situation using appropriate frameworks (SWOT, Porter's Five Forces, PESTEL, etc.)."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "4.2 Root Cause Analysis"
+      },
+      {
+        "type": "paragraph",
+        "content": "Identify underlying causes of the problem."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "4.3 Stakeholder Analysis"
+      },
+      {
+        "type": "paragraph",
+        "content": "Identify key stakeholders and their interests/concerns."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "5. Alternative Solutions"
+      },
+      {
+        "type": "paragraph",
+        "content": "Present 2-4 possible solutions or courses of action. For each alternative, discuss pros, cons, and feasibility."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "6. Recommendations"
+      },
+      {
+        "type": "paragraph",
+        "content": "Recommend the best solution(s) based on your analysis. Justify your recommendation with evidence and reasoning."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "7. Implementation Plan"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "7.1 Action Steps"
+      },
+      {
+        "type": "paragraph",
+        "content": "Outline specific steps for implementing your recommendation."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "7.2 Timeline"
+      },
+      {
+        "type": "paragraph",
+        "content": "Provide a realistic timeline for implementation."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "7.3 Resources Required"
+      },
+      {
+        "type": "paragraph",
+        "content": "Identify financial, human, and other resources needed."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "8. Expected Outcomes and Metrics"
+      },
+      {
+        "type": "paragraph",
+        "content": "Describe expected results and how success will be measured."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "9. Conclusion"
+      },
+      {
+        "type": "paragraph",
+        "content": "Summarize key findings and recommendations. Discuss broader implications or lessons learned."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "References"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Your references will be automatically formatted here]"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Appendices"
+      },
+      {
+        "type": "paragraph",
+        "content": "Include supporting documents: financial statements, survey data, interview transcripts, etc."
+      }
+    ]
+  }
+}

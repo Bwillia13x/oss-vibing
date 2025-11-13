@@ -1,0 +1,170 @@
+{
+  "name": "Research Proposal Template",
+  "description": "Research proposal template for grant applications or thesis proposals",
+  "category": "research",
+  "discipline": "general",
+  "content": {
+    "title": "Research Proposal: [Your Project Title]",
+    "sections": [
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "Executive Summary"
+      },
+      {
+        "type": "paragraph",
+        "content": "Brief overview of your proposed research (1-2 paragraphs). Include the research problem, objectives, methodology, and expected outcomes."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "1. Introduction"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "1.1 Background and Context"
+      },
+      {
+        "type": "paragraph",
+        "content": "Provide background information on the research area. Explain why this research is important now."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "1.2 Problem Statement"
+      },
+      {
+        "type": "paragraph",
+        "content": "Clearly define the problem or gap in knowledge that your research will address."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "2. Research Questions and Objectives"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "2.1 Primary Research Question"
+      },
+      {
+        "type": "paragraph",
+        "content": "State your main research question."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "2.2 Specific Objectives"
+      },
+      {
+        "type": "paragraph",
+        "content": "List 3-5 specific, measurable objectives that your research will accomplish."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "3. Literature Review"
+      },
+      {
+        "type": "paragraph",
+        "content": "Review key existing research related to your topic. Demonstrate your understanding of the field and identify the gap your research will fill."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "4. Theoretical Framework"
+      },
+      {
+        "type": "paragraph",
+        "content": "Describe the theoretical foundation for your research. What theories or models will guide your work?"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "5. Methodology"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "5.1 Research Design"
+      },
+      {
+        "type": "paragraph",
+        "content": "Outline your research approach and design."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "5.2 Participants/Sample"
+      },
+      {
+        "type": "paragraph",
+        "content": "Describe your target population and sampling strategy."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "5.3 Data Collection Methods"
+      },
+      {
+        "type": "paragraph",
+        "content": "Explain how you will collect data (instruments, procedures, timeline)."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "content": "5.4 Data Analysis"
+      },
+      {
+        "type": "paragraph",
+        "content": "Describe how you will analyze the data."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "6. Expected Outcomes and Significance"
+      },
+      {
+        "type": "paragraph",
+        "content": "What do you expect to find? How will your research contribute to the field?"
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "7. Timeline"
+      },
+      {
+        "type": "paragraph",
+        "content": "Provide a realistic timeline for completing each phase of your research."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "8. Budget (if applicable)"
+      },
+      {
+        "type": "paragraph",
+        "content": "Itemized budget showing how funds will be used."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "9. Ethical Considerations"
+      },
+      {
+        "type": "paragraph",
+        "content": "Discuss any ethical issues and how you will address them. Include IRB/ethics approval plans."
+      },
+      {
+        "type": "heading",
+        "level": 1,
+        "content": "References"
+      },
+      {
+        "type": "paragraph",
+        "content": "[Your references will be automatically formatted here]"
+      }
+    ]
+  }
+}

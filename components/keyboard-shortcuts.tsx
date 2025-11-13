@@ -14,7 +14,12 @@ import { ShortcutsHelpDialog } from '@/components/shortcuts-help-dialog'
  * - Ctrl/Cmd + E: Focus file explorer
  * - Ctrl/Cmd + P: Focus preview panel
  * - Ctrl/Cmd + /: Show keyboard shortcuts help
+ * - Ctrl/Cmd + N: New document/artifact
+ * - Ctrl/Cmd + S: Save current document
  * - Ctrl/Cmd + Shift + T: Toggle theme (handled by ThemeToggle component)
+ * - Ctrl/Cmd + Shift + F: Toggle fullscreen mode
+ * - Ctrl/Cmd + Shift + K: Clear chat history
+ * - Alt + 1-9: Switch between tabs
  * - Escape: Close modals/dialogs
  */
 export function KeyboardShortcuts() {
@@ -80,6 +85,75 @@ export function KeyboardShortcuts() {
           announce('Preview panel focused', 'polite')
         } else {
           announce('Preview panel not found', 'polite')
+        }
+      }
+
+      // Ctrl/Cmd + N: New document (trigger template browser)
+      if (modKey && e.key === 'n') {
+        e.preventDefault()
+        const newButton = document.querySelector('[aria-label*="New"], [aria-label*="new"]') as HTMLButtonElement
+        if (newButton) {
+          newButton.click()
+          announce('New document dialog opened', 'polite')
+        } else {
+          announce('New document button not found', 'polite')
+        }
+      }
+
+      // Ctrl/Cmd + S: Save current document
+      if (modKey && e.key === 's') {
+        e.preventDefault()
+        const saveButton = document.querySelector('[aria-label*="Save"], [aria-label*="save"]') as HTMLButtonElement
+        if (saveButton) {
+          saveButton.click()
+          announce('Document saved', 'polite')
+        } else {
+          announce('Save triggered', 'polite')
+        }
+      }
+
+      // Ctrl/Cmd + Shift + F: Toggle fullscreen
+      if (modKey && e.shiftKey && e.key === 'F') {
+        e.preventDefault()
+        if (document.fullscreenElement) {
+          document.exitFullscreen()
+            .then(() => announce('Exited fullscreen mode', 'polite'))
+            .catch(err => {
+              console.warn('Failed to exit fullscreen:', err)
+              announce('Could not exit fullscreen mode', 'polite')
+            })
+        } else {
+          document.documentElement.requestFullscreen()
+            .then(() => announce('Entered fullscreen mode', 'polite'))
+            .catch(err => {
+              console.warn('Failed to enter fullscreen:', err)
+              announce('Could not enter fullscreen mode', 'polite')
+            })
+        }
+      }
+
+      // Ctrl/Cmd + Shift + K: Clear chat history
+      if (modKey && e.shiftKey && e.key === 'K') {
+        e.preventDefault()
+        const clearButton = document.querySelector('[aria-label*="Clear"], [aria-label*="clear"]') as HTMLButtonElement
+        if (clearButton) {
+          clearButton.click()
+          announce('Chat history cleared', 'polite')
+        } else {
+          announce('Clear chat button not found', 'polite')
+        }
+      }
+
+      // Alt + 1-9: Switch between tabs
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const num = parseInt(e.key, 10)
+        if (num >= 1 && num <= 9) {
+          e.preventDefault()
+          const tabs = document.querySelectorAll('[role="tab"]')
+          if (tabs[num - 1]) {
+            (tabs[num - 1] as HTMLElement).click()
+            announce(`Switched to tab ${num}`, 'polite')
+          }
         }
       }
 

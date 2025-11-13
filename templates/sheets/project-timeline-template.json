@@ -1,0 +1,40 @@
+{
+  "name": "Project Timeline Template",
+  "description": "Gantt-style project timeline for managing academic projects and assignments",
+  "category": "project-management",
+  "discipline": "general",
+  "content": {
+    "title": "Project Timeline",
+    "sheets": [
+      {
+        "name": "Timeline",
+        "rows": [
+          ["Task", "Start Date", "End Date", "Duration (days)", "Status", "Owner", "Notes"],
+          ["Project Planning", "", "", "", "Not Started", "", ""],
+          ["Research Phase", "", "", "", "Not Started", "", ""],
+          ["  - Literature Review", "", "", "", "Not Started", "", ""],
+          ["  - Data Collection", "", "", "", "Not Started", "", ""],
+          ["Analysis Phase", "", "", "", "Not Started", "", ""],
+          ["  - Data Analysis", "", "", "", "Not Started", "", ""],
+          ["  - Results Interpretation", "", "", "", "Not Started", "", ""],
+          ["Writing Phase", "", "", "", "Not Started", "", ""],
+          ["  - First Draft", "", "", "", "Not Started", "", ""],
+          ["  - Revisions", "", "", "", "Not Started", "", ""],
+          ["  - Final Draft", "", "", "", "Not Started", "", ""],
+          ["Submission", "", "", "", "Not Started", "", ""]
+        ]
+      },
+      {
+        "name": "Milestones",
+        "rows": [
+          ["Milestone", "Target Date", "Actual Date", "Status", "Notes"],
+          ["Proposal Approval", "", "", "Pending", ""],
+          ["Data Collection Complete", "", "", "Pending", ""],
+          ["Analysis Complete", "", "", "Pending", ""],
+          ["Draft Complete", "", "", "Pending", ""],
+          ["Final Submission", "", "", "Pending", ""]
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "name": "Thesis Defense Presentation Template",
+  "description": "Comprehensive presentation template for graduate thesis or dissertation defense",
+  "category": "academic",
+  "discipline": "general",
+  "content": {
+    "title": "Thesis Defense Presentation",
+    "slides": [
+      {
+        "type": "title",
+        "title": "[Your Thesis Title]",
+        "subtitle": "[Your Name]\n[Department/Program]\n[University]\n[Date]"
+      },
+      {
+        "type": "content",
+        "title": "Agenda",
+        "bullets": [
+          "Introduction & Background",
+          "Research Problem & Questions",
+          "Literature Review",
+          "Methodology",
+          "Results & Findings",
+          "Discussion & Implications",
+          "Conclusions & Future Work",
+          "Questions"
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Introduction & Background"
+      },
+      {
+        "type": "content",
+        "title": "Background",
+        "bullets": [
+          "Context of your research area",
+          "Why this topic is important",
+          "Current state of the field",
+          "Motivation for your research"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Problem Statement",
+        "bullets": [
+          "What problem does your research address?",
+          "Why is this problem important?",
+          "What gap in knowledge exists?",
+          "How will your research fill this gap?"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Research Questions",
+        "bullets": [
+          "Primary Research Question",
+          "Sub-question 1",
+          "Sub-question 2",
+          "Sub-question 3"
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Literature Review"
+      },
+      {
+        "type": "content",
+        "title": "Key Themes in Existing Research",
+        "bullets": [
+          "Theme 1: [Brief description]",
+          "Theme 2: [Brief description]",
+          "Theme 3: [Brief description]",
+          "Identified gaps and limitations"
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Methodology"
+      },
+      {
+        "type": "content",
+        "title": "Research Design",
+        "bullets": [
+          "Research approach (qualitative/quantitative/mixed)",
+          "Study design",
+          "Participants/sample",
+          "Data collection methods",
+          "Data analysis techniques"
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Results"
+      },
+      {
+        "type": "content",
+        "title": "Key Finding 1",
+        "bullets": [
+          "Present your first major finding",
+          "Include relevant statistics or qualitative evidence",
+          "Use charts/graphs if applicable"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Key Finding 2",
+        "bullets": [
+          "Present your second major finding",
+          "Include supporting evidence",
+          "Visual representation recommended"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Key Finding 3",
+        "bullets": [
+          "Present your third major finding",
+          "Supporting data and evidence",
+          "Connect to research questions"
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Discussion"
+      },
+      {
+        "type": "content",
+        "title": "Interpretation of Findings",
+        "bullets": [
+          "What do these results mean?",
+          "How do they answer your research questions?",
+          "How do they relate to existing literature?",
+          "Were there any surprises?"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Implications",
+        "bullets": [
+          "Theoretical contributions",
+          "Practical applications",
+          "Policy implications (if applicable)",
+          "Impact on the field"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Limitations",
+        "bullets": [
+          "Acknowledge study limitations",
+          "Sample size or selection issues",
+          "Methodological constraints",
+          "Scope limitations"
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Conclusions"
+      },
+      {
+        "type": "content",
+        "title": "Key Contributions",
+        "bullets": [
+          "Main contribution 1",
+          "Main contribution 2",
+          "Main contribution 3",
+          "Overall significance of the work"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Future Research Directions",
+        "bullets": [
+          "Suggested extension of current work",
+          "Related areas to explore",
+          "Methodological improvements",
+          "Broader applications"
+        ]
+      },
+      {
+        "type": "content",
+        "title": "Thank You",
+        "bullets": [
+          "Acknowledgments",
+          "Thank committee members",
+          "Questions and discussion"
+        ]
+      }
+    ]
+  }
+}

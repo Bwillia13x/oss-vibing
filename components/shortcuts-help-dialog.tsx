@@ -29,12 +29,22 @@ export function ShortcutsHelpDialog({ open, onOpenChange }: ShortcutsHelpDialogP
         { key: `${modKey} + E`, action: 'Focus file explorer' },
         { key: `${modKey} + P`, action: 'Focus preview panel' },
         { key: `${modKey} + B`, action: 'Toggle sidebar' },
+        { key: 'Alt + 1-9', action: 'Switch between tabs' },
       ],
     },
     {
-      category: 'Appearance',
+      category: 'Document Actions',
+      items: [
+        { key: `${modKey} + N`, action: 'New document (open template browser)' },
+        { key: `${modKey} + S`, action: 'Save current document' },
+        { key: `${modKey} + Shift + K`, action: 'Clear chat history' },
+      ],
+    },
+    {
+      category: 'View & Appearance',
       items: [
         { key: `${modKey} + Shift + T`, action: 'Toggle theme (dark/light/system)' },
+        { key: `${modKey} + Shift + F`, action: 'Toggle fullscreen mode' },
       ],
     },
     {
