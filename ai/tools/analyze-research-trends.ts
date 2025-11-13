@@ -6,6 +6,7 @@ import z from 'zod/v3'
 import { readFile, readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import { detectMethodology } from './utils/methodology-detection'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
@@ -234,21 +235,6 @@ function extractKeywordsFromText(title: string, abstract?: string): string[] {
   return [...new Set(keywords)]
 }
 
-function detectMethodology(text: string): string {
-  const lower = text.toLowerCase()
-  
-  if (lower.includes('survey') || lower.includes('questionnaire')) return 'Survey'
-  if (lower.includes('experiment') || lower.includes('rct') || lower.includes('randomized')) return 'Experimental'
-  if (lower.includes('interview') || lower.includes('qualitative')) return 'Qualitative'
-  if (lower.includes('meta-analysis') || lower.includes('systematic review')) return 'Meta-Analysis'
-  if (lower.includes('case study')) return 'Case Study'
-  if (lower.includes('simulation') || lower.includes('modeling')) return 'Simulation'
-  if (lower.includes('observational') || lower.includes('longitudinal')) return 'Observational'
-  if (lower.includes('theoretical') || lower.includes('conceptual')) return 'Theoretical'
-  
-  return 'Mixed/Other'
-}
-
 function calculateMomentum(years: number[], counts: number[]): number {
   if (years.length < 2) return 0
   
@@ -259,7 +245,9 @@ function calculateMomentum(years: number[], counts: number[]): number {
   const sumXY = years.reduce((sum, year, i) => sum + year * counts[i], 0)
   const sumXX = years.reduce((sum, year) => sum + year * year, 0)
   
-  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX)
+  const denominator = n * sumXX - sumX * sumX
+  if (denominator === 0) return 0
+  const slope = (n * sumXY - sumX * sumY) / denominator
   
   return slope
 }
@@ -352,7 +340,9 @@ function generateTrendReport(
     report += 'These topics show strong upward momentum and increasing research interest:\n\n'
     
     for (const trend of emergingTrends) {
-      const growth = ((trend.counts[trend.counts.length - 1] / trend.counts[0]) * 100).toFixed(0)
+      const growth = trend.counts[0] > 0
+        ? ((trend.counts[trend.counts.length - 1] / trend.counts[0]) * 100).toFixed(0)
+        : 'N/A'
       report += `### ${trend.topic.charAt(0).toUpperCase() + trend.topic.slice(1)}\n`
       report += `- **Momentum Score:** ${trend.momentum.toFixed(2)}\n`
       report += `- **Papers:** ${trend.counts.reduce((sum, c) => sum + c, 0)} total\n`

@@ -6,6 +6,7 @@ import z from 'zod/v3'
 import { readFile, readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import { detectMethodology } from './utils/methodology-detection'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
@@ -155,8 +156,6 @@ export const synthesizeLiteratureReview = ({ writer }: Params) =>
 // Helper functions
 
 function extractFindings(abstract: string): string {
-  const lower = abstract.toLowerCase()
-  
   // Look for findings indicators
   const findingsPatterns = [
     /results? (?:show|indicate|suggest|demonstrate|reveal)[^.]+\./gi,
@@ -174,22 +173,6 @@ function extractFindings(abstract: string): string {
   }
   
   return findings.join(' ')
-}
-
-function detectMethodology(text: string): string {
-  const lower = text.toLowerCase()
-  
-  if (lower.includes('survey') || lower.includes('questionnaire')) return 'Survey'
-  if (lower.includes('experiment') || lower.includes('rct') || lower.includes('randomized')) return 'Experimental'
-  if (lower.includes('interview') || lower.includes('qualitative')) return 'Qualitative'
-  if (lower.includes('meta-analysis') || lower.includes('systematic review')) return 'Meta-Analysis'
-  if (lower.includes('case study')) return 'Case Study'
-  if (lower.includes('simulation') || lower.includes('modeling')) return 'Simulation'
-  if (lower.includes('observational') || lower.includes('longitudinal')) return 'Observational'
-  if (lower.includes('theoretical') || lower.includes('conceptual')) return 'Theoretical'
-  if (lower.includes('mixed method')) return 'Mixed Methods'
-  
-  return 'Other'
 }
 
 function identifyThemes(papers: Paper[], topic: string): Theme[] {
@@ -419,8 +402,9 @@ function identifyGaps(papers: Paper[], themes: Theme[], topic: string): string[]
   
   // Check for temporal gaps
   const years = papers.map(p => p.year).sort((a, b) => a - b)
-  const oldestRecent = Math.max(...years.filter(y => y >= new Date().getFullYear() - 3))
-  if (!oldestRecent || years.length < 5) {
+  const recentYears = years.filter(y => y >= new Date().getFullYear() - 3)
+  const oldestRecent = recentYears.length > 0 ? Math.max(...recentYears) : undefined
+  if (oldestRecent === undefined || years.length < 5) {
     gaps.push('Limited recent research - field may need updated studies')
   }
   
@@ -466,7 +450,11 @@ function generateLiteratureReview(
       return `${a.name} (${paperYears[0]}-${paperYears[paperYears.length - 1]})`
     })
     
-    review += `Notable researchers include ${authorNames.slice(0, -1).join(', ')}, and ${authorNames[authorNames.length - 1]}, `
+    if (authorNames.length === 1) {
+      review += `Notable researcher is ${authorNames[0]}, `
+    } else {
+      review += `Notable researchers include ${authorNames.slice(0, -1).join(', ')}, and ${authorNames[authorNames.length - 1]}, `
+    }
     review += `whose work has been influential in shaping current understanding.\n\n`
   }
   
