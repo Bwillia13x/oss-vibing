@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getPerformanceReport } from '@/lib/performance'
 import { apiCache, apiRateLimiter } from '@/lib/cache'
+import monitoring from '@/lib/monitoring'
 
 /**
  * Performance metrics API endpoint for monitoring
- * GET /api/metrics - Returns performance statistics
+ * GET /api/metrics - Returns performance statistics and monitoring data
  */
 export async function GET(req: Request) {
   // Rate limiting - use IP address
@@ -31,9 +32,18 @@ export async function GET(req: Request) {
   const cacheStats = {
     apiCache: apiCache.stats(),
   }
+
+  // Add monitoring statistics
+  const monitoringStats = {
+    recentErrors: monitoring.getErrors(10),
+    apiResponseTime: monitoring.getMetricStats('api_response_time'),
+    dbQueryTime: monitoring.getMetricStats('db_query_time'),
+    cacheHitRate: monitoring.getMetricStats('cache_hit'),
+  }
   
   return NextResponse.json({
     ...report,
     cache: cacheStats,
+    monitoring: monitoringStats,
   })
 }
