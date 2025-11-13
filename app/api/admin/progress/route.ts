@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStudentProgress, updateStudentProgress } from '@/lib/admin-analytics'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
+import { requireInstitutionAccess } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -33,7 +34,11 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization check
+    const authResult = await requireInstitutionAccess(req, institutionId, ['admin', 'institution-admin', 'instructor'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     const progress = await getStudentProgress(institutionId, courseId)
 
@@ -89,7 +94,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication check - admins and instructors can update progress
+    const authResult = await requireInstitutionAccess(req, progress.institutionId, ['admin', 'institution-admin', 'instructor'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     await updateStudentProgress(studentId, progress)
 
