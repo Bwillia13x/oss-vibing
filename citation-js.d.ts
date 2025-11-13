@@ -1,6 +1,7 @@
 declare module 'citation-js' {
-  export class Cite {
+  class Cite {
     constructor(data: any, options?: any)
     format(format: string, options?: any): string
   }
+  export default Cite
 }

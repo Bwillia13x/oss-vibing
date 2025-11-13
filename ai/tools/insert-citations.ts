@@ -5,7 +5,7 @@ import description from './insert-citations.md'
 import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import { Cite } from 'citation-js'
+import Cite from 'citation-js'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
