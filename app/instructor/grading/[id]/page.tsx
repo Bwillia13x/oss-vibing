@@ -83,7 +83,7 @@ type RubricScore = {
   feedback: string
 }
 
-export default function GradingPage({ params }: { params: Promise<{ id: string }> }) {
+export default function GradingPage() {
   const router = useRouter()
   const [submission] = useState(mockSubmission)
   const [rubric] = useState(mockRubric)
@@ -113,7 +113,7 @@ export default function GradingPage({ params }: { params: Promise<{ id: string }
 
   const totalPoints = rubric.reduce((sum, criterion) => sum + criterion.points, 0)
   const earnedPoints = rubricScores.reduce((sum, score) => sum + score.score, 0)
-  const percentage = Math.round((earnedPoints / totalPoints) * 100)
+  const percentage = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0
 
   const getLetterGrade = (percentage: number) => {
     if (percentage >= 90) return 'A'
@@ -301,15 +301,9 @@ export default function GradingPage({ params }: { params: Promise<{ id: string }
 
         {/* Submit Button */}
         <div className="border-t p-6 space-y-4">
-          {earnedPoints === 0 && (
-            <div className="flex items-start space-x-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950 p-3 rounded-md">
-              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <p>You haven't assigned any points yet. Make sure to grade each criterion.</p>
-            </div>
-          )}
           <Button
             onClick={handleSubmit}
-            disabled={loading || earnedPoints === 0}
+            disabled={loading}
             className="w-full"
             size="lg"
           >

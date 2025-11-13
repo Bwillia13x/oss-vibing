@@ -113,7 +113,7 @@ const mockAssignments = [
   },
 ]
 
-export default function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function CourseDetailPage() {
   const [course] = useState(mockCourse)
   const [students] = useState(mockStudents)
   const [assignments] = useState(mockAssignments)
@@ -125,15 +125,17 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
       student.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const averageCourseGrade = Math.round(
-    students.reduce((sum, student) => sum + student.averageGrade, 0) / students.length
-  )
+  const averageCourseGrade = students.length > 0
+    ? Math.round(students.reduce((sum, student) => sum + student.averageGrade, 0) / students.length)
+    : 0
 
-  const completionRate = Math.round(
-    (students.reduce((sum, student) => sum + student.assignmentsCompleted, 0) /
-      (students.length * course.assignments)) *
-      100
-  )
+  const completionRate = students.length > 0 && course.assignments > 0
+    ? Math.round(
+        (students.reduce((sum, student) => sum + student.assignmentsCompleted, 0) /
+          (students.length * course.assignments)) *
+          100
+      )
+    : 0
 
   return (
     <div className="space-y-6 p-8">
@@ -299,9 +301,9 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
                                     : 'secondary'
                                 }
                               >
-                                {Math.round(
-                                  (student.assignmentsCompleted / student.totalAssignments) * 100
-                                )}
+                                {student.totalAssignments > 0
+                                  ? Math.round((student.assignmentsCompleted / student.totalAssignments) * 100)
+                                  : 0}
                                 %
                               </Badge>
                             </div>

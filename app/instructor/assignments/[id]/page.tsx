@@ -91,7 +91,7 @@ const mockSubmissions = [
   },
 ]
 
-export default function AssignmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function AssignmentDetailPage() {
   const [assignment] = useState(mockAssignment)
   const [submissions] = useState(mockSubmissions)
 
@@ -99,7 +99,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
   const submittedCount = submissions.filter((s) => s.submittedAt).length
   const gradedCount = submissions.filter((s) => s.status === 'graded').length
   const pendingCount = submittedCount - gradedCount
-  const submissionRate = Math.round((submittedCount / totalStudents) * 100)
+  const submissionRate = totalStudents > 0 ? Math.round((submittedCount / totalStudents) * 100) : 0
 
   const getStatusBadge = (status: string) => {
     switch (status) {
