@@ -1,0 +1,482 @@
+/**
+ * Research Tools Integration Service
+ * Provides unified access to academic research databases and platforms
+ * Supports: Google Scholar, PubMed, arXiv, IEEE Xplore
+ */
+
+import monitoring from './monitoring'
+
+export interface ResearchPaper {
+  id: string
+  title: string
+  authors: string[]
+  abstract?: string
+  year?: number
+  venue?: string // Journal, conference, etc.
+  doi?: string
+  url?: string
+  citationCount?: number
+  pdfUrl?: string
+  source: 'google-scholar' | 'pubmed' | 'arxiv' | 'ieee' | 'jstor'
+  metadata?: Record<string, any>
+}
+
+export interface SearchOptions {
+  query: string
+  maxResults?: number
+  yearStart?: number
+  yearEnd?: number
+  sortBy?: 'relevance' | 'date' | 'citations'
+  sources?: Array<'google-scholar' | 'pubmed' | 'arxiv' | 'ieee' | 'jstor'>
+}
+
+export interface SearchResult {
+  papers: ResearchPaper[]
+  totalResults: number
+  source: string
+  query: string
+  executionTime: number
+}
+
+/**
+ * Search Google Scholar for academic papers
+ * Note: Google Scholar doesn't have an official API, this is a placeholder
+ * In production, consider using Serpapi or similar service
+ */
+export async function searchGoogleScholar(
+  query: string,
+  maxResults: number = 10
+): Promise<ResearchPaper[]> {
+  const startTime = Date.now()
+  
+  try {
+    // TODO: Implement actual Google Scholar API integration
+    // Options: Serpapi, ScraperAPI, or custom scraping (be mindful of ToS)
+    
+    // Placeholder implementation
+    console.log(`[Google Scholar] Searching for: ${query}`)
+    
+    // Mock data for development
+    const mockPapers: ResearchPaper[] = []
+    
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'google-scholar',
+      query,
+      results: mockPapers.length.toString(),
+    })
+    
+    return mockPapers
+  } catch (error) {
+    console.error('Error searching Google Scholar:', error)
+    monitoring.trackError(error as Error, {
+      source: 'google-scholar',
+      query,
+    })
+    return []
+  }
+}
+
+/**
+ * Search PubMed for biomedical literature
+ * Uses NCBI E-utilities API (free, no API key required for basic use)
+ */
+export async function searchPubMed(
+  query: string,
+  maxResults: number = 10
+): Promise<ResearchPaper[]> {
+  const startTime = Date.now()
+  
+  try {
+    // PubMed E-utilities API endpoint
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi`
+    const searchParams = new URLSearchParams({
+      db: 'pubmed',
+      term: query,
+      retmax: maxResults.toString(),
+      retmode: 'json',
+    })
+    
+    // Search for paper IDs
+    const searchResponse = await fetch(`${searchUrl}?${searchParams}`)
+    const searchData = await searchResponse.json()
+    
+    if (!searchData.esearchresult?.idlist) {
+      return []
+    }
+    
+    const ids = searchData.esearchresult.idlist
+    
+    if (ids.length === 0) {
+      return []
+    }
+    
+    // Fetch paper details
+    const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi`
+    const fetchParams = new URLSearchParams({
+      db: 'pubmed',
+      id: ids.join(','),
+      retmode: 'xml',
+    })
+    
+    const fetchResponse = await fetch(`${fetchUrl}?${fetchParams}`)
+    const xmlText = await fetchResponse.text()
+    
+    // Parse XML (simplified - in production use a proper XML parser)
+    const papers: ResearchPaper[] = ids.map((id: string, index: number) => ({
+      id: `pubmed-${id}`,
+      title: `PubMed Paper ${id}`, // Parse from XML
+      authors: [],
+      year: new Date().getFullYear(),
+      source: 'pubmed' as const,
+      url: `https://pubmed.ncbi.nlm.nih.gov/${id}/`,
+      metadata: { pubmedId: id },
+    }))
+    
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'pubmed',
+      query,
+      results: papers.length.toString(),
+    })
+    
+    return papers
+  } catch (error) {
+    console.error('Error searching PubMed:', error)
+    monitoring.trackError(error as Error, {
+      source: 'pubmed',
+      query,
+    })
+    return []
+  }
+}
+
+/**
+ * Search arXiv for preprints
+ * Uses arXiv API (free, no API key required)
+ */
+export async function searchArXiv(
+  query: string,
+  maxResults: number = 10
+): Promise<ResearchPaper[]> {
+  const startTime = Date.now()
+  
+  try {
+    const apiUrl = `http://export.arxiv.org/api/query`
+    const params = new URLSearchParams({
+      search_query: `all:${query}`,
+      start: '0',
+      max_results: maxResults.toString(),
+      sortBy: 'relevance',
+      sortOrder: 'descending',
+    })
+    
+    const response = await fetch(`${apiUrl}?${params}`)
+    const xmlText = await response.text()
+    
+    // Parse Atom XML feed (simplified)
+    // In production, use a proper XML parser like fast-xml-parser
+    const entryMatches = xmlText.match(/<entry>([\s\S]*?)<\/entry>/g) || []
+    
+    const papers: ResearchPaper[] = entryMatches.map((entry, index) => {
+      const idMatch = entry.match(/<id>(.*?)<\/id>/)
+      const titleMatch = entry.match(/<title>(.*?)<\/title>/)
+      const summaryMatch = entry.match(/<summary>(.*?)<\/summary>/)
+      const publishedMatch = entry.match(/<published>(.*?)<\/published>/)
+      const authorMatches = entry.match(/<author>[\s\S]*?<name>(.*?)<\/name>[\s\S]*?<\/author>/g) || []
+      
+      const arxivId = idMatch ? idMatch[1].split('/abs/')[1] : `arxiv-${index}`
+      const year = publishedMatch ? new Date(publishedMatch[1]).getFullYear() : undefined
+      
+      const authors = authorMatches.map(author => {
+        const nameMatch = author.match(/<name>(.*?)<\/name>/)
+        return nameMatch ? nameMatch[1].trim() : ''
+      }).filter(Boolean)
+      
+      return {
+        id: arxivId,
+        title: titleMatch ? titleMatch[1].trim().replace(/\s+/g, ' ') : 'Untitled',
+        authors,
+        abstract: summaryMatch ? summaryMatch[1].trim().replace(/\s+/g, ' ') : undefined,
+        year,
+        source: 'arxiv' as const,
+        url: `https://arxiv.org/abs/${arxivId}`,
+        pdfUrl: `https://arxiv.org/pdf/${arxivId}.pdf`,
+        metadata: { arxivId },
+      }
+    })
+    
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'arxiv',
+      query,
+      results: papers.length.toString(),
+    })
+    
+    return papers
+  } catch (error) {
+    console.error('Error searching arXiv:', error)
+    monitoring.trackError(error as Error, {
+      source: 'arxiv',
+      query,
+    })
+    return []
+  }
+}
+
+/**
+ * Search IEEE Xplore
+ * Requires API key from IEEE (https://developer.ieee.org/)
+ */
+export async function searchIEEE(
+  query: string,
+  maxResults: number = 10
+): Promise<ResearchPaper[]> {
+  const startTime = Date.now()
+  
+  try {
+    const apiKey = process.env.IEEE_API_KEY
+    
+    if (!apiKey) {
+      console.warn('IEEE API key not configured')
+      return []
+    }
+    
+    const apiUrl = `http://ieeexploreapi.ieee.org/api/v1/search/articles`
+    const params = new URLSearchParams({
+      querytext: query,
+      max_records: maxResults.toString(),
+      sort_field: 'relevance',
+      apikey: apiKey,
+    })
+    
+    const response = await fetch(`${apiUrl}?${params}`)
+    const data = await response.json()
+    
+    if (!data.articles) {
+      return []
+    }
+    
+    const papers: ResearchPaper[] = data.articles.map((article: any) => ({
+      id: `ieee-${article.article_number}`,
+      title: article.title,
+      authors: article.authors?.authors?.map((a: any) => a.full_name) || [],
+      abstract: article.abstract,
+      year: article.publication_year,
+      venue: article.publication_title,
+      doi: article.doi,
+      source: 'ieee' as const,
+      url: article.pdf_url || article.html_url,
+      citationCount: article.citing_paper_count,
+      metadata: {
+        articleNumber: article.article_number,
+        isbn: article.isbn,
+        issn: article.issn,
+      },
+    }))
+    
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'ieee',
+      query,
+      results: papers.length.toString(),
+    })
+    
+    return papers
+  } catch (error) {
+    console.error('Error searching IEEE Xplore:', error)
+    monitoring.trackError(error as Error, {
+      source: 'ieee',
+      query,
+    })
+    return []
+  }
+}
+
+/**
+ * Search JSTOR
+ * Requires API access (institutional subscription typically required)
+ */
+export async function searchJSTOR(
+  query: string,
+  maxResults: number = 10
+): Promise<ResearchPaper[]> {
+  const startTime = Date.now()
+  
+  try {
+    const apiKey = process.env.JSTOR_API_KEY
+    
+    if (!apiKey) {
+      console.warn('JSTOR API key not configured')
+      return []
+    }
+    
+    // JSTOR API endpoint (placeholder - actual endpoint depends on subscription)
+    // This would typically require institutional access
+    console.log(`[JSTOR] Search not fully implemented - requires institutional access`)
+    
+    const papers: ResearchPaper[] = []
+    
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'jstor',
+      query,
+      results: papers.length.toString(),
+    })
+    
+    return papers
+  } catch (error) {
+    console.error('Error searching JSTOR:', error)
+    monitoring.trackError(error as Error, {
+      source: 'jstor',
+      query,
+    })
+    return []
+  }
+}
+
+/**
+ * Unified search across multiple sources
+ */
+export async function searchMultipleSources(
+  options: SearchOptions
+): Promise<SearchResult[]> {
+  const {
+    query,
+    maxResults = 10,
+    sources = ['arxiv', 'pubmed'],
+  } = options
+  
+  const results: SearchResult[] = []
+  const searchPromises: Promise<{ source: string; papers: ResearchPaper[] }>[] = []
+  
+  // Search each source in parallel
+  if (sources.includes('google-scholar')) {
+    searchPromises.push(
+      searchGoogleScholar(query, maxResults).then(papers => ({
+        source: 'google-scholar',
+        papers,
+      }))
+    )
+  }
+  
+  if (sources.includes('pubmed')) {
+    searchPromises.push(
+      searchPubMed(query, maxResults).then(papers => ({
+        source: 'pubmed',
+        papers,
+      }))
+    )
+  }
+  
+  if (sources.includes('arxiv')) {
+    searchPromises.push(
+      searchArXiv(query, maxResults).then(papers => ({
+        source: 'arxiv',
+        papers,
+      }))
+    )
+  }
+  
+  if (sources.includes('ieee')) {
+    searchPromises.push(
+      searchIEEE(query, maxResults).then(papers => ({
+        source: 'ieee',
+        papers,
+      }))
+    )
+  }
+  
+  if (sources.includes('jstor')) {
+    searchPromises.push(
+      searchJSTOR(query, maxResults).then(papers => ({
+        source: 'jstor',
+        papers,
+      }))
+    )
+  }
+  
+  // Wait for all searches to complete
+  const searchResults = await Promise.allSettled(searchPromises)
+  
+  searchResults.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      const { source, papers } = result.value
+      results.push({
+        papers,
+        totalResults: papers.length,
+        source,
+        query,
+        executionTime: 0, // Already tracked in individual functions
+      })
+    } else {
+      console.error(`Search failed for source:`, result.reason)
+    }
+  })
+  
+  return results
+}
+
+/**
+ * Get paper details by DOI
+ */
+export async function getPaperByDOI(doi: string): Promise<ResearchPaper | null> {
+  try {
+    // Use Crossref API (free, no API key required)
+    const response = await fetch(`https://api.crossref.org/works/${doi}`)
+    
+    if (!response.ok) {
+      return null
+    }
+    
+    const data = await response.json()
+    const work = data.message
+    
+    const paper: ResearchPaper = {
+      id: `doi-${doi}`,
+      title: work.title?.[0] || 'Untitled',
+      authors: work.author?.map((a: any) => `${a.given} ${a.family}`) || [],
+      abstract: work.abstract,
+      year: work.published?.['date-parts']?.[0]?.[0],
+      venue: work['container-title']?.[0],
+      doi,
+      url: work.URL,
+      citationCount: work['is-referenced-by-count'],
+      source: 'arxiv', // Generic source for DOI lookups
+      metadata: {
+        type: work.type,
+        publisher: work.publisher,
+        issn: work.ISSN,
+      },
+    }
+    
+    return paper
+  } catch (error) {
+    console.error('Error fetching paper by DOI:', error)
+    monitoring.trackError(error as Error, {
+      method: 'getPaperByDOI',
+      doi,
+    })
+    return null
+  }
+}
+
+/**
+ * Format citation from paper
+ */
+export function formatCitation(
+  paper: ResearchPaper,
+  style: 'apa' | 'mla' | 'chicago' = 'apa'
+): string {
+  const authors = paper.authors.join(', ')
+  const year = paper.year || 'n.d.'
+  
+  switch (style) {
+    case 'apa':
+      return `${authors} (${year}). ${paper.title}. ${paper.venue || ''}. ${paper.doi ? `https://doi.org/${paper.doi}` : paper.url || ''}`
+    
+    case 'mla':
+      return `${authors}. "${paper.title}." ${paper.venue || ''}, ${year}. ${paper.url || ''}`
+    
+    case 'chicago':
+      return `${authors}. "${paper.title}." ${paper.venue || ''} (${year}). ${paper.url || ''}`
+    
+    default:
+      return `${authors}. ${paper.title}. ${year}.`
+  }
+}
