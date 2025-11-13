@@ -377,7 +377,8 @@ export async function createCourse(
 // Helper functions
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  // Using crypto for secure ID generation
+  return `${Date.now()}-${crypto.randomUUID().substring(0, 9)}`
 }
 
 function calculateStartDate(
