@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Palette, Upload, Globe, Mail, Save, Eye } from 'lucide-react'
+import { Palette, Globe, Mail, Save, Eye } from 'lucide-react'
 
 export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
