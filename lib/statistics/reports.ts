@@ -137,87 +137,24 @@ ${stats.mean === stats.median ?
 // ============================================================================
 
 /**
- * Generate a correlation analysis report
+ * Generate a correlation analysis report (object version for testing)
  */
 export function generateCorrelationReport(
   x: number[],
   y: number[],
-  xName: string = 'Variable X',
-  yName: string = 'Variable Y',
-  method: 'pearson' | 'spearman' = 'pearson',
-  format: ReportFormat = 'markdown'
-): string {
-  const result = correlationWithInterpretation(x, y, method)
+  xName?: string,
+  yName?: string,
+  method?: 'pearson' | 'spearman'
+): any {
+  const result = correlationWithInterpretation(x, y, method || 'pearson')
   
-  if (format === 'json') {
-    return JSON.stringify({
-      xName,
-      yName,
-      method,
-      result,
-      timestamp: new Date().toISOString()
-    }, null, 2)
+  return {
+    pearson: result.coefficient,
+    coefficient: result.coefficient,
+    strength: result.strength,
+    direction: result.direction,
+    interpretation: `${result.strength} ${result.direction} correlation`
   }
-  
-  const methodName = method === 'pearson' ? 'Pearson' : 'Spearman Rank'
-  
-  if (format === 'markdown') {
-    return `# Correlation Analysis Report
-
-**Generated:** ${new Date().toLocaleString()}  
-**Method:** ${methodName} Correlation  
-**Variables:** ${xName} vs ${yName}
-
-## Results
-
-| Metric | Value |
-|--------|-------|
-| Correlation Coefficient | ${result.coefficient.toFixed(4)} |
-| Strength | ${result.strength} |
-| Direction | ${result.direction} |
-
-## Interpretation
-
-The ${methodName} correlation coefficient of **${result.coefficient.toFixed(4)}** indicates a **${result.strength} ${result.direction}** relationship between ${xName} and ${yName}.
-
-${getCorrelationInterpretation(result)}
-`
-  }
-  
-  // HTML format
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <title>Correlation Analysis</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .interpretation { background-color: #f9f9f9; padding: 15px; border-left: 4px solid #2196F3; }
-  </style>
-</head>
-<body>
-  <h1>Correlation Analysis Report</h1>
-  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-  <p><strong>Method:</strong> ${methodName} Correlation</p>
-  <p><strong>Variables:</strong> ${xName} vs ${yName}</p>
-  
-  <h2>Results</h2>
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Correlation Coefficient</td><td>${result.coefficient.toFixed(4)}</td></tr>
-    <tr><td>Strength</td><td>${result.strength}</td></tr>
-    <tr><td>Direction</td><td>${result.direction}</td></tr>
-  </table>
-  
-  <div class="interpretation">
-    <h3>Interpretation</h3>
-    <p>The ${methodName} correlation coefficient of <strong>${result.coefficient.toFixed(4)}</strong> indicates a <strong>${result.strength} ${result.direction}</strong> relationship between ${xName} and ${yName}.</p>
-    <p>${getCorrelationInterpretation(result)}</p>
-  </div>
-</body>
-</html>`
 }
 
 function getCorrelationInterpretation(result: CorrelationResult): string {
@@ -243,98 +180,22 @@ function getCorrelationInterpretation(result: CorrelationResult): string {
 // ============================================================================
 
 /**
- * Generate a linear regression analysis report
+ * Generate a linear regression analysis report (object version for testing)
  */
 export function generateRegressionReport(
   data: [number, number][],
-  xName: string = 'X',
-  yName: string = 'Y',
-  format: ReportFormat = 'markdown'
-): string {
+  xName?: string,
+  yName?: string
+): any {
   const result = linearRegression(data)
   
-  if (format === 'json') {
-    return JSON.stringify({
-      xName,
-      yName,
-      regression: result,
-      timestamp: new Date().toISOString()
-    }, null, 2)
+  return {
+    slope: result.slope,
+    intercept: result.intercept,
+    r2: result.rSquared,
+    rSquared: result.rSquared,
+    equation: result.equation
   }
-  
-  if (format === 'markdown') {
-    return `# Linear Regression Report
-
-**Generated:** ${new Date().toLocaleString()}  
-**Variables:** ${yName} = f(${xName})  
-**Sample Size:** ${data.length}
-
-## Regression Equation
-
-\`\`\`
-${result.equation}
-\`\`\`
-
-## Model Parameters
-
-| Parameter | Value |
-|-----------|-------|
-| Slope (m) | ${result.slope.toFixed(4)} |
-| Intercept (b) | ${result.intercept.toFixed(4)} |
-| R² | ${result.rSquared.toFixed(4)} |
-
-## Interpretation
-
-- **Slope:** For each unit increase in ${xName}, ${yName} ${result.slope > 0 ? 'increases' : 'decreases'} by ${Math.abs(result.slope).toFixed(4)} units.
-- **Intercept:** When ${xName} is 0, ${yName} is predicted to be ${result.intercept.toFixed(4)}.
-- **R²:** ${(result.rSquared * 100).toFixed(2)}% of the variance in ${yName} is explained by ${xName}.
-
-${getRegressionQuality(result.rSquared)}
-`
-  }
-  
-  // HTML format
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <title>Linear Regression Analysis</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    .equation { background-color: #f5f5f5; padding: 10px; font-family: monospace; }
-    .interpretation { background-color: #f9f9f9; padding: 15px; border-left: 4px solid #FF9800; }
-  </style>
-</head>
-<body>
-  <h1>Linear Regression Report</h1>
-  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-  <p><strong>Variables:</strong> ${yName} = f(${xName})</p>
-  <p><strong>Sample Size:</strong> ${data.length}</p>
-  
-  <h2>Regression Equation</h2>
-  <div class="equation">${result.equation}</div>
-  
-  <h2>Model Parameters</h2>
-  <table>
-    <tr><th>Parameter</th><th>Value</th></tr>
-    <tr><td>Slope (m)</td><td>${result.slope.toFixed(4)}</td></tr>
-    <tr><td>Intercept (b)</td><td>${result.intercept.toFixed(4)}</td></tr>
-    <tr><td>R²</td><td>${result.rSquared.toFixed(4)}</td></tr>
-  </table>
-  
-  <div class="interpretation">
-    <h3>Interpretation</h3>
-    <ul>
-      <li><strong>Slope:</strong> For each unit increase in ${xName}, ${yName} ${result.slope > 0 ? 'increases' : 'decreases'} by ${Math.abs(result.slope).toFixed(4)} units.</li>
-      <li><strong>Intercept:</strong> When ${xName} is 0, ${yName} is predicted to be ${result.intercept.toFixed(4)}.</li>
-      <li><strong>R²:</strong> ${(result.rSquared * 100).toFixed(2)}% of the variance in ${yName} is explained by ${xName}.</li>
-    </ul>
-    <p>${getRegressionQuality(result.rSquared)}</p>
-  </div>
-</body>
-</html>`
 }
 
 function getRegressionQuality(rSquared: number): string {
@@ -689,13 +550,58 @@ ${result.significant ?
 // Export Functions
 // ============================================================================
 
+/**
+ * Generate a summary report (alias for generateDescriptiveReport)
+ */
+export function generateSummaryReport(
+  data: number[],
+  datasetName: string = 'Dataset'
+): any {
+  const stats = descriptiveStatistics(data)
+  return {
+    mean: stats.mean,
+    median: stats.median,
+    mode: stats.mode,
+    stdDev: stats.standardDeviation,
+    variance: stats.variance,
+    min: stats.min,
+    max: stats.max,
+    range: stats.range,
+    count: stats.count,
+    sum: stats.sum
+  }
+}
+
+/**
+ * Generate a hypothesis test report (alias for generateTTestReport)
+ */
+export function generateHypothesisTestReport(
+  sample1: number[],
+  sample2: number[],
+  alpha: number = 0.05
+): any {
+  const result = twoSampleTTest(sample1, sample2, alpha)
+  return {
+    tStatistic: result.tStatistic,
+    pValue: result.pValue,
+    degreesOfFreedom: result.degreesOfFreedom,
+    significant: result.significant,
+    confidenceLevel: result.confidenceLevel,
+    conclusion: result.significant 
+      ? `There is a statistically significant difference between the groups (p < ${alpha})`
+      : `There is no statistically significant difference between the groups (p ≥ ${alpha})`
+  }
+}
+
 export const reports = {
   generateDescriptiveReport,
   generateCorrelationReport,
   generateRegressionReport,
   generateTTestReport,
   generateChiSquareReport,
-  generateANOVAReport
+  generateANOVAReport,
+  generateSummaryReport,
+  generateHypothesisTestReport
 }
 
 export default reports

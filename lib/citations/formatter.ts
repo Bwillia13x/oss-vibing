@@ -486,9 +486,8 @@ export function validateCitation(input: CitationInput): {
     })
   }
   
-  // Recommended fields
   if (!input.year) {
-    warnings.push('Missing publication year')
+    missing.push('year')
   }
   
   if (!input.doi && !input.url) {
@@ -524,6 +523,7 @@ export function validateCitation(input: CitationInput): {
 export function getStyleInfo(style: CitationStyle): {
   name: string
   fullName: string
+  version?: string
   type: 'author-date' | 'numbered' | 'note'
   description: string
 } {
@@ -531,36 +531,42 @@ export function getStyleInfo(style: CitationStyle): {
     apa: {
       name: 'APA',
       fullName: 'American Psychological Association 7th Edition',
+      version: '7th',
       type: 'author-date' as const,
       description: 'Used in psychology, education, and social sciences',
     },
     mla: {
       name: 'MLA',
       fullName: 'Modern Language Association 9th Edition',
+      version: '9th',
       type: 'author-date' as const,
       description: 'Used in humanities and liberal arts',
     },
     chicago: {
       name: 'Chicago',
       fullName: 'Chicago Manual of Style 17th Edition',
+      version: '17th',
       type: 'note' as const,
       description: 'Used in history, arts, and humanities with footnotes/endnotes',
     },
     ieee: {
       name: 'IEEE',
       fullName: 'Institute of Electrical and Electronics Engineers',
+      version: '2021',
       type: 'numbered' as const,
       description: 'Used in engineering and computer science',
     },
     harvard: {
       name: 'Harvard',
       fullName: 'Harvard Reference System',
+      version: '1',
       type: 'author-date' as const,
       description: 'Used in various academic fields, especially in UK',
     },
     vancouver: {
       name: 'Vancouver',
       fullName: 'Vancouver/ICMJE Style',
+      version: '2021',
       type: 'numbered' as const,
       description: 'Used in medical and scientific journals',
     },
@@ -603,37 +609,33 @@ export function detectCitationStyle(text: string): CitationStyle | null {
 /**
  * Parse author string into Author objects
  * 
- * @param authorString - Author string (e.g., "Smith, John & Jones, Jane")
+ * @param authorString - Author string (e.g., "John Smith, Jane Doe" or "Smith, John")
  * @returns Array of Author objects
  */
 export function parseAuthors(authorString: string): Author[] {
-  // Split by common delimiters
-  const authorParts = authorString.split(/\s+(?:and|&)\s+|;\s*/)
+  // First check if it looks like "Last, First" format by counting commas and spaces
+  const parts = authorString.split(',').map(s => s.trim())
   
-  return authorParts.map(authorStr => {
-    const trimmed = authorStr.trim()
-    
-    // Try "Last, First" format
-    if (trimmed.includes(',')) {
-      const parts = trimmed.split(',').map(s => s.trim())
-      return {
-        family: parts[0],
-        given: parts[1] || '',
-      }
-    }
-    
-    // Try "First Last" format (assume last word is family name)
-    const words = trimmed.split(/\s+/)
+  // If we have exactly 2 parts and the first has no spaces, it's likely "Last, First"
+  if (parts.length === 2 && !parts[0].includes(' ')) {
+    return [{
+      family: parts[0],
+      given: parts[1]
+    }]
+  }
+  
+  // Otherwise, treat each comma-separated part as a full name "First Last"
+  return parts.map(part => {
+    const words = part.trim().split(/\s+/)
     if (words.length >= 2) {
       return {
         given: words.slice(0, -1).join(' '),
         family: words[words.length - 1],
       }
     }
-    
     // Single name - use as family name
     return {
-      family: trimmed,
+      family: part.trim(),
     }
   })
 }

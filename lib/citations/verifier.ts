@@ -231,12 +231,13 @@ export function analyzeCitationCoverage(
  * Verify quotes have proper citations
  * 
  * @param content - Document text content
- * @returns Array of quote issues
+ * @returns Object with totalQuotes and issues array
  */
-export function verifyQuotes(content: string): QuoteIssue[] {
-  if (!content) return []
+export function verifyQuotes(content: string): { totalQuotes: number; issues: QuoteIssue[] } {
+  if (!content) return { totalQuotes: 0, issues: [] }
   
   const issues: QuoteIssue[] = []
+  let totalQuotes = 0
   
   // Find quoted text (both single and double quotes)
   const quotePatterns = [
@@ -248,6 +249,7 @@ export function verifyQuotes(content: string): QuoteIssue[] {
   quotePatterns.forEach(pattern => {
     let match
     while ((match = pattern.exec(content)) !== null) {
+      totalQuotes++
       const quote = match[1]
       const quoteStart = match.index
       
@@ -280,7 +282,10 @@ export function verifyQuotes(content: string): QuoteIssue[] {
     }
   })
   
-  return issues.slice(0, 20) // Limit to top 20
+  return {
+    totalQuotes,
+    issues: issues.slice(0, 20) // Limit to top 20
+  }
 }
 
 /**
@@ -362,6 +367,20 @@ export async function detectStaleCitations(
   }
   
   return issues.slice(0, 20) // Limit to top 20
+}
+
+/**
+ * Detect potentially fabricated citations (alias)
+ * 
+ * @param citations - Array of citations
+ * @param options - Verification options
+ * @returns Array of potentially fabricated citations
+ */
+export async function detectFabrication(
+  citations: CitationInput[],
+  options: VerificationOptions = {}
+): Promise<FabricatedCitation[]> {
+  return detectFabricatedCitations(citations, options)
 }
 
 /**
@@ -513,13 +532,16 @@ function calculateTitleSimilarity(title1: string, title2: string): number {
  * @param citations - Array of citations
  * @returns Quality score (0-100)
  */
-export function calculateQualityScore(citations: CitationInput[]): number {
-  if (citations.length === 0) return 0
+export function calculateQualityScore(citations: CitationInput[] | CitationInput): number {
+  // Handle single citation or array
+  const citationArray = Array.isArray(citations) ? citations : [citations]
+  
+  if (citationArray.length === 0) return 0
   
   let score = 0
   let maxScore = 0
   
-  citations.forEach(citation => {
+  citationArray.forEach(citation => {
     // Has DOI or URL: +10 points
     if (citation.doi || citation.url) {
       score += 10
