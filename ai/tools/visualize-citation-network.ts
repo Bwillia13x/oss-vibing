@@ -96,7 +96,7 @@ export const visualizeCitationNetwork = ({ writer }: Params) =>
               })
             }
           } catch (parseError) {
-            console.warn(`Failed to parse reference file: ${file}`)
+            console.warn(`Failed to parse reference file: ${file}`, parseError)
           }
         }
         
@@ -201,8 +201,9 @@ function extractCitationsFromDocument(content: string): Array<{ title: string; a
         authors: ref.authors,
       }))
     }
-  } catch {
+  } catch (error) {
     // Not JSON, try text extraction
+    console.debug('Failed to parse document as JSON:', error);
   }
   
   // Extract from citation patterns in text

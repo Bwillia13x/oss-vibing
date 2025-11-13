@@ -121,7 +121,6 @@ export const analyzeArgumentStructure = ({ writer }: Params) =>
 function analyzeThesis(text: string, sections: Array<{ title: string; content: string }>, discipline: string) {
   // Look for thesis statement (typically in introduction)
   const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0)
-  const firstParagraphs = paragraphs.slice(0, 3).join('\n\n')
   
   // Heuristics for thesis identification
   const thesisIndicators = [

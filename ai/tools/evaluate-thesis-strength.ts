@@ -263,7 +263,7 @@ function evaluateScope(thesis: string, documentType: string) {
   const broadIndicators = /\b(?:all|every|always|never|throughout history|entire|whole world)\b/i
   const specificIndicators = /\b(?:specifically|particularly|in the context of|among|between \d+ and \d+)\b/i
   
-  let score = 20
+  let score
   let strength = ''
   let weakness = ''
   const recommendations: string[] = []
@@ -300,7 +300,7 @@ function evaluateOriginality(thesis: string) {
   const genericPhrases = /\b(?:has many effects|plays a role|is important|has an impact|can be seen)\b/i
   const specificClaim = /\b(?:challenge|question|reveal|demonstrate that|argue that|show how)\b/i
   
-  let score = 15
+  let score
   let strength = ''
   let weakness = ''
   const recommendations: string[] = []
@@ -321,7 +321,7 @@ function evaluateOriginality(thesis: string) {
 }
 
 function evaluateDisciplineAlignment(thesis: string, discipline: string) {
-  let score = 15
+  let score
   let strength = ''
   let weakness = ''
   const recommendations: string[] = []
@@ -393,7 +393,7 @@ function evaluateTestability(thesis: string, discipline: string, documentType: s
     return { score: 10, strength: '', weakness: '', recommendations: [] }
   }
   
-  let score = 10
+  let score
   let strength = ''
   let weakness = ''
   const recommendations: string[] = []

@@ -89,14 +89,14 @@ You have access to academic-focused tools that stream university-specific data p
 18. **semantic_search_papers** - Find conceptually similar papers using semantic similarity (beyond keywords)
 
 ## Quality & Integrity Tools
-18. **check_grammar** - Check grammar, style, readability, and passive voice
-19. **detect_plagiarism** - Detect potential plagiarism and generate originality reports
-20. **verify_citations** - Verify citation accuracy and completeness
-21. **review_flashcards** - Review and optimize flashcard sets for learning
-22. **generate_quiz** - Generate quizzes from notes and materials
+19. **check_grammar** - Check grammar, style, readability, and passive voice
+20. **detect_plagiarism** - Detect potential plagiarism and generate originality reports
+21. **verify_citations** - Verify citation accuracy and completeness
+22. **review_flashcards** - Review and optimize flashcard sets for learning
+23. **generate_quiz** - Generate quizzes from notes and materials
 
 ## Integration Tools
-23. **lms_sync** - Sync with Canvas LMS (courses, assignments, submissions)
+24. **lms_sync** - Sync with Canvas LMS (courses, assignments, submissions)
 
 Plus the standard sandbox tools:
 - **createSandbox** - Initialize workspace (reuse throughout session)

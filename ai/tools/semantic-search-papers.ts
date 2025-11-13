@@ -85,8 +85,9 @@ export const semanticSearchPapers = ({ writer }: Params) =>
               keywords: ref.keywords || [],
               DOI: ref.DOI,
             })
-          } catch {
-            // Skip invalid files
+          } catch (error) {
+            // Skip invalid files, but log which file and why
+            console.debug(`Skipping invalid reference file: ${file}. Error: ${error instanceof Error ? error.message : String(error)}`)
           }
         }
         
@@ -283,19 +284,19 @@ function calculateSetSimilarity(set1: Set<string>, set2: Set<string>): number {
 function categorizeSimilarPapers(papers: Paper[], queryText: string): {
   highlyRelevant: Paper[]
   relevant: Paper[]
-  somewhatsRelevant: Paper[]
+  somewhatRelevant: Paper[]
   byYear: Map<number, Paper[]>
   byMethodology: Map<string, Paper[]>
 } {
   const highlyRelevant: Paper[] = []
   const relevant: Paper[] = []
-  const somewhatsRelevant: Paper[] = []
+  const somewhatRelevant: Paper[] = []
   
   papers.forEach(paper => {
     const sim = paper.similarity || 0
     if (sim >= 0.7) highlyRelevant.push(paper)
     else if (sim >= 0.5) relevant.push(paper)
-    else somewhatsRelevant.push(paper)
+    else somewhatRelevant.push(paper)
   })
   
   // Group by year
@@ -336,7 +337,7 @@ function categorizeSimilarPapers(papers: Paper[], queryText: string): {
   return {
     highlyRelevant,
     relevant,
-    somewhatsRelevant,
+    somewhatRelevant,
     byYear,
     byMethodology,
   }
@@ -385,15 +386,15 @@ function formatSearchResults(
     message += `\n`
   }
   
-  if (results.somewhatsRelevant.length > 0) {
-    message += `## Somewhat Relevant (${results.somewhatsRelevant.length})\n\n`
+  if (results.somewhatRelevant.length > 0) {
+    message += `## Somewhat Relevant (${results.somewhatRelevant.length})\n\n`
     message += `Papers with some conceptual overlap (30-50%):\n\n`
     
-    results.somewhatsRelevant.slice(0, 5).forEach((paper, index) => {
+    results.somewhatRelevant.slice(0, 5).forEach((paper, index) => {
       message += `${index + 1}. **${paper.title}**\n`
     })
-    if (results.somewhatsRelevant.length > 5) {
-      message += `... and ${results.somewhatsRelevant.length - 5} more\n`
+    if (results.somewhatRelevant.length > 5) {
+      message += `... and ${results.somewhatRelevant.length - 5} more\n`
     }
     message += `\n`
   }

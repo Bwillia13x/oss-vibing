@@ -61,8 +61,9 @@ export const identifyResearchGaps = ({ writer }: Params) =>
                 try {
                   const ref = JSON.parse(refContent)
                   references.push(ref)
-                } catch {
+                } catch (error) {
                   // Skip invalid JSON
+                  console.debug(`Skipping invalid reference file due to invalid JSON: ${file}`);
                 }
               }
             }
