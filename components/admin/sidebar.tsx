@@ -17,6 +17,7 @@ import {
   Settings,
   Shield,
   Package,
+  History,
 } from 'lucide-react'
 
 const navItems = [
@@ -54,6 +55,11 @@ const navItems = [
     title: 'Licenses',
     href: '/admin/licenses',
     icon: Package,
+  },
+  {
+    title: 'Audit Logs',
+    href: '/admin/audit-logs',
+    icon: History,
   },
   {
     title: 'Settings',

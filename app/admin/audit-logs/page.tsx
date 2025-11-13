@@ -1,0 +1,343 @@
+/**
+ * Admin Audit Logs Page
+ * Displays audit trail of administrative actions
+ */
+
+'use client'
+
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Download, Search, Filter, Shield, User, FileText, Settings, Trash, Edit } from 'lucide-react'
+
+// Mock audit log data
+const auditLogs = [
+  {
+    id: '1',
+    timestamp: new Date('2025-11-13T14:30:00'),
+    admin: 'admin@university.edu',
+    action: 'User Created',
+    resourceType: 'User',
+    resourceId: 'user_123',
+    details: 'Created new user: john.doe@university.edu',
+    ipAddress: '192.168.1.100',
+    severity: 'info',
+  },
+  {
+    id: '2',
+    timestamp: new Date('2025-11-13T14:25:00'),
+    admin: 'admin@university.edu',
+    action: 'License Updated',
+    resourceType: 'License',
+    resourceId: 'license_456',
+    details: 'Increased CS Department allocation from 50 to 75 seats',
+    ipAddress: '192.168.1.100',
+    severity: 'warning',
+  },
+  {
+    id: '3',
+    timestamp: new Date('2025-11-13T14:20:00'),
+    admin: 'admin@university.edu',
+    action: 'User Suspended',
+    resourceType: 'User',
+    resourceId: 'user_789',
+    details: 'Suspended user: suspicious.activity@university.edu',
+    ipAddress: '192.168.1.100',
+    severity: 'critical',
+  },
+  {
+    id: '4',
+    timestamp: new Date('2025-11-13T14:15:00'),
+    admin: 'superadmin@university.edu',
+    action: 'Settings Changed',
+    resourceType: 'Settings',
+    resourceId: 'branding_001',
+    details: 'Updated institution branding colors',
+    ipAddress: '192.168.1.50',
+    severity: 'info',
+  },
+  {
+    id: '5',
+    timestamp: new Date('2025-11-13T14:10:00'),
+    admin: 'admin@university.edu',
+    action: 'Bulk Import',
+    resourceType: 'User',
+    resourceId: 'bulk_import_20251113',
+    details: 'Imported 45 users from CSV file students_fall2025.csv',
+    ipAddress: '192.168.1.100',
+    severity: 'info',
+  },
+  {
+    id: '6',
+    timestamp: new Date('2025-11-13T14:05:00'),
+    admin: 'admin@university.edu',
+    action: 'User Deleted',
+    resourceType: 'User',
+    resourceId: 'user_deleted',
+    details: 'Deleted user account: graduated.student@university.edu',
+    ipAddress: '192.168.1.100',
+    severity: 'warning',
+  },
+  {
+    id: '7',
+    timestamp: new Date('2025-11-13T14:00:00'),
+    admin: 'superadmin@university.edu',
+    action: 'Admin Role Granted',
+    resourceType: 'User',
+    resourceId: 'user_999',
+    details: 'Granted admin role to faculty.member@university.edu',
+    ipAddress: '192.168.1.50',
+    severity: 'critical',
+  },
+  {
+    id: '8',
+    timestamp: new Date('2025-11-13T13:55:00'),
+    admin: 'admin@university.edu',
+    action: 'Data Export',
+    resourceType: 'Export',
+    resourceId: 'export_001',
+    details: 'Exported student progress data for Fall 2025',
+    ipAddress: '192.168.1.100',
+    severity: 'info',
+  },
+]
+
+const actionTypes = [
+  'All Actions',
+  'User Created',
+  'User Updated',
+  'User Deleted',
+  'User Suspended',
+  'License Updated',
+  'Settings Changed',
+  'Admin Role Granted',
+  'Bulk Import',
+  'Data Export',
+]
+
+const severityColors = {
+  info: 'bg-blue-100 text-blue-800 border-blue-200',
+  warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  critical: 'bg-red-100 text-red-800 border-red-200',
+}
+
+const actionIcons = {
+  'User Created': User,
+  'User Updated': Edit,
+  'User Deleted': Trash,
+  'User Suspended': Shield,
+  'License Updated': FileText,
+  'Settings Changed': Settings,
+  'Admin Role Granted': Shield,
+  'Bulk Import': FileText,
+  'Data Export': Download,
+}
+
+export default function AuditLogsPage() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [actionFilter, setActionFilter] = useState('All Actions')
+  const [severityFilter, setSeverityFilter] = useState('all')
+
+  const filteredLogs = auditLogs.filter((log) => {
+    const matchesSearch = 
+      log.admin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.details.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    const matchesAction = actionFilter === 'All Actions' || log.action === actionFilter
+    const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter
+
+    return matchesSearch && matchesAction && matchesSeverity
+  })
+
+  const handleExport = () => {
+    // In production, this would export to CSV
+    const csv = [
+      ['Timestamp', 'Admin', 'Action', 'Resource Type', 'Details', 'IP Address', 'Severity'],
+      ...filteredLogs.map(log => [
+        log.timestamp.toISOString(),
+        log.admin,
+        log.action,
+        log.resourceType,
+        log.details,
+        log.ipAddress,
+        log.severity,
+      ])
+    ].map(row => row.join(',')).join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Audit Logs</h1>
+          <p className="text-muted-foreground">
+            Track all administrative actions and changes
+          </p>
+        </div>
+        <Button onClick={handleExport}>
+          <Download className="mr-2 h-4 w-4" />
+          Export to CSV
+        </Button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Total Events</CardDescription>
+            <CardTitle className="text-2xl">{auditLogs.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Critical Events</CardDescription>
+            <CardTitle className="text-2xl text-red-600">
+              {auditLogs.filter(log => log.severity === 'critical').length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Warning Events</CardDescription>
+            <CardTitle className="text-2xl text-yellow-600">
+              {auditLogs.filter(log => log.severity === 'warning').length}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardDescription>Active Admins</CardDescription>
+            <CardTitle className="text-2xl">
+              {new Set(auditLogs.map(log => log.admin)).size}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search logs by admin or details..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger className="w-[200px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by action" />
+              </SelectTrigger>
+              <SelectContent>
+                {actionTypes.map((action) => (
+                  <SelectItem key={action} value={action}>
+                    {action}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+              <SelectTrigger className="w-[200px]">
+                <Shield className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by severity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Severities</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
+                <SelectItem value="warning">Warning</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Audit Logs Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Log</CardTitle>
+          <CardDescription>
+            Showing {filteredLogs.length} of {auditLogs.length} events
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>Admin</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Details</TableHead>
+                <TableHead>IP Address</TableHead>
+                <TableHead>Severity</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredLogs.map((log) => {
+                const Icon = actionIcons[log.action as keyof typeof actionIcons] || FileText
+                return (
+                  <TableRow key={log.id}>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {log.timestamp.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="font-medium">{log.admin}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <span>{log.action}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      <div className="truncate text-sm" title={log.details}>
+                        {log.details}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {log.ipAddress}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant="outline"
+                        className={severityColors[log.severity as keyof typeof severityColors]}
+                      >
+                        {log.severity}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
