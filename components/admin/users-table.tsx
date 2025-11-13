@@ -89,16 +89,6 @@ const mockUsers: User[] = [
   },
 ]
 
-interface User {
-  id: string
-  name: string
-  email: string
-  role: 'student' | 'instructor' | 'admin'
-  department: string
-  lastActive: string
-  status: 'active' | 'inactive'
-}
-
 export function UsersTable() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
@@ -129,26 +119,63 @@ export function UsersTable() {
   const handleUpdateUser = async (userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
     // TODO: Call API to update user
     if (!editingUser) return
-    setUsers(users.map(user => 
-      user.id === editingUser.id 
-        ? { ...user, ...userData }
-        : user
-    ))
-    setEditingUser(null)
+    
+    const previousUsers = [...users]
+    
+    try {
+      // Optimistically update UI
+      setUsers(users.map(user => 
+        user.id === editingUser.id 
+          ? { ...user, ...userData }
+          : user
+      ))
+      setEditingUser(null)
+      
+      // When API is implemented:
+      // await updateUserApi(editingUser.id, userData)
+    } catch (error) {
+      // Revert on error
+      setUsers(previousUsers)
+      throw error
+    }
   }
 
   const handleDeleteUser = async (userId: string) => {
     // TODO: Call API to delete user
-    setUsers(users.filter(user => user.id !== userId))
+    const previousUsers = [...users]
+    
+    try {
+      // Optimistically update UI
+      setUsers(users.filter(user => user.id !== userId))
+      
+      // When API is implemented:
+      // await deleteUserApi(userId)
+    } catch (error) {
+      // Revert on error
+      setUsers(previousUsers)
+      throw error
+    }
   }
 
   const handleToggleStatus = async (userId: string) => {
     // TODO: Call API to toggle user status
-    setUsers(users.map(user =>
-      user.id === userId
-        ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' as const }
-        : user
-    ))
+    const previousUsers = [...users]
+    
+    try {
+      // Optimistically update UI
+      setUsers(users.map(user =>
+        user.id === userId
+          ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' as const }
+          : user
+      ))
+      
+      // When API is implemented:
+      // await toggleUserStatusApi(userId)
+    } catch (error) {
+      // Revert on error
+      setUsers(previousUsers)
+      throw error
+    }
   }
 
   const openEditDialog = (user: User) => {

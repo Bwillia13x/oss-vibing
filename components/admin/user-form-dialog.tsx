@@ -5,13 +5,14 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 interface UserFormData {
   name: string
@@ -36,8 +37,23 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof UserFormData, string>>>({})
+  const [generalError, setGeneralError] = useState<string>('')
 
   const isEdit = !!user
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFormData({
+        name: user?.name || '',
+        email: user?.email || '',
+        role: user?.role || 'student',
+        department: user?.department || '',
+      })
+      setErrors({})
+      setGeneralError('')
+    }
+  }, [open, user])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof UserFormData, string>> = {}
@@ -68,6 +84,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
     }
 
     setLoading(true)
+    setGeneralError('')
     try {
       await onSave(formData)
       onOpenChange(false)
@@ -81,7 +98,7 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
       setErrors({})
     } catch (error) {
       console.error('Error saving user:', error)
-      setErrors({ name: 'Failed to save user. Please try again.' })
+      setGeneralError('Failed to save user. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -99,6 +116,14 @@ export function UserFormDialog({ open, onOpenChange, user, onSave }: UserFormDia
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* General Error */}
+            {generalError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{generalError}</AlertDescription>
+              </Alert>
+            )}
+
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>

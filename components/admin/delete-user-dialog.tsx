@@ -16,7 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Loader2 } from 'lucide-react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 interface DeleteUserDialogProps {
   open: boolean
@@ -31,14 +32,17 @@ interface DeleteUserDialogProps {
 
 export function DeleteUserDialog({ open, onOpenChange, user, onDelete }: DeleteUserDialogProps) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string>('')
 
   const handleDelete = async () => {
     setLoading(true)
+    setError('')
     try {
       await onDelete(user.id)
       onOpenChange(false)
     } catch (error) {
       console.error('Error deleting user:', error)
+      setError(error instanceof Error ? error.message : 'Failed to delete user. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -54,6 +58,12 @@ export function DeleteUserDialog({ open, onOpenChange, user, onDelete }: DeleteU
             This action cannot be undone and will remove all associated data.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
           <AlertDialogAction

@@ -31,7 +31,20 @@ export default function UsersPage() {
         })),
       }),
     })
-    const result = await response.json()
+    
+    let result
+    try {
+      result = await response.json()
+    } catch (e) {
+      throw new Error('Failed to parse server response.')
+    }
+    
+    if (!response.ok) {
+      // Try to get error message from result, fallback to status text
+      const errorMsg = result?.error || result?.message || response.statusText || 'Bulk import failed'
+      throw new Error(errorMsg)
+    }
+    
     return result.data
   }
 

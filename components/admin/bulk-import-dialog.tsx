@@ -5,7 +5,9 @@
 
 'use client'
 
+import * as React from 'react'
 import { useState, useRef } from 'react'
+import Papa from 'papaparse'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -39,32 +41,30 @@ export function BulkImportDialog({ open, onOpenChange, onImport }: BulkImportDia
   }
 
   const parseCSV = (text: string): Array<{ name: string; email: string; role: string; department: string }> => {
-    const lines = text.split('\n').filter(line => line.trim())
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+    const result = Papa.parse(text, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header: string) => header.trim().toLowerCase()
+    })
+
+    if (result.errors.length > 0) {
+      throw new Error(`CSV parsing error: ${result.errors[0].message}`)
+    }
+
+    const requiredColumns = ['name', 'email', 'role', 'department']
+    const headers = Object.keys(result.data[0] || {})
+    const missingColumns = requiredColumns.filter(col => !headers.includes(col))
     
-    const nameIndex = headers.indexOf('name')
-    const emailIndex = headers.indexOf('email')
-    const roleIndex = headers.indexOf('role')
-    const departmentIndex = headers.indexOf('department')
-
-    if (nameIndex === -1 || emailIndex === -1 || roleIndex === -1 || departmentIndex === -1) {
-      throw new Error('CSV must have columns: name, email, role, department')
+    if (missingColumns.length > 0) {
+      throw new Error(`CSV must have columns: ${requiredColumns.join(', ')}`)
     }
 
-    const users = []
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim())
-      if (values.length >= 4) {
-        users.push({
-          name: values[nameIndex],
-          email: values[emailIndex],
-          role: values[roleIndex],
-          department: values[departmentIndex],
-        })
-      }
-    }
-
-    return users
+    return result.data.map((row: any) => ({
+      name: row.name,
+      email: row.email,
+      role: row.role,
+      department: row.department,
+    }))
   }
 
   const handleImport = async () => {
