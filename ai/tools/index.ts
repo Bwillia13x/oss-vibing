@@ -23,6 +23,11 @@ import { planSchedule } from './plan-schedule'
 import { exportArtifact } from './export-artifact'
 import { generateQuiz } from './generate-quiz'
 import { lmsSync } from './lms-sync'
+import { analyzeArgumentStructure } from './analyze-argument-structure'
+import { evaluateThesisStrength } from './evaluate-thesis-strength'
+import { identifyResearchGaps } from './identify-research-gaps'
+import { visualizeCitationNetwork } from './visualize-citation-network'
+import { semanticSearchPapers } from './semantic-search-papers'
 
 interface Params {
   modelId: string
@@ -57,6 +62,13 @@ export function tools({ modelId, writer }: Params) {
     exportArtifact: exportArtifact({ writer }),
     generateQuiz: generateQuiz({ writer }),
     lmsSync: lmsSync({ writer }),
+    
+    // Phase 4: Advanced AI Writing Assistant tools
+    analyzeArgumentStructure: analyzeArgumentStructure({ writer }),
+    evaluateThesisStrength: evaluateThesisStrength({ writer }),
+    identifyResearchGaps: identifyResearchGaps({ writer }),
+    visualizeCitationNetwork: visualizeCitationNetwork({ writer }),
+    semanticSearchPapers: semanticSearchPapers({ writer }),
   }
 }
 
