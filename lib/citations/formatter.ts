@@ -15,7 +15,7 @@
  * @module lib/citations/formatter
  */
 
-import { Cite } from 'citation-js'
+import Cite from 'citation-js'
 
 /**
  * Supported citation styles
