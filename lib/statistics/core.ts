@@ -639,7 +639,6 @@ export function confidenceInterval(data: number[], confidence: number = 0.95): [
     const n = data.length
     
     // Z-score for confidence level (approximation)
-    const alpha = 1 - confidence
     const zScore = getZScore(confidence)
     
     const marginOfError = zScore * (sampleStdDev / Math.sqrt(n))

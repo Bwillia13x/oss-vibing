@@ -119,6 +119,10 @@ export function BoxPlot({
  * Calculate box plot statistics
  */
 function calculateBoxPlotStats(data: number[], detectOutliers: boolean): BoxPlotStats {
+  if (data.length === 0) {
+    return { min: 0, q1: 0, median: 0, q3: 0, max: 0, outliers: [] }
+  }
+  
   const sorted = [...data].sort((a, b) => a - b)
   const n = sorted.length
 

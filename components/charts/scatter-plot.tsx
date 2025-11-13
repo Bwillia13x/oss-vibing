@@ -210,6 +210,17 @@ function calculateTrendline(xData: number[], yData: number[]): Array<{ x: number
     denominator += Math.pow(xData[i] - xMean, 2)
   }
   
+  // Handle edge case: all x-values are the same (vertical line, undefined slope)
+  if (denominator === 0) {
+    // Return a horizontal line at yMean
+    const minX = Math.min(...xData)
+    const maxX = Math.max(...xData)
+    return [
+      { x: minX, y: yMean },
+      { x: maxX, y: yMean },
+    ]
+  }
+  
   const slope = numerator / denominator
   const intercept = yMean - slope * xMean
   

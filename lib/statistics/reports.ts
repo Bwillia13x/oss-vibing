@@ -6,11 +6,6 @@
  */
 
 import {
-  DescriptiveStats,
-  RegressionResult,
-  TTestResult,
-  ChiSquareResult,
-  ANOVAResult,
   CorrelationResult,
   descriptiveStatistics,
   correlationWithInterpretation,
@@ -226,8 +221,6 @@ ${getCorrelationInterpretation(result)}
 }
 
 function getCorrelationInterpretation(result: CorrelationResult): string {
-  const absCoeff = Math.abs(result.coefficient)
-  
   if (result.direction === 'none') {
     return 'There is essentially no linear relationship between the variables.'
   }
@@ -515,8 +508,59 @@ ${result.significant ?
 `
   }
   
-  // HTML version similar to markdown
-  return generateChiSquareReport(observed, expected, categories, testName, alpha, 'markdown')
+  // HTML format
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>${testName}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .interpretation { background-color: #f9f9f9; padding: 15px; border-left: 4px solid #9C27B0; }
+  </style>
+</head>
+<body>
+  <h1>${testName} Report</h1>
+  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+  <p><strong>Significance Level (α):</strong> ${alpha}</p>
+  
+  <h2>Data</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Observed</th>
+        <th>Expected</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${categories.map((cat, i) => `<tr>
+        <td>${cat || `Category ${i + 1}`}</td>
+        <td>${observed[i]}</td>
+        <td>${expected[i]}</td>
+      </tr>`).join('\n      ')}
+    </tbody>
+  </table>
+  
+  <h2>Results</h2>
+  <table>
+    <tr><th>Statistic</th><th>Value</th></tr>
+    <tr><td>χ² Statistic</td><td>${result.chiSquare.toFixed(4)}</td></tr>
+    <tr><td>Degrees of Freedom</td><td>${result.degreesOfFreedom}</td></tr>
+    <tr><td>P-Value</td><td>${result.pValue.toFixed(4)}</td></tr>
+    <tr><td>Significant?</td><td>${result.significant ? '✓ Yes' : '✗ No'}</td></tr>
+  </table>
+  
+  <div class="interpretation">
+    <h3>Interpretation</h3>
+    <p>${result.significant ?
+      `The test result is <strong>statistically significant</strong> (p &lt; ${alpha}). This suggests that the observed frequencies differ significantly from the expected frequencies. The data does not follow the expected distribution.` :
+      `The test result is <strong>not statistically significant</strong> (p ≥ ${alpha}). This suggests that the observed frequencies do not differ significantly from the expected frequencies. The data is consistent with the expected distribution.`}</p>
+  </div>
+</body>
+</html>`
 }
 
 // ============================================================================
@@ -574,8 +618,71 @@ ${result.significant ?
 `
   }
   
-  // HTML version
-  return generateANOVAReport(groups, groupNames, alpha, 'markdown')
+  // HTML format
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <title>One-Way ANOVA Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .interpretation { background-color: #f9f9f9; padding: 15px; border-left: 4px solid #9C27B0; }
+  </style>
+</head>
+<body>
+  <h1>One-Way ANOVA Report</h1>
+  <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+  <p><strong>Number of Groups:</strong> ${groups.length}</p>
+  <p><strong>Significance Level (α):</strong> ${alpha}</p>
+  
+  <h2>Groups</h2>
+  <ul>
+    ${groups.map((group, i) => `<li><strong>${groupNames[i] || `Group ${i + 1}`}</strong> (n = ${group.length})</li>`).join('\n    ')}
+  </ul>
+  
+  <h2>Results</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Statistic</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>F-Statistic</td>
+        <td>${result.fStatistic.toFixed(4)}</td>
+      </tr>
+      <tr>
+        <td>Degrees of Freedom (Between)</td>
+        <td>${result.degreesOfFreedomBetween}</td>
+      </tr>
+      <tr>
+        <td>Degrees of Freedom (Within)</td>
+        <td>${result.degreesOfFreedomWithin}</td>
+      </tr>
+      <tr>
+        <td>P-Value</td>
+        <td>${result.pValue.toFixed(4)}</td>
+      </tr>
+      <tr>
+        <td>Significant?</td>
+        <td>${result.significant ? '&#10003; Yes' : '&#10007; No'}</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <div class="interpretation">
+    <h3>Interpretation</h3>
+    <p>${result.significant ?
+      `The ANOVA result is <strong>statistically significant</strong> (p &lt; ${alpha}). This indicates that at least one group mean differs significantly from the others. Post-hoc tests are recommended to identify which specific groups differ.` :
+      `The ANOVA result is <strong>not statistically significant</strong> (p ≥ ${alpha}). This suggests that there are no significant differences among the group means.`}</p>
+    <p><strong>Note:</strong> ANOVA assumes normality and homogeneity of variance. Verify these assumptions before interpreting results.</p>
+  </div>
+</body>
+</html>`
 }
 
 // ============================================================================

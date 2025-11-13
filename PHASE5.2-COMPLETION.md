@@ -276,9 +276,9 @@ const datasets = [
 | `index.ts` (charts) | 663 chars | Chart exports |
 
 ### Dependencies Added
-- **simple-statistics** (v7.8.0): Core statistical calculations
-- **chart.js** (v4.4.0): Charting library
-- **react-chartjs-2** (v5.2.0): React integration for Chart.js
+- **simple-statistics** (^7.8.8): Core statistical calculations
+- **chart.js** (^4.5.1): Charting library
+- **react-chartjs-2** (^5.3.1): React integration for Chart.js
 
 ---
 

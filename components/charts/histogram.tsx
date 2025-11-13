@@ -197,6 +197,16 @@ function calculateHistogram(data: number[], numBins: number): {
 
   const min = Math.min(...data)
   const max = Math.max(...data)
+  
+  // Handle edge case where all values are the same
+  if (min === max) {
+    return {
+      labels: [`${min.toFixed(2)}`],
+      frequencies: [data.length],
+      binEdges: [min, min]
+    }
+  }
+  
   const binWidth = (max - min) / numBins
 
   // Create bin edges
@@ -246,6 +256,10 @@ export function suggestBinCount(dataLength: number): number {
  */
 export function suggestBinCountScott(data: number[]): number {
   const n = data.length
+  if (n < 2) {
+    // Not enough data to calculate variance, return 1 bin as default
+    return 1
+  }
   const mean = data.reduce((a, b) => a + b, 0) / n
   const variance = data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1)
   const stdDev = Math.sqrt(variance)
