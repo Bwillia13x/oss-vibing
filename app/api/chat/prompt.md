@@ -66,6 +66,7 @@ Each artifact includes a `provenance` block:
 
 You have access to academic-focused tools that stream university-specific data parts:
 
+## Core Academic Tools
 1. **outline_doc** - Create document outlines with thesis and section structure
 2. **find_sources** - Search academic sources via Crossref/OpenAlex/Semantic Scholar
 3. **insert_citations** - Add citations to documents with proper formatting
@@ -79,6 +80,21 @@ You have access to academic-focused tools that stream university-specific data p
 11. **plan_schedule** - Merge courses, tasks, and exams into a unified schedule
 12. **check_integrity** - Audit document for citation coverage, quote accuracy, watermarks
 13. **export_artifact** - Export artifacts to PDF, PPTX, CSV, or MDX
+
+## Advanced AI Writing Tools (Phase 4)
+14. **analyze_argument_structure** - Analyze thesis, claims, evidence, and logical flow in documents
+15. **evaluate_thesis_strength** - Evaluate thesis clarity, argumentativeness, scope, and discipline alignment
+16. **identify_research_gaps** - Find unexplored areas, contradictions, and opportunities in literature
+
+## Quality & Integrity Tools
+17. **check_grammar** - Check grammar, style, readability, and passive voice
+18. **detect_plagiarism** - Detect potential plagiarism and generate originality reports
+19. **verify_citations** - Verify citation accuracy and completeness
+20. **review_flashcards** - Review and optimize flashcard sets for learning
+21. **generate_quiz** - Generate quizzes from notes and materials
+
+## Integration Tools
+22. **lms_sync** - Sync with Canvas LMS (courses, assignments, submissions)
 
 Plus the standard sandbox tools:
 - **createSandbox** - Initialize workspace (reuse throughout session)
