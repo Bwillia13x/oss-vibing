@@ -8,6 +8,7 @@ import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import type { InstitutionBranding } from '@/lib/types/institutional'
 import { requireInstitutionAccess } from '@/lib/auth'
+import { adminSettingsRepository, auditLogRepository } from '@/lib/db/repositories'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -35,13 +36,27 @@ export async function GET(req: NextRequest) {
 
     // Note: Branding retrieval can be public (no auth required)
     // This allows the platform to display custom branding on login pages
-    // TODO: Query database for branding
+    const brandingKey = `branding.${institutionId}`
+    const branding = await adminSettingsRepository.get<InstitutionBranding>(brandingKey)
 
-    const branding: InstitutionBranding = {
-      institutionId,
-      primaryColor: '#2563eb',
-      secondaryColor: '#1e40af',
-      supportEmail: 'support@example.edu',
+    if (!branding) {
+      // Return default branding
+      const defaultBranding: InstitutionBranding = {
+        institutionId,
+        primaryColor: '#2563eb',
+        secondaryColor: '#1e40af',
+        supportEmail: 'support@example.edu',
+      }
+
+      monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+        endpoint: '/api/admin/branding',
+        method: 'GET',
+      })
+
+      return NextResponse.json({
+        success: true,
+        data: defaultBranding,
+      })
     }
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
@@ -109,7 +124,18 @@ export async function POST(req: NextRequest) {
       return authResult
     }
 
-    // TODO: Save branding to database
+    // Save branding to database
+    const brandingKey = `branding.${branding.institutionId}`
+    await adminSettingsRepository.set(brandingKey, branding, 'branding')
+
+    // Log audit entry
+    await auditLogRepository.create({
+      action: 'branding.created',
+      resource: 'branding',
+      resourceId: branding.institutionId,
+      details: branding,
+      severity: 'INFO',
+    })
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/admin/branding',
@@ -183,7 +209,25 @@ export async function PUT(req: NextRequest) {
       return authResult
     }
 
-    // TODO: Update branding in database
+    // Update branding in database
+    const brandingKey = `branding.${updates.institutionId}`
+    const existingBranding = await adminSettingsRepository.get<InstitutionBranding>(brandingKey)
+    
+    const updatedBranding = {
+      ...existingBranding,
+      ...updates,
+    }
+
+    await adminSettingsRepository.set(brandingKey, updatedBranding, 'branding')
+
+    // Log audit entry
+    await auditLogRepository.create({
+      action: 'branding.updated',
+      resource: 'branding',
+      resourceId: updates.institutionId,
+      details: updates,
+      severity: 'INFO',
+    })
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/admin/branding',
@@ -192,6 +236,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      data: updatedBranding,
       message: 'Branding updated successfully',
     })
   } catch (error) {

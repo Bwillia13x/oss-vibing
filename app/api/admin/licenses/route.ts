@@ -8,6 +8,8 @@ import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import type { License } from '@/lib/types/institutional'
 import { requireRole, requireInstitutionAccess } from '@/lib/auth'
+import { licenseRepository, auditLogRepository } from '@/lib/db/repositories'
+import { createLicenseSchema, updateLicenseSchema } from '@/lib/db/validation/schemas'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -26,6 +28,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const institutionId = searchParams.get('institutionId')
     const licenseId = searchParams.get('licenseId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const perPage = parseInt(searchParams.get('perPage') || '20')
 
     // Authentication check - admins only
     const authResult = await requireRole(req, ['admin', 'institution-admin'])
@@ -35,8 +39,7 @@ export async function GET(req: NextRequest) {
 
     if (licenseId) {
       // Get specific license
-      // TODO: Query database
-      const license: License | null = null
+      const license = await licenseRepository.findById(licenseId)
       
       if (!license) {
         return NextResponse.json(
@@ -52,21 +55,34 @@ export async function GET(req: NextRequest) {
     }
 
     if (institutionId) {
-      // Get all licenses for institution
-      // TODO: Query database
-      const licenses: License[] = []
+      // Get license for institution
+      const license = await licenseRepository.findByInstitutionId(institutionId)
       
       return NextResponse.json({
         success: true,
-        data: licenses,
-        count: licenses.length,
+        data: license,
       })
     }
 
-    return NextResponse.json(
-      { error: 'Either institutionId or licenseId is required' },
-      { status: 400 }
-    )
+    // Get all licenses
+    const result = await licenseRepository.list({}, { page, perPage })
+
+    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+      endpoint: '/api/admin/licenses',
+      method: 'GET',
+      licenses_returned: result.data.length.toString(),
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: result.data,
+      pagination: {
+        page: result.page,
+        perPage: result.perPage,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    })
   } catch (error) {
     console.error('Error retrieving licenses:', error)
     
@@ -101,27 +117,34 @@ export async function POST(req: NextRequest) {
 
     const licenseData = await req.json()
 
-    if (!licenseData.institutionId || !licenseData.type || !licenseData.maxSeats) {
-      return NextResponse.json(
-        { error: 'institutionId, type, and maxSeats are required' },
-        { status: 400 }
-      )
-    }
+    // Validate license data
+    const validated = createLicenseSchema.parse({
+      institutionId: licenseData.institutionId,
+      institution: licenseData.institution,
+      seats: licenseData.maxSeats,
+      expiresAt: new Date(licenseData.expiresAt),
+    })
 
     // Authentication and authorization - admins only
-    const authResult = await requireInstitutionAccess(req, licenseData.institutionId, ['admin', 'institution-admin'])
+    const authResult = await requireInstitutionAccess(req, validated.institutionId, ['admin', 'institution-admin'])
     if (authResult instanceof NextResponse) {
       return authResult
     }
 
-    // TODO: Create license in database
+    // Create license in database
+    const license = await licenseRepository.create(validated)
 
-    const license: License = {
-      id: `lic_${Date.now()}`,
-      ...licenseData,
-      usedSeats: 0,
-      createdAt: new Date(),
-    }
+    // Log audit entry
+    await auditLogRepository.create({
+      action: 'license.created',
+      resource: 'license',
+      resourceId: license.id,
+      details: {
+        institutionId: license.institutionId,
+        seats: license.seats,
+      },
+      severity: 'INFO',
+    })
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/admin/licenses',
@@ -174,13 +197,28 @@ export async function PUT(req: NextRequest) {
       )
     }
 
+    // Validate update data
+    const validated = updateLicenseSchema.parse(updates)
+
     // Authentication and authorization - admins only
     const authResult = await requireRole(req, ['admin', 'institution-admin'])
     if (authResult instanceof NextResponse) {
       return authResult
     }
 
-    // TODO: Update license in database
+    // Update license in database
+    const license = await licenseRepository.update(id, validated)
+
+    // Log audit entry
+    await auditLogRepository.create({
+      action: 'license.updated',
+      resource: 'license',
+      resourceId: license.id,
+      details: {
+        changes: validated,
+      },
+      severity: 'INFO',
+    })
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/admin/licenses',
@@ -189,6 +227,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      data: license,
       message: 'License updated successfully',
     })
   } catch (error) {
