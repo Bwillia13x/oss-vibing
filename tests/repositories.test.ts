@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/db/client'
 import {
   userRepository,
   documentRepository,
@@ -16,7 +16,14 @@ import {
   auditLogRepository,
 } from '../lib/db/repositories'
 
-const prisma = new PrismaClient()
+// Helper function to get test user ID
+async function getTestUserId(): Promise<string> {
+  const user = await userRepository.findByEmail('test@example.com')
+  if (!user) {
+    throw new Error('Test user not found')
+  }
+  return user.id
+}
 
 describe('Repository Integration Tests', () => {
   beforeAll(async () => {
@@ -92,8 +99,7 @@ describe('Repository Integration Tests', () => {
     let userId: string
 
     beforeEach(async () => {
-      const user = await userRepository.findByEmail('test@example.com')
-      userId = user!.id
+      userId = await getTestUserId()
     })
 
     it('should create a document', async () => {
@@ -150,8 +156,7 @@ describe('Repository Integration Tests', () => {
     let userId: string
 
     beforeEach(async () => {
-      const user = await userRepository.findByEmail('test@example.com')
-      userId = user!.id
+      userId = await getTestUserId()
     })
 
     it('should create a reference', async () => {
@@ -195,8 +200,7 @@ describe('Repository Integration Tests', () => {
     let referenceId: string
 
     beforeEach(async () => {
-      const user = await userRepository.findByEmail('test@example.com')
-      userId = user!.id
+      userId = await getTestUserId()
 
       const docs = await documentRepository.list({ userId })
       documentId = docs.data[0].id
@@ -319,8 +323,7 @@ describe('Repository Integration Tests', () => {
     let userId: string
 
     beforeEach(async () => {
-      const user = await userRepository.findByEmail('test@example.com')
-      userId = user!.id
+      userId = await getTestUserId()
     })
 
     it('should create an audit log', async () => {

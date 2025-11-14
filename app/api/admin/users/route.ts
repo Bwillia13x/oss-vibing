@@ -10,7 +10,6 @@ import type { BulkUserProvisionRequest, BulkUserProvisionResult } from '@/lib/ty
 import { requireInstitutionAccess } from '@/lib/auth'
 import { userRepository, auditLogRepository, licenseRepository } from '@/lib/db/repositories'
 import { createUserSchema } from '@/lib/db/validation/schemas'
-import { z } from 'zod'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
