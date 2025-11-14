@@ -404,13 +404,13 @@ export default function ResearchAssistantPage() {
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-sm font-medium">Example: Writing Analysis</p>
               <p className="mt-1 text-sm text-muted-foreground italic">
-                "Analyze the argument structure in my essay"
+                &quot;Analyze the argument structure in my essay&quot;
               </p>
             </div>
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-sm font-medium">Example: Research Discovery</p>
               <p className="mt-1 text-sm text-muted-foreground italic">
-                "Find papers semantically related to climate change mitigation"
+                &quot;Find papers semantically related to climate change mitigation&quot;
               </p>
             </div>
           </div>

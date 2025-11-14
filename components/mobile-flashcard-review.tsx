@@ -45,7 +45,7 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [results, setResults] = useState<Record<string, 'correct' | 'incorrect' | 'skipped'>>({})
-  const [startTime] = useState(Date.now())
+  const [startTime] = useState(() => Date.now())
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
 

@@ -127,7 +127,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
           {/* Feature Request */}
           <div className="space-y-2">
             <Label htmlFor="feature">
-              Any feature you'd like to see? (optional)
+              Any feature you&apos;d like to see? (optional)
             </Label>
             <Input
               id="feature"

@@ -47,7 +47,7 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [answers, setAnswers] = useState<Record<string, { selected: number; correct: boolean }>>({})
   const [showExplanation, setShowExplanation] = useState(false)
-  const [startTime] = useState(Date.now())
+  const [startTime] = useState(() => Date.now())
   const [timeRemaining, setTimeRemaining] = useState(timeLimit)
 
   const currentQuestion = questions[currentIndex]

@@ -24,19 +24,20 @@ interface BeforeInstallPromptEvent extends Event {
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(false)
-  const [isIOS, setIsIOS] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    const isInStandaloneMode = (window.navigator as any).standalone === true
+    return isStandalone || isInStandaloneMode
+  })
+  const [isIOS] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+  })
 
   useEffect(() => {
-    // Check if already installed
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    const isInStandaloneMode = (window.navigator as any).standalone === true
-    
-    setIsIOS(isIOSDevice)
-    
-    if (isStandalone || isInStandaloneMode) {
-      setIsInstalled(true)
+    // Already checked in useState initialization
+    if (isInstalled) {
       return
     }
 
@@ -156,8 +157,8 @@ export function PWAInstallPrompt() {
               <p className="font-medium mb-1">iOS Installation:</p>
               <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                 <li>Tap the Share button in Safari</li>
-                <li>Scroll down and tap "Add to Home Screen"</li>
-                <li>Tap "Add" to confirm</li>
+                <li>Scroll down and tap &quot;Add to Home Screen&quot;</li>
+                <li>Tap &quot;Add&quot; to confirm</li>
               </ol>
             </div>
           )}

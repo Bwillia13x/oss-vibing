@@ -20,7 +20,8 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
 
   // Prevent hydration mismatch
   useEffect(() => {
-    setMounted(true)
+    // Use a microtask to avoid the synchronous setState warning
+    queueMicrotask(() => setMounted(true))
   }, [])
 
   // Keyboard shortcut: Ctrl/Cmd + Shift + T

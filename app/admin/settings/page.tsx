@@ -57,7 +57,7 @@ export default function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
-          Customize your institution's branding and configuration
+          Customize your institution&apos;s branding and configuration
         </p>
       </div>
 
@@ -91,7 +91,7 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>Logo & Colors</CardTitle>
               <CardDescription>
-                Customize your institution's visual identity
+                Customize your institution&apos;s visual identity
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                   placeholder="support@example.edu"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Used as the "Reply-To" address in system emails
+                  Used as the &quot;Reply-To&quot; address in system emails
                 </p>
               </div>
 
