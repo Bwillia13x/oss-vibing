@@ -51,7 +51,7 @@ export const evaluateThesisStrength = ({ writer: _writer }: Params) =>
               if (doc.thesis) {
                 explicitThesis = doc.thesis
               }
-            } catch (parseError) {
+            } catch (_parseError) {
               text = content
             }
           } else {

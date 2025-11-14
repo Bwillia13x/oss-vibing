@@ -49,7 +49,7 @@ export const analyzeArgumentStructure = ({ writer: _writer }: Params) =>
             } else if (doc.content) {
               text = doc.content
             }
-          } catch (parseError) {
+          } catch (_parseError) {
             text = content
           }
         }
@@ -164,7 +164,7 @@ function analyzeThesis(text: string, sections: Array<{ title: string; content: s
   }
 }
 
-function analyzeClaims(text: string, sections: Array<{ title: string; content: string }>) {
+function analyzeClaims(text: string, _sections: Array<{ title: string; content: string }>) {
   const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0)
   
   // Identify claims (sentences that make assertions)

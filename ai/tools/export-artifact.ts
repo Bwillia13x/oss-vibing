@@ -87,7 +87,7 @@ async function exportToPDF(docData: any, exportPath: string, options?: any) {
 }
 
 // Export document to DOCX
-async function exportToDOCX(docData: any, exportPath: string, options?: any) {
+async function exportToDOCX(docData: any, exportPath: string, _options?: any) {
   const sections: Paragraph[] = []
   
   // Add title
