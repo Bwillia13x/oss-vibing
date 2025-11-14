@@ -8,6 +8,9 @@ import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import type { BulkUserProvisionRequest, BulkUserProvisionResult } from '@/lib/types/institutional'
 import { requireInstitutionAccess } from '@/lib/auth'
+import { userRepository, auditLogRepository, licenseRepository } from '@/lib/db/repositories'
+import { createUserSchema } from '@/lib/db/validation/schemas'
+import { z } from 'zod'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -48,8 +51,22 @@ export async function POST(req: NextRequest) {
       return authResult
     }
 
-    // TODO: Check license capacity
-    // TODO: Create users in database
+    // Check license capacity
+    const license = await licenseRepository.findByInstitutionId(provisionRequest.institutionId)
+    if (!license) {
+      return NextResponse.json(
+        { error: 'Institution license not found' },
+        { status: 404 }
+      )
+    }
+
+    const availableSeats = license.seats - license.usedSeats
+    if (availableSeats < provisionRequest.users.length) {
+      return NextResponse.json(
+        { error: `Insufficient license seats. Available: ${availableSeats}, Requested: ${provisionRequest.users.length}` },
+        { status: 400 }
+      )
+    }
 
     const result: BulkUserProvisionResult = {
       total: provisionRequest.users.length,
@@ -59,18 +76,45 @@ export async function POST(req: NextRequest) {
       createdUsers: [],
     }
 
-    // Simulate user creation
+    // Create users in database
     for (const user of provisionRequest.users) {
       try {
-        // TODO: Actual user creation logic
-        // Using crypto for secure ID generation
-        const userId = `usr_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`
+        // Validate user data
+        createUserSchema.parse({
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        })
+
+        // Create user
+        const createdUser = await userRepository.create({
+          email: user.email,
+          name: user.name,
+          role: user.role as 'USER' | 'ADMIN' | 'INSTRUCTOR',
+        })
+
+        // Increment license usage
+        await licenseRepository.incrementUsedSeats(license.id)
+
+        // Log audit entry
+        await auditLogRepository.create({
+          userId: createdUser.id,
+          action: 'user.created',
+          resource: 'user',
+          resourceId: createdUser.id,
+          details: {
+            institutionId: provisionRequest.institutionId,
+            email: user.email,
+            role: user.role,
+          },
+          severity: 'INFO',
+        })
         
         result.successful++
         result.createdUsers.push({
-          id: userId,
-          email: user.email,
-          name: user.name,
+          id: createdUser.id,
+          email: createdUser.email,
+          name: createdUser.name || '',
         })
       } catch (error) {
         result.failed++
@@ -127,6 +171,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const institutionId = searchParams.get('institutionId')
     const role = searchParams.get('role')
+    const page = parseInt(searchParams.get('page') || '1')
+    const perPage = parseInt(searchParams.get('perPage') || '20')
 
     if (!institutionId) {
       return NextResponse.json(
@@ -141,14 +187,29 @@ export async function GET(req: NextRequest) {
       return authResult
     }
 
-    // TODO: Query database for users
+    // Query database for users
+    const filters: any = {}
+    if (role) {
+      filters.role = role.toUpperCase()
+    }
 
-    const users: any[] = []
+    const result = await userRepository.list(filters, { page, perPage })
+
+    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+      endpoint: '/api/admin/users',
+      method: 'GET',
+      users_returned: result.data.length.toString(),
+    })
 
     return NextResponse.json({
       success: true,
-      data: users,
-      count: users.length,
+      data: result.data,
+      pagination: {
+        page: result.page,
+        perPage: result.perPage,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
     })
   } catch (error) {
     console.error('Error retrieving users:', error)
