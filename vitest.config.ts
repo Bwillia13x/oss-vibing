@@ -1,6 +1,15 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// Load environment variables before tests run
+dotenv.config();
+
+// Ensure DATABASE_URL is set for Prisma
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./prisma/dev.db';
+}
 
 export default defineConfig({
   plugins: [react()],
