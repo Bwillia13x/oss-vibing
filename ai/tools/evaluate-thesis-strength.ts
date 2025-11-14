@@ -51,7 +51,7 @@ export const evaluateThesisStrength = ({ writer: _writer }: Params) =>
               if (doc.thesis) {
                 explicitThesis = doc.thesis
               }
-            } catch (parseError) {
+            } catch (_parseError) {
               text = content
             }
           } else {
@@ -323,7 +323,7 @@ function evaluateOriginality(thesis: string) {
 function evaluateDisciplineAlignment(thesis: string, discipline: string) {
   let score
   let strength = ''
-  let weakness = ''
+  const weakness = ''
   const recommendations: string[] = []
   
   switch (discipline) {

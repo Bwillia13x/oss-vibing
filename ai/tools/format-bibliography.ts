@@ -91,7 +91,7 @@ export const formatBibliography = ({ writer }: Params) =>
         try {
           const content = await fs.readFile(fullPath, 'utf-8')
           docContent = JSON.parse(content)
-        } catch (error) {
+        } catch (_error) {
           throw new Error(`Could not read document: ${fullPath}`)
         }
         

@@ -41,7 +41,7 @@ export const detectPlagiarism = ({ writer: _writer }: Params) =>
             } else if (doc.content) {
               text = doc.content
             }
-          } catch (parseError) {
+          } catch (_parseError) {
             // If JSON parsing fails, fall through to use raw content as plain text.
             // This is safe because the document may be plain text or an unexpected format.
             // If debugging is needed, consider logging the error here.

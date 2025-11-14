@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser, clearAuthCookies } from '@/lib/auth';
 import { requestUserDataDeletion, logDataAccess } from '@/lib/compliance/ferpa';
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
     // Authenticate user
     const user = await getCurrentUser();
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 /**
  * Cancel data deletion request
  */
-export async function DELETE(req: NextRequest) {
+export async function DELETE(_req: NextRequest) {
   try {
     // Authenticate user
     const user = await getCurrentUser();

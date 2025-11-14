@@ -91,7 +91,7 @@ describe('Phase 8 AI Tools - Smoke Tests', () => {
     try {
       await unlink(TEST_DOC_PATH)
       await unlink(TEST_TEXT_PATH)
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   })

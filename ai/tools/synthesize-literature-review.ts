@@ -175,7 +175,7 @@ function extractFindings(abstract: string): string {
   return findings.join(' ')
 }
 
-function identifyThemes(papers: Paper[], topic: string): Theme[] {
+function identifyThemes(papers: Paper[], _topic: string): Theme[] {
   const themes: Theme[] = []
   const keywordClusters = new Map<string, Paper[]>()
   
@@ -383,7 +383,7 @@ function extractCommonKeywords(papers: Paper[]): string[] {
     .map(([kw]) => kw)
 }
 
-function identifyGaps(papers: Paper[], themes: Theme[], topic: string): string[] {
+function identifyGaps(papers: Paper[], themes: Theme[], _topic: string): string[] {
   const gaps: string[] = []
   
   // Check for methodological gaps

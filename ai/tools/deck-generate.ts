@@ -17,7 +17,7 @@ export const deckGenerate = ({ writer }: Params) =>
       slideCount: z.number().default(10).describe('Target number of slides'),
       theme: z.string().default('academic').describe('Presentation theme'),
     }),
-    execute: async ({ docPath, outline, slideCount, theme }, { toolCallId }) => {
+    execute: async ({ _docPath, _outline, slideCount, theme }, { toolCallId }) => {
       writer.write({
         id: toolCallId,
         type: 'data-uni-deck-generate',

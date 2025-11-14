@@ -229,7 +229,7 @@ function findNodeByTitle(nodes: Map<string, CitationNode>, title: string): Citat
   return undefined
 }
 
-function findCoCitations(edges: CitationEdge[], nodes: Map<string, CitationNode>): CitationEdge[] {
+function findCoCitations(edges: CitationEdge[], _nodes: Map<string, CitationNode>): CitationEdge[] {
   const coCitations: CitationEdge[] = []
   const citationPairs = new Map<string, Set<string>>()
   
@@ -419,7 +419,7 @@ function formatNetworkMessage(data: any, outputPath: string): string {
   if (data.communities.length > 0) {
     message += `## Research Communities\n\n`
     message += `Identified ${data.communities.length} research clusters:\n\n`
-    data.communities.forEach((community: any, index: number) => {
+    data.communities.forEach((community: any, _index: number) => {
       message += `**Community ${community.id}** (${community.size} papers)\n`
     })
     message += `\n`

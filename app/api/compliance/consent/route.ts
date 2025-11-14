@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { recordUserConsent, hasUserConsent } from '@/lib/compliance/ferpa';
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     // Authenticate user
     const user = await getCurrentUser();

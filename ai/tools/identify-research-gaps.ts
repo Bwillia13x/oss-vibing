@@ -61,7 +61,7 @@ export const identifyResearchGaps = ({ writer: _writer }: Params) =>
                 try {
                   const ref = JSON.parse(refContent)
                   references.push(ref)
-                } catch (error) {
+                } catch (_error) {
                   // Skip invalid JSON
                   console.debug(`Skipping invalid reference file due to invalid JSON: ${file}`);
                 }
@@ -204,7 +204,7 @@ function identifyTemporalGaps(text: string, references: any[], topic: string) {
   return { hasGap: false, severity: 'none', description: '', evidence: '' }
 }
 
-function identifyMethodologicalGaps(text: string, discipline: string) {
+function identifyMethodologicalGaps(text: string, _discipline: string) {
   const qualitativeIndicators = /\b(?:interview|case study|ethnography|observation|qualitative)\b/gi
   const quantitativeIndicators = /\b(?:survey|experiment|statistical|quantitative|measure|correlation)\b/gi
   const mixedIndicators = /\b(?:mixed methods?|triangulation)\b/gi
@@ -396,7 +396,7 @@ function identifyLimitedResearch(text: string, topic: string) {
   return { hasGap: false, severity: 'none', description: '', evidence: '' }
 }
 
-function generateOpportunities(gaps: any[], topic: string, discipline: string): string[] {
+function generateOpportunities(gaps: any[], topic: string, _discipline: string): string[] {
   const opportunities: string[] = []
   
   for (const gap of gaps) {
@@ -435,7 +435,7 @@ function generateOpportunities(gaps: any[], topic: string, discipline: string): 
   return opportunities.slice(0, 8) // Top 8 opportunities
 }
 
-function generateResearchQuestions(gaps: any[], topic: string, discipline: string): string[] {
+function generateResearchQuestions(gaps: any[], topic: string, _discipline: string): string[] {
   const questions: string[] = []
   
   for (const gap of gaps) {
