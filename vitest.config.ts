@@ -12,7 +12,21 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'markdown-loader',
+      transform(code, id) {
+        if (id.endsWith('.md')) {
+          // Return markdown content as a default export string
+          return {
+            code: `export default ${JSON.stringify(code)};`,
+            map: null
+          }
+        }
+      }
+    }
+  ],
   test: {
     globals: true,
     environment: 'jsdom',
