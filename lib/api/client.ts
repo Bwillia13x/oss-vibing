@@ -34,8 +34,21 @@ const DEFAULT_OPTIONS: Required<ApiClientOptions> = {
   cacheTTL: 3600, // 1 hour in seconds
 }
 
-// Simple in-memory cache
+// Simple in-memory cache with size limit (LRU eviction)
 const cache = new Map<string, { data: unknown; timestamp: number }>()
+const MAX_CACHE_SIZE = 100 // Maximum number of cache entries
+
+/**
+ * Add entry to cache with LRU eviction
+ */
+function addToCache(key: string, data: unknown) {
+  if (cache.size >= MAX_CACHE_SIZE) {
+    // Remove oldest entry (first inserted)
+    const firstKey = cache.keys().next().value
+    if (firstKey) cache.delete(firstKey)
+  }
+  cache.set(key, { data, timestamp: Date.now() })
+}
 
 /**
  * Sleep helper for retry delays
@@ -130,11 +143,8 @@ export async function fetchWithRetry<T>(
 
         // Cache successful responses
         if (config.cacheEnabled) {
-          cache.set(cacheKey, { data, timestamp: Date.now() })
+          addToCache(cacheKey, data)
         }
-
-        // Track performance
-        trackApiPerformance(`${apiName}.fetch`, async () => data)
 
         return {
           data,
@@ -208,7 +218,6 @@ export function getCacheStats(): {
  */
 export function cleanExpiredCache(ttl: number = DEFAULT_OPTIONS.cacheTTL): number {
   let cleaned = 0
-  const now = Date.now()
 
   cache.forEach((entry, key) => {
     if (!isCacheValid(entry.timestamp, ttl)) {
@@ -220,9 +229,24 @@ export function cleanExpiredCache(ttl: number = DEFAULT_OPTIONS.cacheTTL): numbe
   return cleaned
 }
 
-// Run cache cleanup every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
+// Run cache cleanup every 5 minutes (server-only)
+let cleanupInterval: NodeJS.Timeout | null = null
+
+export function startCacheCleanup(): void {
+  if (cleanupInterval) return
+  cleanupInterval = setInterval(() => {
     cleanExpiredCache()
   }, 5 * 60 * 1000)
+}
+
+export function stopCacheCleanup(): void {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval)
+    cleanupInterval = null
+  }
+}
+
+// Only start on server-side
+if (typeof window === 'undefined' && typeof setInterval !== 'undefined') {
+  startCacheCleanup()
 }
