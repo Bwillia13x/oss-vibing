@@ -5,6 +5,7 @@ import description from './verify-citations.md'
 import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { lookupDOI, validateDOI } from '@/lib/api/citation-client'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
@@ -134,11 +135,11 @@ function verifyQuotes(content: string, bibliography: any): Array<{
 }
 
 // Detect stale or broken citations
-function detectStaleCitations(bibliography: any): Array<{
+async function detectStaleCitations(bibliography: any): Promise<Array<{
   citation: string
   issue: string
   severity: 'high' | 'medium' | 'low'
-}> {
+}>> {
   const issues: Array<{ citation: string; issue: string; severity: 'high' | 'medium' | 'low' }> = []
   
   if (!bibliography?.items || !Array.isArray(bibliography.items)) {
@@ -147,23 +148,46 @@ function detectStaleCitations(bibliography: any): Array<{
   
   const currentYear = new Date().getFullYear()
   
-  bibliography.items.forEach((item: any) => {
+  // Verify DOIs in parallel (with limit to avoid rate limiting)
+  const verificationPromises = bibliography.items.slice(0, 20).map(async (item: any) => {
     // Check for missing DOI or URL
     if (!item.doi && !item.url) {
-      issues.push({
+      return {
         citation: item.title || item.id || 'Unknown',
         issue: 'Missing DOI or URL - citation not verifiable',
-        severity: 'medium',
-      })
+        severity: 'medium' as const,
+      }
+    }
+    
+    // Verify DOI exists in academic databases if DOI is present
+    if (item.doi) {
+      try {
+        const isValid = await validateDOI(item.doi, { enableCaching: true })
+        if (!isValid) {
+          return {
+            citation: item.title || item.id || 'Unknown',
+            issue: 'DOI not found in academic databases - citation may be invalid or fabricated',
+            severity: 'high' as const,
+          }
+        }
+      } catch (error) {
+        console.error('Error verifying DOI:', error)
+        // Don't fail silently - report the verification issue
+        return {
+          citation: item.title || item.id || 'Unknown',
+          issue: 'Unable to verify DOI - check your internet connection',
+          severity: 'medium' as const,
+        }
+      }
     }
     
     // Check for very old citations (> 10 years for most fields)
     if (item.year && currentYear - item.year > 10) {
-      issues.push({
+      return {
         citation: item.title || item.id || 'Unknown',
         issue: `Citation is ${currentYear - item.year} years old - may be outdated`,
-        severity: 'low',
-      })
+        severity: 'low' as const,
+      }
     }
     
     // Check if citation was fetched long ago (stale cache)
@@ -172,36 +196,44 @@ function detectStaleCitations(bibliography: any): Array<{
       const daysSinceFetch = (Date.now() - fetchDate.getTime()) / (1000 * 60 * 60 * 24)
       
       if (daysSinceFetch > 90) {
-        issues.push({
+        return {
           citation: item.title || item.id || 'Unknown',
           issue: `Citation metadata is ${Math.round(daysSinceFetch)} days old - should be re-verified`,
-          severity: 'low',
-        })
+          severity: 'low' as const,
+        }
       }
     }
+    
+    return null
   })
+  
+  const results = await Promise.all(verificationPromises)
+  issues.push(...results.filter((r): r is NonNullable<typeof r> => r !== null))
   
   return issues.slice(0, 10) // Limit to top 10
 }
 
 // Detect potentially fabricated citations
-function detectFabricatedCitations(bibliography: any): Array<{
+async function detectFabricatedCitations(bibliography: any): Promise<Array<{
   citation: string
   issue: string
   severity: 'high' | 'medium' | 'low'
-}> {
+}>> {
   const issues: Array<{ citation: string; issue: string; severity: 'high' | 'medium' | 'low' }> = []
   
   if (!bibliography?.items || !Array.isArray(bibliography.items)) {
     return issues
   }
   
-  bibliography.items.forEach((item: any) => {
+  // Verify citations in parallel (limit to first 20 to avoid rate limiting)
+  const verificationPromises = bibliography.items.slice(0, 20).map(async (item: any) => {
+    const itemIssues: Array<{ citation: string; issue: string; severity: 'high' | 'medium' | 'low' }> = []
+    
     // Check for suspicious patterns
     
     // Missing critical fields
     if (!item.title || !item.author) {
-      issues.push({
+      itemIssues.push({
         citation: item.id || 'Unknown',
         issue: 'Missing critical fields (title or author) - may be fabricated',
         severity: 'high',
@@ -221,7 +253,7 @@ function detectFabricatedCitations(bibliography: any): Array<{
     const author = item.author || ''
     
     if (placeholderPatterns.some(pattern => pattern.test(title) || pattern.test(author))) {
-      issues.push({
+      itemIssues.push({
         citation: item.title || item.id || 'Unknown',
         issue: 'Contains placeholder text - likely not a real source',
         severity: 'high',
@@ -230,13 +262,45 @@ function detectFabricatedCitations(bibliography: any): Array<{
     
     // Invalid DOI format (if DOI is present)
     if (item.doi && !/^10\.\d{4,}\//.test(item.doi)) {
-      issues.push({
+      itemIssues.push({
         citation: item.title || item.id || 'Unknown',
         issue: 'Invalid DOI format - citation may be fabricated',
         severity: 'high',
       })
+    } else if (item.doi) {
+      // Verify the DOI actually exists in academic databases
+      try {
+        const paper = await lookupDOI(item.doi, { enableCaching: true })
+        if (!paper) {
+          itemIssues.push({
+            citation: item.title || item.id || 'Unknown',
+            issue: 'DOI not found in any academic database - citation is likely fabricated',
+            severity: 'high',
+          })
+        } else {
+          // Verify the metadata matches
+          const titleMatch = paper.title.toLowerCase().includes(title.toLowerCase().substring(0, 20)) ||
+                            title.toLowerCase().includes(paper.title.toLowerCase().substring(0, 20))
+          
+          if (!titleMatch && title.length > 10) {
+            itemIssues.push({
+              citation: item.title || item.id || 'Unknown',
+              issue: 'Title does not match DOI record - metadata may be incorrect',
+              severity: 'medium',
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error verifying DOI:', error)
+        // Don't fail the whole verification if one lookup fails
+      }
     }
+    
+    return itemIssues
   })
+  
+  const results = await Promise.all(verificationPromises)
+  results.forEach(itemIssues => issues.push(...itemIssues))
   
   return issues.slice(0, 10) // Limit to top 10
 }
@@ -320,14 +384,14 @@ export const verifyCitations = ({ writer }: Params) =>
           ? verifyQuotes(content, bibliography) 
           : []
         
-        // Check for stale citations
+        // Check for stale citations (now async)
         const staleIssues = checkStaleness 
-          ? detectStaleCitations(bibliography) 
+          ? await detectStaleCitations(bibliography) 
           : []
         
-        // Check for fabricated citations
+        // Check for fabricated citations (now async)
         const fabricationIssues = checkSources 
-          ? detectFabricatedCitations(bibliography) 
+          ? await detectFabricatedCitations(bibliography) 
           : []
         
         // Combine all issues (normalize to quote format)
