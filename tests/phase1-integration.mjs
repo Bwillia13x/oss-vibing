@@ -60,7 +60,7 @@ async function testCitationSearch() {
     } else {
       console.log('  No reference files yet (expected for fresh install)');
     }
-  } catch (error) {
+  } catch (_error) {
     console.log('  References directory not yet created (expected for fresh install)');
   }
   
@@ -83,7 +83,7 @@ async function testDocumentStructure() {
     console.log(`  Citations: ${docData.citations?.length || 0}`);
     
     return true;
-  } catch (error) {
+  } catch (_error) {
     console.log('✗ Could not read test document');
     return false;
   }
@@ -98,7 +98,7 @@ async function testExportDirectory() {
     await fs.access(exportsDir);
     const files = await fs.readdir(exportsDir);
     console.log(`✓ Exports directory exists with ${files.length} file(s)`);
-  } catch (error) {
+  } catch (_error) {
     console.log('  Exports directory will be created on first export');
   }
   

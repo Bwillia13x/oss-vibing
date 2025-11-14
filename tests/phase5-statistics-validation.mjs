@@ -36,7 +36,7 @@ try {
   console.log('Building project...')
   execSync('npm run build', { stdio: 'pipe', cwd: '/home/runner/work/oss-vibing/oss-vibing' })
   assert(true, 'Project builds successfully')
-} catch (error) {
+} catch (_error) {
   assert(false, 'Project build failed')
 }
 

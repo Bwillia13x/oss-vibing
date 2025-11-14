@@ -82,7 +82,7 @@ export const synthesizeLiteratureReview = ({ writer: _writer }: Params) =>
               methodology: detectMethodology(ref.abstract || ref.title || ''),
               citationCount: ref.citationCount || 0,
             })
-          } catch (error) {
+          } catch (_error) {
             console.debug(`Skipping invalid reference file: ${file}`)
           }
         }

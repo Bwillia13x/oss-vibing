@@ -253,7 +253,7 @@ export const lmsSync = ({ writer }: Params) =>
                     submittedAt: submission.submittedAt,
                   })
                 }
-              } catch (error) {
+              } catch (_error) {
                 // Skip if no submission found
                 continue
               }

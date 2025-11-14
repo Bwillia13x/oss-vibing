@@ -76,7 +76,7 @@ export const analyzeResearchTrends = ({ writer: _writer }: Params) =>
                 methodology: detectMethodology(ref.abstract || ref.title || ''),
               })
             }
-          } catch (error) {
+          } catch (_error) {
             console.debug(`Skipping invalid reference file: ${file}`)
           }
         }
