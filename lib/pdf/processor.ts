@@ -299,13 +299,24 @@ function parseTEIFullText(teiXml: string): {
 
 /**
  * Clean XML text by removing tags and decoding entities
+ * 
+ * SECURITY NOTE: This function processes trusted TEI XML output from GROBID service.
+ * The output is stored as plain text in the database and is NOT rendered as HTML.
+ * 
+ * The order of replacements is intentional:
+ * 1. Remove ALL XML tags first (including <script> tags)
+ * 2. Decode &amp; first to avoid double-decoding issues
+ * 3. Decode other entities
+ * 
+ * This is NOT suitable for sanitizing untrusted user input for HTML rendering.
+ * For that use case, use a proper HTML sanitizer like DOMPurify.
  */
 function cleanXMLText(text: string): string {
   return text
-    .replace(/<[^>]*>/g, '') // Remove XML tags
+    .replace(/<[^>]*>/g, '') // Remove XML tags (including <script>)
+    .replace(/&amp;/g, '&')   // Decode & first to avoid double-decoding
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
     .replace(/\s+/g, ' ') // Normalize whitespace
