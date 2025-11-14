@@ -119,7 +119,7 @@ export async function searchWorks(
     filter?: Record<string, string>
   } = {}
 ): Promise<CrossrefSearchResult | null> {
-  const cacheKey = generateCacheKey('crossref', 'search', query, options)
+  const cacheKey = generateCacheKey('crossref', 'search', query, JSON.stringify(options))
   
   return getOrSetCached(
     cacheKey,

@@ -7,6 +7,7 @@ import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 import { generatePlagiarismReport, getOriginalityRecommendation } from '../../lib/plagiarism-detector'
+import type { JsonDocument } from './types'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>

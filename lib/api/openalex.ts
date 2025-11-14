@@ -129,7 +129,7 @@ export async function searchWorks(
     filter?: Record<string, string | number>
   } = {}
 ): Promise<OpenAlexSearchResult | null> {
-  const cacheKey = generateCacheKey('openalex', 'search', query, options)
+  const cacheKey = generateCacheKey('openalex', 'search', query, JSON.stringify(options))
   
   return getOrSetCached(
     cacheKey,
