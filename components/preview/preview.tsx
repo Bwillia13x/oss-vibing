@@ -22,9 +22,11 @@ export function Preview({ className, disabled, url }: Props) {
   const loadStartTime = useRef<number | null>(null)
 
   useEffect(() => {
-    setCurrentUrl(url)
-    setInputValue(url || '')
-  }, [url])
+    if (url !== currentUrl) {
+      setCurrentUrl(url)
+      setInputValue(url || '')
+    }
+  }, [url, currentUrl])
 
   const refreshIframe = () => {
     if (iframeRef.current && currentUrl) {

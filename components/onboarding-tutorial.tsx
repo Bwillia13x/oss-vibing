@@ -74,10 +74,10 @@ const steps: OnboardingStep[] = [
           <div className="p-3 bg-muted rounded-md">
             <p className="font-semibold mb-1">Example queries:</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>"Help me write an essay on climate change"</li>
-              <li>"Find sources about renewable energy"</li>
-              <li>"Create a presentation on photosynthesis"</li>
-              <li>"Analyze this temperature dataset"</li>
+              <li>&quot;Help me write an essay on climate change&quot;</li>
+              <li>&quot;Find sources about renewable energy&quot;</li>
+              <li>&quot;Create a presentation on photosynthesis&quot;</li>
+              <li>&quot;Analyze this temperature dataset&quot;</li>
             </ul>
           </div>
         </div>
@@ -204,7 +204,7 @@ const steps: OnboardingStep[] = [
           <div className="p-3 bg-accent rounded-md">
             <h4 className="font-semibold">💡 Pro Tip</h4>
             <p className="text-sm text-muted-foreground mt-1">
-              Start by asking the Copilot: "Help me create a research paper on [your topic]"
+              Start by asking the Copilot: &quot;Help me create a research paper on [your topic]&quot;
             </p>
           </div>
           <div className="p-3 bg-accent rounded-md">

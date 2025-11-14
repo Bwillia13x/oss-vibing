@@ -41,9 +41,10 @@ const mockDepartmentAllocations = [
 export default function LicensesPage() {
   const [licenseData] = useState(mockLicenseData)
   const [allocations] = useState(mockDepartmentAllocations)
+  const [currentTime] = useState(() => Date.now())
 
   const usagePercentage = Math.round((licenseData.used / licenseData.total) * 100)
-  const daysUntilRenewal = Math.ceil((new Date(licenseData.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  const daysUntilRenewal = Math.ceil((new Date(licenseData.renewalDate).getTime() - currentTime) / (1000 * 60 * 60 * 24))
 
   return (
     <div className="space-y-6">
