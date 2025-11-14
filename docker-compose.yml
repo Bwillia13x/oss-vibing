@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # GROBID service for PDF processing
+  grobid:
+    image: lfoppiano/grobid:0.8.0
+    container_name: vibe-grobid
+    ports:
+      - "8070:8070"
+    environment:
+      # Increase memory for processing large PDFs
+      - JAVA_OPTS=-Xmx4g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8070/api/isalive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Uncomment to limit resources in production
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 4G
+    #     reservations:
+    #       cpus: '1'
+    #       memory: 2G
+
+  # Optional: Add PostgreSQL for production database
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: vibe-postgres
+  #   environment:
+  #     POSTGRES_DB: vibeuniversity
+  #     POSTGRES_USER: vibe
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+  # Optional: Add Redis for caching
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: vibe-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes
+
+# volumes:
+#   postgres_data:
+#   redis_data:
