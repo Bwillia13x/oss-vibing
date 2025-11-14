@@ -143,6 +143,25 @@ export interface Reference {
   [key: string]: unknown;
 }
 
+// CSL (Citation Style Language) item
+export interface CSLItem {
+  type?: string;
+  title?: string;
+  author?: Array<{ family?: string; given?: string }>;
+  issued?: { 'date-parts'?: number[][] };
+  'container-title'?: string;
+  volume?: string | number;
+  issue?: string | number;
+  page?: string;
+  DOI?: string;
+  URL?: string;
+  publisher?: string;
+  'publisher-place'?: string;
+  ISBN?: string;
+  ISSN?: string;
+  [key: string]: unknown;
+}
+
 export interface CitationMetadata {
   page?: number | string;
   location?: string;

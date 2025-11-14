@@ -5,6 +5,7 @@ import description from './format-bibliography.md'
 import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import type { CSLItem, JsonDocument } from './types'
 import Cite from 'citation-js'
 
 interface Params {
@@ -43,7 +44,7 @@ function convertToCSL(citation: Citation) {
     authors = citation.author
   }
   
-  const cslItem: any = {
+  const cslItem: CSLItem = {
     id: citation.id,
     type: citation.type || 'article-journal',
     title: citation.title,
@@ -86,7 +87,7 @@ export const formatBibliography = ({ writer }: Params) =>
       try {
         // Read document to extract citations
         const fullPath = path.join(process.cwd(), docPath)
-        let docContent: any
+        let docContent: JsonDocument
         
         try {
           const content = await fs.readFile(fullPath, 'utf-8')

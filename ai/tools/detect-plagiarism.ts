@@ -34,10 +34,10 @@ export const detectPlagiarism = ({ writer: _writer }: Params) =>
         let text = content
         if (fullPath.endsWith('.json')) {
           try {
-            const doc = JSON.parse(content)
+            const doc: JsonDocument = JSON.parse(content)
             // Extract text from sections if it's a document structure
             if (doc.sections) {
-              text = doc.sections.map((s: any) => s.content || '').join('\n\n')
+              text = doc.sections.map((s) => s.content || '').join('\n\n')
             } else if (doc.content) {
               text = doc.content
             }

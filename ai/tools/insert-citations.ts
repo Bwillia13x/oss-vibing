@@ -6,6 +6,7 @@ import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 import Cite from 'citation-js'
+import type { CSLItem, JsonDocument } from './types'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
@@ -41,7 +42,7 @@ function convertToCSL(citation: Citation) {
     authors = citation.author
   }
   
-  const cslItem: any = {
+  const cslItem: CSLItem = {
     id: citation.id,
     type: citation.type || 'article-journal',
     title: citation.title,
@@ -124,7 +125,7 @@ export const insertCitations = ({ writer }: Params) =>
       try {
         // Read document
         const fullPath = path.join(process.cwd(), docPath)
-        let docContent: any
+        let docContent: JsonDocument
         
         try {
           const content = await fs.readFile(fullPath, 'utf-8')

@@ -39,10 +39,10 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
         let text = content
         if (fullPath.endsWith('.json')) {
           try {
-            const doc = JSON.parse(content)
+            const doc: JsonDocument = JSON.parse(content)
             // Extract text from sections if it's a document structure
             if (doc.sections) {
-              text = doc.sections.map((s: any) => s.content || '').join('\n\n')
+              text = doc.sections.map((s) => s.content || '').join('\n\n')
             } else if (doc.content) {
               text = doc.content
             }
@@ -63,7 +63,13 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
         const shouldCheckPassive = shouldCheckAll || checkTypes.includes('passive')
         
         // Run grammar and style checks
-        let grammarResults: { issues: GrammarIssue[]; summary: any } | null = null
+        interface GrammarSummary {
+          errors: number;
+          warnings: number;
+          [key: string]: unknown;
+        }
+        
+        let grammarResults: { issues: GrammarIssue[]; summary: GrammarSummary } | null = null
         if (shouldCheckGrammar || shouldCheckPassive) {
           grammarResults = checkGrammarAndStyle(text)
           
@@ -84,7 +90,19 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
         }
         
         // Prepare results
-        const results: any = {
+        interface GrammarCheckResults {
+          status: string;
+          grammar?: {
+            totalIssues: number;
+            errors: number;
+            warnings: number;
+            issues: GrammarIssue[];
+          };
+          readability?: ReturnType<typeof calculateReadabilityScores>;
+          [key: string]: unknown;
+        }
+        
+        const results: GrammarCheckResults = {
           status: 'done',
         }
         
