@@ -10,6 +10,10 @@ import { isGROBIDAvailable, processPDF } from '@/lib/pdf/processor'
  * Tests are skipped if GROBID is not available.
  */
 
+// Test timeout is 1.5x the GROBID timeout (default 30s) to allow for processing overhead
+const GROBID_TIMEOUT = parseInt(process.env.GROBID_TIMEOUT || '30000', 10)
+const TEST_TIMEOUT = Math.floor(GROBID_TIMEOUT * 1.5)
+
 describe('PDF Processing', () => {
   let grobidAvailable = false
 
@@ -35,7 +39,12 @@ describe('PDF Processing', () => {
   })
 
   describe('PDF Metadata Extraction', () => {
-    it.skipIf(!grobidAvailable)('should extract metadata from PDF header', async () => {
+    it('should extract metadata from PDF header', async () => {
+      if (!grobidAvailable) {
+        console.log('Skipping: GROBID not available')
+        return
+      }
+
       // This test requires a sample PDF file
       // For now, we'll skip unless the file exists
       const result = await processPDF({
@@ -57,11 +66,16 @@ describe('PDF Processing', () => {
         result.metadata.authors?.length || 
         result.metadata.abstract
       ).toBeTruthy()
-    }, 30000)
+    }, TEST_TIMEOUT)
   })
 
   describe('PDF Citation Extraction', () => {
-    it.skipIf(!grobidAvailable)('should extract citations from PDF', async () => {
+    it('should extract citations from PDF', async () => {
+      if (!grobidAvailable) {
+        console.log('Skipping: GROBID not available')
+        return
+      }
+
       const result = await processPDF({
         pdfPath: './tests/fixtures/sample-paper.pdf',
         extractCitations: true,
@@ -89,11 +103,16 @@ describe('PDF Processing', () => {
           citation.doi
         ).toBeTruthy()
       }
-    }, 30000)
+    }, TEST_TIMEOUT)
   })
 
   describe('PDF Full Text Extraction', () => {
-    it.skipIf(!grobidAvailable)('should extract full text from PDF', async () => {
+    it('should extract full text from PDF', async () => {
+      if (!grobidAvailable) {
+        console.log('Skipping: GROBID not available')
+        return
+      }
+
       const result = await processPDF({
         pdfPath: './tests/fixtures/sample-paper.pdf',
         extractFullText: true,
@@ -113,7 +132,7 @@ describe('PDF Processing', () => {
       // Check sections
       expect(result.sections).toBeDefined()
       expect(Array.isArray(result.sections)).toBe(true)
-    }, 45000)
+    }, TEST_TIMEOUT)
   })
 
   describe('Error Handling', () => {
@@ -135,7 +154,12 @@ describe('PDF Processing', () => {
       expect(result.error).toBeDefined()
     })
 
-    it.skipIf(!grobidAvailable)('should handle very large files', async () => {
+    it('should handle very large files', async () => {
+      if (!grobidAvailable) {
+        console.log('Skipping: GROBID not available')
+        return
+      }
+
       // Create a mock large buffer (larger than max size)
       const largeBuffer = Buffer.alloc(60 * 1024 * 1024) // 60MB
 
@@ -149,7 +173,12 @@ describe('PDF Processing', () => {
   })
 
   describe('Integration with Citation Client', () => {
-    it.skipIf(!grobidAvailable)('should extract DOIs that can be validated', async () => {
+    it('should extract DOIs that can be validated', async () => {
+      if (!grobidAvailable) {
+        console.log('Skipping: GROBID not available')
+        return
+      }
+
       const result = await processPDF({
         pdfPath: './tests/fixtures/sample-paper.pdf',
         extractCitations: true,
@@ -169,7 +198,7 @@ describe('PDF Processing', () => {
           expect(citation.doi).toMatch(/^10\.\d{4,}\//)
         })
       }
-    }, 30000)
+    }, TEST_TIMEOUT)
   })
 })
 
