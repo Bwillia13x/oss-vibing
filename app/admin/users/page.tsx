@@ -12,12 +12,11 @@ import { UserFormDialog } from '@/components/admin/user-form-dialog'
 import { Button } from '@/components/ui/button'
 import { UserPlus, Upload, Download } from 'lucide-react'
 import { createUser, exportUsersToCSV } from '@/lib/api/admin-users'
+import { useInstitutionId } from '@/lib/auth/context'
 import { toast } from 'sonner'
 
-// TODO: Get institutionId from auth context or config
-const INSTITUTION_ID = 'inst_demo'
-
 export default function UsersPage() {
+  const institutionId = useInstitutionId()
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -27,7 +26,7 @@ export default function UsersPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        institutionId: INSTITUTION_ID,
+        institutionId,
         users: users.map(u => ({
           name: u.name,
           email: u.email,
@@ -58,7 +57,7 @@ export default function UsersPage() {
 
   const handleExport = async () => {
     try {
-      await exportUsersToCSV(INSTITUTION_ID)
+      await exportUsersToCSV(institutionId)
       toast.success('Users exported successfully')
     } catch (error) {
       console.error('Export failed:', error)
@@ -68,7 +67,7 @@ export default function UsersPage() {
 
   const handleCreateUser = async (userData: { name: string; email: string; role: string }) => {
     try {
-      await createUser(INSTITUTION_ID, {
+      await createUser(institutionId, {
         name: userData.name,
         email: userData.email,
         role: userData.role.toUpperCase(),

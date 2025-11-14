@@ -37,7 +37,11 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization check
+    const authResult = await requireRole(req, ['INSTRUCTOR', 'ADMIN'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     const reviews = await getPeerReviewsForSubmission(submissionId)
 
@@ -127,7 +131,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // TODO: Add authentication and authorization check
+    // Authentication and authorization check
+    const authResult = await requireRole(req, ['USER', 'INSTRUCTOR', 'ADMIN'])
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
     const review = await submitPeerReview(reviewId, feedback, rubricScores)
 

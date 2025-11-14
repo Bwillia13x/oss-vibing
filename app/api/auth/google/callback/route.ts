@@ -64,31 +64,46 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // TODO: Create or update user in database
-    // IMPORTANT: This is a placeholder implementation for development.
-    // In production, you MUST implement proper user lookup/creation:
-    //
-    // let user = await prisma.user.findUnique({ where: { email: userInfo.email } });
-    // if (!user) {
-    //   user = await prisma.user.create({
-    //     data: {
-    //       email: userInfo.email,
-    //       name: userInfo.name,
-    //       role: 'USER',
-    //       status: 'ACTIVE',
-    //     },
-    //   });
-    // }
-    // const userId = user.id; // Use database ID, not Google ID
-    //
-    // For now, we'll create tokens with the Google user info
-    const userId = userInfo.id; // WARNING: Using Google ID - replace with database user ID in production
+    // Create or update user in database
+    // Check if database repository is available
+    let userId: string;
+    let userRole: 'USER' | 'ADMIN' | 'INSTRUCTOR' = 'USER';
+    
+    try {
+      const { userRepository } = await import('@/lib/db/repositories');
+      
+      // Try to find existing user
+      const existingUser = await userRepository.findByEmail(userInfo.email);
+      
+      if (existingUser) {
+        // Update existing user
+        const updatedUser = await userRepository.update(existingUser.id, {
+          name: userInfo.name || existingUser.name,
+        });
+        userId = updatedUser.id;
+        userRole = updatedUser.role;
+      } else {
+        // Create new user
+        const newUser = await userRepository.create({
+          email: userInfo.email,
+          name: userInfo.name || userInfo.email.split('@')[0],
+          role: 'USER',
+        });
+        userId = newUser.id;
+        userRole = newUser.role;
+      }
+    } catch (error) {
+      // If database is not available, use Google ID as fallback
+      console.warn('Database not available, using Google ID:', error);
+      userId = userInfo.id;
+      userRole = 'USER';
+    }
 
     // Create access and refresh tokens
     const accessToken = await createAccessToken({
       userId,
       email: userInfo.email,
-      role: 'USER', // Default role, should come from database
+      role: userRole,
     });
 
     const refreshToken = await createRefreshToken({

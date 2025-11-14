@@ -30,6 +30,7 @@ import { MoreHorizontal, Search, Pencil, Trash2, Ban, CheckCircle, Loader2 } fro
 import { UserFormDialog } from './user-form-dialog'
 import { DeleteUserDialog } from './delete-user-dialog'
 import { fetchUsers, updateUser, deleteUser, type User as ApiUser } from '@/lib/api/admin-users'
+import { useInstitutionId } from '@/lib/auth/context'
 import { toast } from 'sonner'
 
 interface User {
@@ -56,10 +57,8 @@ function mapApiUserToDisplayUser(apiUser: ApiUser): User {
   }
 }
 
-// TODO: Get institutionId from auth context or config
-const INSTITUTION_ID = 'inst_demo'
-
 export function UsersTable() {
+  const institutionId = useInstitutionId()
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [users, setUsers] = useState<User[]>([])
@@ -77,7 +76,7 @@ export function UsersTable() {
   async function loadUsers() {
     try {
       setLoading(true)
-      const result = await fetchUsers(INSTITUTION_ID, {
+      const result = await fetchUsers(institutionId, {
         role: roleFilter !== 'all' ? roleFilter.toUpperCase() : undefined,
       })
       setUsers(result.data.map(mapApiUserToDisplayUser))
