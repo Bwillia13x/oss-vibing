@@ -8,6 +8,7 @@ import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { userRepository, auditLogRepository } from '@/lib/db/repositories'
 import { updateUserSchema } from '@/lib/db/validation/schemas'
+import { requireRole, requireInstitutionAccess } from '@/lib/auth'
 
 export async function PUT(
   req: NextRequest,
@@ -41,11 +42,20 @@ export async function PUT(
       )
     }
 
-    // TODO: Verify institutionId from request body or session
-    // const authResult = await requireInstitutionAccess(req, institutionId, ['admin', 'institution-admin'])
-    // if (authResult instanceof NextResponse) {
-    //   return authResult
-    // }
+    // Authentication and authorization - admins only
+    // Use the user's institution for authorization if available
+    if (existingUser.institutionId) {
+      const authResult = await requireInstitutionAccess(req, existingUser.institutionId, ['admin', 'institution-admin'])
+      if (authResult instanceof NextResponse) {
+        return authResult
+      }
+    } else {
+      // For users without an institution, require admin role
+      const authResult = await requireRole(req, ['admin'])
+      if (authResult instanceof NextResponse) {
+        return authResult
+      }
+    }
 
     // Update user
     const updatedUser = await userRepository.update(userId, validated)
@@ -117,11 +127,20 @@ export async function DELETE(
       )
     }
 
-    // TODO: Verify institutionId from request body or session
-    // const authResult = await requireInstitutionAccess(req, institutionId, ['admin', 'institution-admin'])
-    // if (authResult instanceof NextResponse) {
-    //   return authResult
-    // }
+    // Authentication and authorization - admins only
+    // Use the user's institution for authorization if available
+    if (existingUser.institutionId) {
+      const authResult = await requireInstitutionAccess(req, existingUser.institutionId, ['admin', 'institution-admin'])
+      if (authResult instanceof NextResponse) {
+        return authResult
+      }
+    } else {
+      // For users without an institution, require admin role
+      const authResult = await requireRole(req, ['admin'])
+      if (authResult instanceof NextResponse) {
+        return authResult
+      }
+    }
 
     // Soft delete user
     const deletedUser = await userRepository.delete(userId)

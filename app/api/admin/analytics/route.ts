@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getInstitutionAnalytics, generateAnalyticsReport } from '@/lib/admin-analytics'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
-import { requireInstitutionAccess } from '@/lib/auth'
+import { requireInstitutionAccess, requireAuth } from '@/lib/auth'
+import { usageMetricRepository } from '@/lib/db/repositories'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -105,20 +106,36 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { userId, activity } = body
 
-    if (!userId || !activity) {
+    if (!userId || !activity || !activity.metric) {
       return NextResponse.json(
-        { error: 'userId and activity are required' },
+        { error: 'userId, activity, and activity.metric are required' },
         { status: 400 }
       )
     }
 
-    // Authentication check - any authenticated user can track their own activity
-    const authResult = await requireInstitutionAccess(req, activity.institutionId, ['admin', 'institution-admin', 'instructor', 'student'])
+    // Authentication check - users can only track their own activity
+    const authResult = await requireAuth(req)
     if (authResult instanceof NextResponse) {
-      return authResult // Return error response
+      return authResult
     }
 
-    // TODO: Track activity in database
+    const user = authResult
+
+    // Users can only track their own activity unless they're admins
+    if (user.id !== userId && user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'You can only track your own activity' },
+        { status: 403 }
+      )
+    }
+
+    // Track activity in database
+    await usageMetricRepository.create({
+      userId,
+      metric: activity.metric,
+      value: activity.value ?? 1,
+      metadata: activity.metadata,
+    })
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/admin/analytics',
