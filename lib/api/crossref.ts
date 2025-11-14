@@ -10,10 +10,17 @@
  */
 
 import { trackApiPerformance } from '@/lib/monitoring'
+import { getOrSetCached, generateCacheKey, DEFAULT_TTL } from '@/lib/cache'
 
 const CROSSREF_API_BASE = 'https://api.crossref.org'
 const POLITE_EMAIL = process.env.POLITE_EMAIL || 'support@vibeuniversity.com' // Used for polite pool
 const USER_AGENT = `VibeUniversity/0.1 (mailto:${POLITE_EMAIL})`
+
+// Cache TTLs
+const CACHE_TTL = {
+  DOI_LOOKUP: DEFAULT_TTL.DAY, // DOI metadata rarely changes
+  SEARCH: DEFAULT_TTL.LONG, // Search results can change more frequently
+}
 
 export interface CrossrefWork {
   DOI: string
@@ -65,37 +72,42 @@ export interface CrossrefSearchResult {
 }
 
 /**
- * Look up a work by DOI
+ * Look up a work by DOI (with caching)
  */
 export async function lookupDOI(doi: string): Promise<CrossrefWork | null> {
   const cleanDOI = doi.trim().replace(/^https?:\/\/doi\.org\//, '')
+  const cacheKey = generateCacheKey('crossref', 'doi', cleanDOI)
   
-  return trackApiPerformance('crossref.lookup', async () => {
-    try {
-      const response = await fetch(`${CROSSREF_API_BASE}/works/${encodeURIComponent(cleanDOI)}`, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      })
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('crossref.lookup', async () => {
+      try {
+        const response = await fetch(`${CROSSREF_API_BASE}/works/${encodeURIComponent(cleanDOI)}`, {
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+        })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Crossref API error: ${response.status} ${response.statusText}`)
         }
-        throw new Error(`Crossref API error: ${response.status} ${response.statusText}`)
-      }
 
-      const data: CrossrefResponse = await response.json()
-      return data.message as CrossrefWork
-    } catch (error) {
-      console.error('Error looking up DOI:', error)
-      return null
-    }
-  })
+        const data: CrossrefResponse = await response.json()
+        return data.message as CrossrefWork
+      } catch (error) {
+        console.error('Error looking up DOI:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.DOI_LOOKUP
+  )
 }
 
 /**
- * Search for works by query string
+ * Search for works by query string (with caching)
  */
 export async function searchWorks(
   query: string,
@@ -107,43 +119,49 @@ export async function searchWorks(
     filter?: Record<string, string>
   } = {}
 ): Promise<CrossrefSearchResult | null> {
-  const params = new URLSearchParams({
-    query: query,
-    rows: String(options.rows || 20),
-    offset: String(options.offset || 0),
-  })
-
-  if (options.sort) {
-    params.append('sort', options.sort)
-  }
-  if (options.order) {
-    params.append('order', options.order)
-  }
-  if (options.filter) {
-    for (const [key, value] of Object.entries(options.filter)) {
-      params.append(`filter`, `${key}:${value}`)
-    }
-  }
-
-  return trackApiPerformance('crossref.search', async () => {
-    try {
-      const response = await fetch(`${CROSSREF_API_BASE}/works?${params.toString()}`, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
+  const cacheKey = generateCacheKey('crossref', 'search', query, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('crossref.search', async () => {
+      const params = new URLSearchParams({
+        query: query,
+        rows: String(options.rows || 20),
+        offset: String(options.offset || 0),
       })
 
-      if (!response.ok) {
-        throw new Error(`Crossref API error: ${response.status} ${response.statusText}`)
+      if (options.sort) {
+        params.append('sort', options.sort)
+      }
+      if (options.order) {
+        params.append('order', options.order)
+      }
+      if (options.filter) {
+        for (const [key, value] of Object.entries(options.filter)) {
+          params.append(`filter`, `${key}:${value}`)
+        }
       }
 
-      const data: CrossrefResponse = await response.json()
-      return data.message as any as CrossrefSearchResult
-    } catch (error) {
-      console.error('Error searching Crossref:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${CROSSREF_API_BASE}/works?${params.toString()}`, {
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`Crossref API error: ${response.status} ${response.statusText}`)
+        }
+
+        const data: CrossrefResponse = await response.json()
+        return data.message as any as CrossrefSearchResult
+      } catch (error) {
+        console.error('Error searching Crossref:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.SEARCH
+  )
 }
 
 /**

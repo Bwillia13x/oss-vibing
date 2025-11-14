@@ -5,6 +5,7 @@ import description from './sheet-chart.md'
 import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import type { ChartConfig } from './types'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
@@ -15,20 +16,25 @@ interface SheetData {
   tables: {
     [key: string]: {
       headers: string[]
-      data: any[][]
+      data: unknown[][]
     }
   }
-  charts?: any[]
+  charts?: ChartConfig[]
+}
+
+interface ChartDataPoint {
+  index: number;
+  [key: string]: unknown;
 }
 
 // Extract data for chart from table
-function extractChartData(table: { headers: string[]; data: any[][] }, _range: string) {
+function extractChartData(table: { headers: string[]; data: unknown[][] }, _range: string): ChartDataPoint[] {
   // Simple range parsing - assumes format like "A1:D12"
   // For a real implementation, would parse the range properly
   
   // For now, return all data with headers
-  const chartData = table.data.map((row, index) => {
-    const dataPoint: any = { index: index + 1 }
+  const chartData = table.data.map((row, index): ChartDataPoint => {
+    const dataPoint: ChartDataPoint = { index: index + 1 }
     table.headers.forEach((header, i) => {
       dataPoint[header] = row[i]
     })
@@ -53,19 +59,19 @@ const COLOR_PALETTE = [
 // Create chart configuration for Recharts
 function createChartConfig(
   kind: string,
-  data: any[],
+  data: ChartDataPoint[],
   headers: string[],
   title?: string,
   xAxis?: string,
   yAxis?: string
-) {
+): ChartConfig {
   const chartTitle = title || `${kind.charAt(0).toUpperCase() + kind.slice(1)} Chart`
   
   // Determine axes
   const xAxisKey = xAxis || headers[0] || 'index'
   const yAxisKeys = yAxis ? [yAxis] : headers.slice(1)
   
-  const config: any = {
+  const config: ChartConfig = {
     id: `chart-${Date.now()}`,
     type: kind,
     title: chartTitle,
