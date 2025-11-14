@@ -281,7 +281,7 @@ function calculateSetSimilarity(set1: Set<string>, set2: Set<string>): number {
   return intersection.size / union.size
 }
 
-function categorizeSimilarPapers(papers: Paper[], queryText: string): {
+function categorizeSimilarPapers(papers: Paper[], _queryText: string): {
   highlyRelevant: Paper[]
   relevant: Paper[]
   somewhatRelevant: Paper[]

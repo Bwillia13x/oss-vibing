@@ -48,7 +48,7 @@ interface DocumentData {
 const CITATION_PATTERN = /\([^)]*\d{4}[^)]*\)|\[[^\]]*\d+[^\]]*\]/
 
 // Analyze citation coverage in document
-function analyzeCitationCoverage(content: string, citations: any[]): {
+function analyzeCitationCoverage(content: string, _citations: any[]): {
   totalSentences: number
   citedSentences: number
   coveragePct: number
@@ -101,7 +101,7 @@ function analyzeCitationCoverage(content: string, citations: any[]): {
 }
 
 // Verify quotes against sources
-function verifyQuotes(content: string, bibliography: any): Array<{
+function verifyQuotes(content: string, _bibliography: any): Array<{
   quote: string
   issue: string
   severity: 'high' | 'medium' | 'low'

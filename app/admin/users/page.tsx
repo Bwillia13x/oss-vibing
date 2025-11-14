@@ -35,7 +35,7 @@ export default function UsersPage() {
     let result
     try {
       result = await response.json()
-    } catch (e) {
+    } catch (_e) {
       throw new Error('Failed to parse server response.')
     }
     

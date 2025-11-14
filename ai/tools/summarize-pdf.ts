@@ -17,7 +17,7 @@ export const summarizePdf = ({ writer }: Params) =>
       style: z.enum(['detailed', 'brief', 'highlights']).default('detailed').describe('Summary style'),
       length: z.number().default(500).describe('Target summary length in words'),
     }),
-    execute: async ({ pdfUrl, uploadPath, style, length }, { toolCallId }) => {
+    execute: async ({ pdfUrl, uploadPath, _style, _length }, { toolCallId }) => {
       const source = pdfUrl || uploadPath || 'Unknown source'
 
       writer.write({

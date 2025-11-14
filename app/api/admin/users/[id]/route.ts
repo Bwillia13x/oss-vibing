@@ -6,8 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
-import { requireInstitutionAccess } from '@/lib/auth'
-import { userRepository, auditLogRepository, licenseRepository } from '@/lib/db/repositories'
+import { userRepository, auditLogRepository } from '@/lib/db/repositories'
 import { updateUserSchema } from '@/lib/db/validation/schemas'
 
 export async function PUT(

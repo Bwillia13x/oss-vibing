@@ -22,7 +22,7 @@ interface SheetData {
 }
 
 // Extract data for chart from table
-function extractChartData(table: { headers: string[]; data: any[][] }, range: string) {
+function extractChartData(table: { headers: string[]; data: any[][] }, _range: string) {
   // Simple range parsing - assumes format like "A1:D12"
   // For a real implementation, would parse the range properly
   

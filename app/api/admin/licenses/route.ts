@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
-import type { License } from '@/lib/types/institutional'
 import { requireRole, requireInstitutionAccess } from '@/lib/auth'
 import { licenseRepository, auditLogRepository } from '@/lib/db/repositories'
 import { createLicenseSchema, updateLicenseSchema } from '@/lib/db/validation/schemas'
