@@ -323,7 +323,7 @@ function evaluateOriginality(thesis: string) {
 function evaluateDisciplineAlignment(thesis: string, discipline: string) {
   let score
   let strength = ''
-  let weakness = ''
+  const weakness = ''
   const recommendations: string[] = []
   
   switch (discipline) {
