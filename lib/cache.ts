@@ -1,8 +1,10 @@
 /**
- * Simple in-memory cache for Phase 3.1.2 Backend Performance
- * Provides request memoization without external dependencies like Redis
- * Suitable for development and low-traffic scenarios
+ * Cache implementation with Redis support (Phase 9)
+ * Provides in-memory fallback when Redis is not available
+ * Suitable for both development and production scenarios
  */
+
+import { getRedisClient, isRedisConnected } from './cache/redis-client'
 
 interface CacheEntry<T> {
   value: T
@@ -21,7 +23,31 @@ class SimpleCache<T = any> {
   }
 
   /**
-   * Get a value from cache
+   * Get a value from cache (supports Redis)
+   */
+  async getAsync(key: string): Promise<T | null> {
+    // Try Redis first if available
+    if (isRedisConnected()) {
+      try {
+        const redis = getRedisClient()
+        if (redis) {
+          const value = await redis.get(key)
+          if (value) {
+            return JSON.parse(value) as T
+          }
+        }
+      } catch (error) {
+        console.error('Redis get error:', error)
+        // Fall through to memory cache
+      }
+    }
+
+    // Fallback to memory cache
+    return this.get(key)
+  }
+
+  /**
+   * Get a value from cache (sync, memory-only)
    */
   get(key: string): T | null {
     const entry = this.cache.get(key)
@@ -39,7 +65,28 @@ class SimpleCache<T = any> {
   }
 
   /**
-   * Set a value in cache
+   * Set a value in cache (supports Redis)
+   */
+  async setAsync(key: string, value: T): Promise<void> {
+    // Try Redis first if available
+    if (isRedisConnected()) {
+      try {
+        const redis = getRedisClient()
+        if (redis) {
+          await redis.setex(key, Math.floor(this.ttl / 1000), JSON.stringify(value))
+        }
+      } catch (error) {
+        console.error('Redis set error:', error)
+        // Fall through to memory cache
+      }
+    }
+
+    // Also set in memory cache for fast local access
+    this.set(key, value)
+  }
+
+  /**
+   * Set a value in cache (sync, memory-only)
    */
   set(key: string, value: T): void {
     // Evict oldest entries if cache is full
@@ -71,7 +118,27 @@ class SimpleCache<T = any> {
   }
 
   /**
-   * Delete a key from cache
+   * Delete a key from cache (supports Redis)
+   */
+  async deleteAsync(key: string): Promise<void> {
+    // Delete from Redis if available
+    if (isRedisConnected()) {
+      try {
+        const redis = getRedisClient()
+        if (redis) {
+          await redis.del(key)
+        }
+      } catch (error) {
+        console.error('Redis delete error:', error)
+      }
+    }
+
+    // Also delete from memory cache
+    this.delete(key)
+  }
+
+  /**
+   * Delete a key from cache (sync, memory-only)
    */
   delete(key: string): void {
     this.cache.delete(key)
@@ -85,7 +152,44 @@ class SimpleCache<T = any> {
   }
 
   /**
-   * Get cache statistics
+   * Get cache statistics (supports Redis)
+   */
+  async statsAsync() {
+    const memoryStats = this.stats()
+    
+    // Try to get Redis stats if available
+    if (isRedisConnected()) {
+      try {
+        const redis = getRedisClient()
+        if (redis) {
+          const dbsize = await redis.dbsize()
+          const info = await redis.info('memory')
+          const memoryMatch = info.match(/used_memory_human:(.+)/)
+          
+          return {
+            ...memoryStats,
+            redis: {
+              connected: true,
+              keys: dbsize,
+              memory: memoryMatch ? memoryMatch[1].trim() : 'unknown',
+            },
+          }
+        }
+      } catch (error) {
+        console.error('Redis stats error:', error)
+      }
+    }
+
+    return {
+      ...memoryStats,
+      redis: {
+        connected: false,
+      },
+    }
+  }
+
+  /**
+   * Get cache statistics (sync, memory-only)
    */
   stats() {
     let totalHits = 0
