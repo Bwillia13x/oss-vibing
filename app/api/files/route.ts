@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { fileIndexer, initializeFileIndex, searchArtifacts } from '@/lib/file-indexer'
+import { fileIndexer, initializeFileIndex, searchArtifacts, FileMetadata } from '@/lib/file-indexer'
 import { perfMonitor } from '@/lib/performance'
 import { apiCache, apiRateLimiter } from '@/lib/cache'
 
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Search query too long' }, { status: 400 })
       }
       
-      const results = searchArtifacts(search, typeParam as any)
+      const results = searchArtifacts(search, typeParam as FileMetadata['type'] | undefined)
       return NextResponse.json({
         query: search,
         type: typeParam || 'all',

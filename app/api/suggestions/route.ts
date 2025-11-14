@@ -59,9 +59,10 @@ export async function GET(req: Request) {
   try {
     input = validateParam(inputRaw, 'input', 1000)
     content = validateParam(contentRaw, 'content', 10000)
-  } catch (validationError: any) {
+  } catch (validationError: unknown) {
+    const errorMessage = validationError instanceof Error ? validationError.message : 'Validation error'
     return NextResponse.json(
-      { error: validationError.message },
+      { error: errorMessage },
       { status: 400 }
     )
   }

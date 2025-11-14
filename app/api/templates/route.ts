@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     const indexData = await readFile(indexPath, 'utf-8')
     const index = JSON.parse(indexData)
 
-    const template = index.templates[type].find((t: any) => t.id === id)
+    const template = index.templates[type].find((t: { id: string }) => t.id === id)
     if (!template) {
       return NextResponse.json(
         { error: 'Template not found' },

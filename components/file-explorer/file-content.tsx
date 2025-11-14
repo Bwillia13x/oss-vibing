@@ -1,5 +1,4 @@
 import { SyntaxHighlighter } from './syntax-highlighter'
-import { PulseLoader } from 'react-spinners'
 import { Skeleton } from '@/components/ui/skeleton'
 import { memo } from 'react'
 import useSWR from 'swr'

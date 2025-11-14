@@ -4,7 +4,7 @@ import type { Command } from './types'
 import { Panel, PanelHeader } from '@/components/panels/panels'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { SquareChevronRight } from 'lucide-react'
-import { useEffect, useRef, memo, useMemo } from 'react'
+import { useEffect, useRef, memo } from 'react'
 import { useVirtualScroll } from '@/lib/use-virtual-scroll'
 
 interface Props {

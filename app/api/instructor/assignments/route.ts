@@ -16,7 +16,7 @@ import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
-  const startTime = Date.now()
+  const _startTime = Date.now()
 
   try {
     const forwardedFor = req.headers.get('x-forwarded-for')

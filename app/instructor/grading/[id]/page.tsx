@@ -20,8 +20,6 @@ import {
   Save,
   ArrowLeft,
   ArrowRight,
-  FileText,
-  AlertCircle,
   CheckCircle,
 } from 'lucide-react'
 
