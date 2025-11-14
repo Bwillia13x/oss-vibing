@@ -28,9 +28,9 @@ export async function GET(req: Request) {
 
   const report = getPerformanceReport()
   
-  // Add cache statistics
+  // Add cache statistics (with Redis support)
   const cacheStats = {
-    apiCache: apiCache.stats(),
+    apiCache: await apiCache.statsAsync(),
   }
 
   // Add monitoring statistics
