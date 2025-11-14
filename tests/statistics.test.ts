@@ -151,7 +151,7 @@ describe('Statistical Reports', () => {
     const x = [1, 2, 3, 4, 5];
     const y = [2, 4, 6, 8, 10];
     
-    const report = generateCorrelationReport(x, y);
+    const report = generateCorrelationReport(x, y, 'X', 'Y', 'pearson', 'object');
     
     expect(report.pearson).toBeDefined();
     expect(report.interpretation).toBeDefined();
@@ -166,7 +166,7 @@ describe('Statistical Reports', () => {
       [5, 10],
     ];
     
-    const report = generateRegressionReport(data);
+    const report = generateRegressionReport(data, 'X', 'Y', 'object');
     
     expect(report.slope).toBeDefined();
     expect(report.intercept).toBeDefined();
