@@ -7,6 +7,34 @@ import { readFile, readdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
+interface ResearchReference {
+  title?: string
+  authors?: Array<{ name: string }>
+  year?: number
+  doi?: string
+  [key: string]: unknown
+}
+
+interface DocumentSection {
+  title?: string
+  content?: string
+  [key: string]: unknown
+}
+
+interface JsonDocument {
+  sections?: DocumentSection[]
+  content?: string
+  [key: string]: unknown
+}
+
+interface ResearchGap {
+  type: string
+  description: string
+  severity: string
+  evidence: string[]
+  [key: string]: unknown
+}
+
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
@@ -25,7 +53,7 @@ export const identifyResearchGaps = ({ writer: _writer }: Params) =>
     execute: async ({ documentPath, topic, discipline, referenceFolder }, { toolCallId: _toolCallId }) => {
       try {
         let literatureText = ''
-        const references: any[] = []
+        const references: ResearchReference[] = []
         
         // Read literature review document if provided
         if (documentPath) {
@@ -35,9 +63,9 @@ export const identifyResearchGaps = ({ writer: _writer }: Params) =>
             
             if (fullPath.endsWith('.json')) {
               try {
-                const doc = JSON.parse(content)
+                const doc: JsonDocument = JSON.parse(content)
                 if (doc.sections) {
-                  literatureText = doc.sections.map((s: any) => s.content || '').join('\n\n')
+                  literatureText = doc.sections.map((s) => s.content || '').join('\n\n')
                 } else if (doc.content) {
                   literatureText = doc.content
                 }
@@ -74,7 +102,7 @@ export const identifyResearchGaps = ({ writer: _writer }: Params) =>
         const gaps = {
           topic,
           discipline,
-          identifiedGaps: [] as any[],
+          identifiedGaps: [] as ResearchGap[],
           opportunities: [] as string[],
           suggestedQuestions: [] as string[],
         }
@@ -162,7 +190,7 @@ export const identifyResearchGaps = ({ writer: _writer }: Params) =>
 
 // Helper functions
 
-function identifyTemporalGaps(text: string, references: any[], topic: string) {
+function identifyTemporalGaps(text: string, references: ResearchReference[], topic: string) {
   // Extract years from text
   const yearMatches = text.match(/\b(19|20)\d{2}\b/g) || []
   const years = yearMatches.map(y => parseInt(y))
@@ -396,7 +424,7 @@ function identifyLimitedResearch(text: string, topic: string) {
   return { hasGap: false, severity: 'none', description: '', evidence: '' }
 }
 
-function generateOpportunities(gaps: any[], topic: string, _discipline: string): string[] {
+function generateOpportunities(gaps: ResearchGap[], topic: string, _discipline: string): string[] {
   const opportunities: string[] = []
   
   for (const gap of gaps) {
@@ -435,7 +463,7 @@ function generateOpportunities(gaps: any[], topic: string, _discipline: string):
   return opportunities.slice(0, 8) // Top 8 opportunities
 }
 
-function generateResearchQuestions(gaps: any[], topic: string, _discipline: string): string[] {
+function generateResearchQuestions(gaps: ResearchGap[], topic: string, _discipline: string): string[] {
   const questions: string[] = []
   
   for (const gap of gaps) {

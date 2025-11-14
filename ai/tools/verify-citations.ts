@@ -11,6 +11,13 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
+interface Citation {
+  id: string
+  text: string
+  position?: number
+  [key: string]: unknown
+}
+
 /**
  * Represents the structure of a document for citation verification.
  * 
@@ -28,11 +35,7 @@ interface Params {
 interface DocumentData {
   title?: string
   content?: string
-  citations?: Array<{
-    id: string
-    text: string
-    position?: number
-  }>
+  citations?: Citation[]
   bibliography?: {
     items?: Array<{
       id: string
@@ -40,15 +43,17 @@ interface DocumentData {
       url?: string
       year?: number
       timestamp?: string
+      [key: string]: unknown
     }>
   }
+  [key: string]: unknown
 }
 
 // Citation pattern regex - matches common citation formats like (Author, 2024) or [1]
 const CITATION_PATTERN = /\([^)]*\d{4}[^)]*\)|\[[^\]]*\d+[^\]]*\]/
 
 // Analyze citation coverage in document
-function analyzeCitationCoverage(content: string, _citations: any[]): {
+function analyzeCitationCoverage(content: string, _citations: Citation[]): {
   totalSentences: number
   citedSentences: number
   coveragePct: number
@@ -101,7 +106,7 @@ function analyzeCitationCoverage(content: string, _citations: any[]): {
 }
 
 // Verify quotes against sources
-function verifyQuotes(content: string, _bibliography: any): Array<{
+function verifyQuotes(content: string, _bibliography: DocumentData['bibliography']): Array<{
   quote: string
   issue: string
   severity: 'high' | 'medium' | 'low'
@@ -135,7 +140,7 @@ function verifyQuotes(content: string, _bibliography: any): Array<{
 }
 
 // Detect stale or broken citations
-async function detectStaleCitations(bibliography: any): Promise<Array<{
+async function detectStaleCitations(bibliography: DocumentData['bibliography']): Promise<Array<{
   citation: string
   issue: string
   severity: 'high' | 'medium' | 'low'
@@ -149,7 +154,7 @@ async function detectStaleCitations(bibliography: any): Promise<Array<{
   const currentYear = new Date().getFullYear()
   
   // Verify DOIs in parallel (with limit to avoid rate limiting)
-  const verificationPromises = bibliography.items.slice(0, 20).map(async (item: any) => {
+  const verificationPromises = bibliography.items.slice(0, 20).map(async (item) => {
     // Check for missing DOI or URL
     if (!item.doi && !item.url) {
       return {
@@ -214,7 +219,7 @@ async function detectStaleCitations(bibliography: any): Promise<Array<{
 }
 
 // Detect potentially fabricated citations
-async function detectFabricatedCitations(bibliography: any): Promise<Array<{
+async function detectFabricatedCitations(bibliography: DocumentData['bibliography']): Promise<Array<{
   citation: string
   issue: string
   severity: 'high' | 'medium' | 'low'
@@ -226,7 +231,7 @@ async function detectFabricatedCitations(bibliography: any): Promise<Array<{
   }
   
   // Verify citations in parallel (limit to first 20 to avoid rate limiting)
-  const verificationPromises = bibliography.items.slice(0, 20).map(async (item: any) => {
+  const verificationPromises = bibliography.items.slice(0, 20).map(async (item) => {
     const itemIssues: Array<{ citation: string; issue: string; severity: 'high' | 'medium' | 'low' }> = []
     
     // Check for suspicious patterns
@@ -309,9 +314,9 @@ async function detectFabricatedCitations(bibliography: any): Promise<Array<{
 function generateRecommendations(
   coveragePct: number,
   uncitedClaims: string[],
-  quoteIssues: any[],
-  staleIssues: any[],
-  fabricationIssues: any[]
+  quoteIssues: Array<{ quote: string; issue: string; severity: string }>,
+  staleIssues: Array<{ citation: string; issue: string; severity: string }>,
+  fabricationIssues: Array<{ citation: string; issue: string; severity: string }>
 ): string[] {
   const recommendations: string[] = []
   
