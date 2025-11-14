@@ -26,7 +26,7 @@ export function Preview({ className, disabled, url }: Props) {
       setCurrentUrl(url)
       setInputValue(url || '')
     }
-  }, [url, currentUrl])
+  }, [url])
 
   const refreshIframe = () => {
     if (iframeRef.current && currentUrl) {
