@@ -8,13 +8,14 @@ import * as path from 'path'
 import { jsPDF } from 'jspdf'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
 import PptxGenJS from 'pptxgenjs'
+import type { DocumentData, ExportOptionsType, SheetData, DeckData } from './types'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
 // Export document to PDF
-async function exportToPDF(docData: any, exportPath: string, options?: any) {
+async function exportToPDF(docData: DocumentData, exportPath: string, options?: ExportOptionsType) {
   const doc = new jsPDF()
   
   // Add title
@@ -87,7 +88,7 @@ async function exportToPDF(docData: any, exportPath: string, options?: any) {
 }
 
 // Export document to DOCX
-async function exportToDOCX(docData: any, exportPath: string, _options?: any) {
+async function exportToDOCX(docData: DocumentData, exportPath: string, _options?: ExportOptionsType) {
   const sections: Paragraph[] = []
   
   // Add title
@@ -170,7 +171,7 @@ async function exportToDOCX(docData: any, exportPath: string, _options?: any) {
 }
 
 // Export sheet to CSV
-async function exportToCSV(sheetData: any, exportPath: string) {
+async function exportToCSV(sheetData: SheetData, exportPath: string) {
   const tableName = Object.keys(sheetData.tables)[0]
   const table = sheetData.tables[tableName]
   
@@ -185,8 +186,8 @@ async function exportToCSV(sheetData: any, exportPath: string) {
   csvLines.push(table.headers.join(','))
   
   // Add data rows
-  table.data.forEach((row: any[]) => {
-    const escapedRow = row.map((cell: any) => {
+  table.data.forEach((row: unknown[]) => {
+    const escapedRow = row.map((cell: unknown) => {
       const cellStr = String(cell)
       // Escape commas and quotes
       if (cellStr.includes(',') || cellStr.includes('"')) {
@@ -201,7 +202,7 @@ async function exportToCSV(sheetData: any, exportPath: string) {
 }
 
 // Export deck to PPTX
-async function exportToPPTX(deckData: any, exportPath: string, options?: any) {
+async function exportToPPTX(deckData: DeckData, exportPath: string, options?: ExportOptionsType) {
   const pptx = new PptxGenJS()
   
   // Set presentation properties
@@ -248,7 +249,7 @@ async function exportToPPTX(deckData: any, exportPath: string, options?: any) {
   
   // Add content slides
   if (deckData.slides && Array.isArray(deckData.slides)) {
-    deckData.slides.forEach((slideData: any) => {
+    deckData.slides.forEach((slideData) => {
       const slide = pptx.addSlide()
       
       // Add slide title
@@ -368,7 +369,7 @@ function escapeHtml(text: string): string {
 }
 
 // Export to HTML
-async function exportToHTML(docData: any, exportPath: string, options?: any) {
+async function exportToHTML(docData: DocumentData, exportPath: string, options?: ExportOptionsType) {
   let html = `<!DOCTYPE html>
 <html lang="en">
 <head>

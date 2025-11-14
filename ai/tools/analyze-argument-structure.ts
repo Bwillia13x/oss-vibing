@@ -6,6 +6,11 @@ import z from 'zod/v3'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import type { 
+  DocumentSection, 
+  JsonDocument, 
+  ArgumentStructureAnalysis 
+} from './types'
 
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
@@ -39,9 +44,9 @@ export const analyzeArgumentStructure = ({ writer: _writer }: Params) =>
         
         if (fullPath.endsWith('.json')) {
           try {
-            const doc = JSON.parse(content)
+            const doc: JsonDocument = JSON.parse(content)
             if (doc.sections) {
-              sections = doc.sections.map((s: any) => ({
+              sections = doc.sections.map((s) => ({
                 title: s.title || 'Untitled',
                 content: s.content || ''
               }))
@@ -61,7 +66,7 @@ export const analyzeArgumentStructure = ({ writer: _writer }: Params) =>
         const shouldAnalyzeAll = focusAreas.includes('all')
         
         // Analyze argument structure
-        const analysis: any = {
+        const analysis: ArgumentStructureAnalysis = {
           status: 'complete',
           discipline,
           documentPath,
@@ -295,14 +300,14 @@ function analyzeCounterarguments(text: string) {
   }
 }
 
-function calculateArgumentStrength(analysis: any): number {
+function calculateArgumentStrength(analysis: ArgumentStructureAnalysis): number {
   let score = 0
   
   // Thesis strength (30 points)
   if (analysis.thesis) {
-    if (analysis.thesis.found) score += 15
+    if (analysis.thesis.present) score += 15
     if (analysis.thesis.clarity === 'clear') score += 5
-    if (analysis.thesis.characteristics.specific) score += 5
+    if (analysis.thesis.specificity === 'specific') score += 5
     if (analysis.thesis.characteristics.argumentative) score += 3
     if (analysis.thesis.characteristics.debatable) score += 2
   }
@@ -348,11 +353,11 @@ function getStrengthRating(score: number): string {
   return 'Needs Improvement'
 }
 
-function generateStrengthSummary(analysis: any, score: number): string {
+function generateStrengthSummary(analysis: ArgumentStructureAnalysis, score: number): string {
   const strengths: string[] = []
   const weaknesses: string[] = []
   
-  if (analysis.thesis?.found && analysis.thesis?.clarity === 'clear') {
+  if (analysis.thesis?.present && analysis.thesis?.clarity === 'clear') {
     strengths.push('clear thesis statement')
   } else {
     weaknesses.push('thesis needs clarification')
@@ -395,7 +400,7 @@ function generateStrengthSummary(analysis: any, score: number): string {
   return summary
 }
 
-function formatAnalysisMessage(analysis: any, documentPath: string): string {
+function formatAnalysisMessage(analysis: ArgumentStructureAnalysis, documentPath: string): string {
   let message = `# Argument Structure Analysis: ${path.basename(documentPath)}\n\n`
   
   message += `${analysis.overallStrength.summary}\n\n`
