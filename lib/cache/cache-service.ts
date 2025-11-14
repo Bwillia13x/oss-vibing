@@ -125,7 +125,7 @@ export async function deleteCachedPattern(pattern: string): Promise<void> {
     }
 
     // Fallback: clear matching keys from memory cache
-    const regex = new RegExp(pattern.replace('*', '.*'));
+    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
     for (const key of memoryCache.keys()) {
       if (regex.test(key)) {
         memoryCache.delete(key);
