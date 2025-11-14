@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
     if (authResult instanceof NextResponse) {
       return authResult
     }
-    const user = authResult
+    const _user = authResult
 
     const body = await request.json()
     const { pluginId, version } = body
@@ -291,7 +291,7 @@ export async function DELETE(request: NextRequest) {
     if (authResult instanceof NextResponse) {
       return authResult
     }
-    const user = authResult
+    const _user = authResult
 
     const { searchParams } = new URL(request.url)
     const pluginId = searchParams.get('pluginId')

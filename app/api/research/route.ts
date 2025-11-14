@@ -134,8 +134,8 @@ export async function GET(req: NextRequest) {
 
     // Multi-source search
     const sources = sourcesParam 
-      ? sourcesParam.split(',').map(s => s.trim() as any)
-      : ['arxiv', 'pubmed']
+      ? sourcesParam.split(',').map(s => s.trim() as 'google-scholar' | 'pubmed' | 'arxiv' | 'ieee' | 'jstor')
+      : ['arxiv', 'pubmed'] as const
 
     const searchOptions: SearchOptions = {
       query,

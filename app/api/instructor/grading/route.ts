@@ -8,14 +8,15 @@ import {
   gradeSubmission,
   getAssignmentSubmissions,
   getStudentSubmissions,
-  exportGradesToLMS
+  exportGradesToLMS,
+  Submission
 } from '@/lib/instructor-tools'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
-  const startTime = Date.now()
+  const _startTime = Date.now()
 
   try {
     const forwardedFor = req.headers.get('x-forwarded-for')
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
     if (assignmentId) {
       const submissions = await getAssignmentSubmissions(
         assignmentId,
-        status as any
+        status as Submission['status'] | undefined
       )
       
       return NextResponse.json({

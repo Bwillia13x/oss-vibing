@@ -8,7 +8,7 @@ import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
 import { auditLogRepository } from '@/lib/db/repositories'
-import { AuditSeverity } from '@prisma/client'
+import { AuditLog, AuditSeverity } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
@@ -42,7 +42,14 @@ export async function GET(req: NextRequest) {
     const format = searchParams.get('format') // 'json' or 'csv'
 
     // Build filters
-    const filters: any = {}
+    const filters: {
+      userId?: string
+      action?: string
+      resource?: string
+      severity?: AuditSeverity
+      startDate?: Date
+      endDate?: Date
+    } = {}
     if (userId) filters.userId = userId
     if (action) filters.action = action
     if (resource) filters.resource = resource
@@ -99,7 +106,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-function convertToCSV(logs: any[]): string {
+function convertToCSV(logs: (AuditLog & { user?: { email?: string } | null })[]): string {
   if (logs.length === 0) {
     return 'timestamp,userId,userEmail,action,resource,resourceId,severity,details\n'
   }

@@ -187,7 +187,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Query database for users
-    const filters: any = {}
+    const filters: { role?: string } = {}
     if (role) {
       filters.role = role.toUpperCase()
     }
