@@ -60,7 +60,7 @@ export enum PluginPermission {
 export interface PluginConfig {
   enabled: boolean
   permissions: PluginPermission[]
-  settings?: Record<string, any>
+  settings?: Record<string, unknown>
   rateLimits?: {
     requestsPerMinute: number
     requestsPerHour: number
@@ -136,9 +136,9 @@ export interface PluginAPI {
    * Access citation tools
    */
   citations: {
-    format: (citation: any, style: string) => string
-    validate: (citation: any) => boolean
-    search: (query: string) => Promise<any[]>
+    format: (citation: Record<string, unknown>, style: string) => string
+    validate: (citation: Record<string, unknown>) => boolean
+    search: (query: string) => Promise<Array<Record<string, unknown>>>
   }
 
   /**
@@ -172,10 +172,10 @@ export interface PluginStorage {
  * Plugin logger interface
  */
 export interface PluginLogger {
-  debug: (message: string, ...args: any[]) => void
-  info: (message: string, ...args: any[]) => void
-  warn: (message: string, ...args: any[]) => void
-  error: (message: string, ...args: any[]) => void
+  debug: (message: string, ...args: unknown[]) => void
+  info: (message: string, ...args: unknown[]) => void
+  warn: (message: string, ...args: unknown[]) => void
+  error: (message: string, ...args: unknown[]) => void
 }
 
 /**
@@ -185,7 +185,7 @@ export interface PluginCommand {
   id: string
   name: string
   description: string
-  execute: (args?: any) => Promise<any>
+  execute: (args?: Record<string, unknown>) => Promise<unknown>
   icon?: string
   shortcut?: string
 }
@@ -208,7 +208,7 @@ export interface PluginExportFormat {
   name: string
   extension: string
   mimeType: string
-  export: (document: any) => Promise<Blob>
+  export: (document: Record<string, unknown>) => Promise<Blob>
 }
 
 /**
@@ -219,7 +219,7 @@ export interface PluginImportFormat {
   name: string
   extensions: string[]
   mimeTypes: string[]
-  import: (file: File) => Promise<any>
+  import: (file: File) => Promise<Record<string, unknown>>
 }
 
 /**

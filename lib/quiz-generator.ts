@@ -124,7 +124,6 @@ export function generateMultipleChoiceQuestions(
     
     // Randomize option order
     const options = [correctAnswer, ...distractors]
-    const correctIndex = 0
     shuffleArray(options)
     const finalCorrectIndex = options.indexOf(correctAnswer)
     

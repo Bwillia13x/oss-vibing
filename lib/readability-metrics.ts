@@ -233,7 +233,7 @@ export function calculateReadabilityScores(text: string): {
  */
 export function getAcademicReadabilityRecommendation(
   scores: ReadabilityScores,
-  discipline?: string
+  _discipline?: string
 ): string {
   const avgGrade = (
     scores.fleschKincaidGrade +
