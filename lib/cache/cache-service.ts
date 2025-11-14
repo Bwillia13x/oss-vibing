@@ -117,15 +117,22 @@ export async function deleteCachedPattern(pattern: string): Promise<void> {
     if (isRedisConnected()) {
       const redis = getRedisClient();
       if (redis) {
-        const keys = await redis.keys(pattern);
-        if (keys.length > 0) {
-          await redis.del(...keys);
-        }
+        // Use SCAN instead of KEYS for non-blocking iteration
+        let cursor = '0';
+        do {
+          const [newCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+          cursor = newCursor;
+          if (keys.length > 0) {
+            await redis.del(...keys);
+          }
+        } while (cursor !== '0');
       }
     }
 
     // Fallback: clear matching keys from memory cache
-    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    // Escape special regex characters, then replace * with .*
+    const escapedPattern = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp('^' + escapedPattern.replace(/\*/g, '.*') + '$');
     for (const key of memoryCache.keys()) {
       if (regex.test(key)) {
         memoryCache.delete(key);
@@ -141,11 +148,18 @@ export async function deleteCachedPattern(pattern: string): Promise<void> {
  */
 export async function clearCache(): Promise<void> {
   try {
-    // Try Redis first
+    // Try Redis first - use SCAN instead of flushdb to be safer
     if (isRedisConnected()) {
       const redis = getRedisClient();
       if (redis) {
-        await redis.flushdb();
+        let cursor = '0';
+        do {
+          const [newCursor, keys] = await redis.scan(cursor, 'COUNT', 100);
+          cursor = newCursor;
+          if (keys.length > 0) {
+            await redis.del(...keys);
+          }
+        } while (cursor !== '0');
       }
     }
 
@@ -240,7 +254,31 @@ export function cleanupMemoryCache(): void {
   }
 }
 
-// Clean up memory cache every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupMemoryCache, 5 * 60 * 1000);
+// Memory cache cleanup interval management
+let cleanupInterval: NodeJS.Timeout | null = null;
+
+/**
+ * Start periodic memory cache cleanup.
+ * Only starts if not already running.
+ */
+export function startMemoryCacheCleanup(): void {
+  if (cleanupInterval) return; // Already running
+  if (typeof setInterval !== 'undefined') {
+    cleanupInterval = setInterval(cleanupMemoryCache, 5 * 60 * 1000);
+  }
+}
+
+/**
+ * Stop periodic memory cache cleanup.
+ */
+export function stopMemoryCacheCleanup(): void {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+}
+
+// Auto-start cleanup in server environments
+if (typeof setInterval !== 'undefined' && !cleanupInterval) {
+  startMemoryCacheCleanup();
 }

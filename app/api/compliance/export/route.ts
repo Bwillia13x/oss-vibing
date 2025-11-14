@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const exportData = await exportUserData(user.userId);
 
     // Log the data access
-    await logDataAccess(user.userId, 'user_data', 'DATA_EXPORTED');
+    await logDataAccess(user.userId, 'user_data', 'DATA_EXPORTED', user.userId);
 
     // Return data as JSON
     return NextResponse.json(exportData, {

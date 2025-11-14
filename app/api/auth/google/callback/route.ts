@@ -65,8 +65,24 @@ export async function GET(req: NextRequest) {
     }
 
     // TODO: Create or update user in database
+    // IMPORTANT: This is a placeholder implementation for development.
+    // In production, you MUST implement proper user lookup/creation:
+    //
+    // let user = await prisma.user.findUnique({ where: { email: userInfo.email } });
+    // if (!user) {
+    //   user = await prisma.user.create({
+    //     data: {
+    //       email: userInfo.email,
+    //       name: userInfo.name,
+    //       role: 'USER',
+    //       status: 'ACTIVE',
+    //     },
+    //   });
+    // }
+    // const userId = user.id; // Use database ID, not Google ID
+    //
     // For now, we'll create tokens with the Google user info
-    const userId = userInfo.id; // In production, this should be the database user ID
+    const userId = userInfo.id; // WARNING: Using Google ID - replace with database user ID in production
 
     // Create access and refresh tokens
     const accessToken = await createAccessToken({

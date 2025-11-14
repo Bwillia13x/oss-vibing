@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const result = await requestUserDataDeletion(user.userId);
 
     // Log the deletion request
-    await logDataAccess(user.userId, 'user_data', 'DATA_DELETION_REQUESTED');
+    await logDataAccess(user.userId, 'user_data', 'DATA_DELETION_REQUESTED', user.userId);
 
     // Clear authentication cookies
     await clearAuthCookies();

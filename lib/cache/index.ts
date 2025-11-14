@@ -21,5 +21,7 @@ export {
   getCacheStats,
   generateCacheKey,
   cleanupMemoryCache,
+  startMemoryCacheCleanup,
+  stopMemoryCacheCleanup,
   DEFAULT_TTL,
 } from './cache-service';

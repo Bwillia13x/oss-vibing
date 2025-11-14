@@ -359,9 +359,12 @@ export class RateLimiter {
 // Global rate limiter for API routes
 export const apiRateLimiter = new RateLimiter(100, 60000) // 100 requests per minute
 
+// Cleanup interval management
+let apiRateLimiterCleanupInterval: NodeJS.Timeout | null = null;
+
 // Cleanup old rate limit entries every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => apiRateLimiter.cleanup(), 300000)
+if (typeof setInterval !== 'undefined' && !apiRateLimiterCleanupInterval) {
+  apiRateLimiterCleanupInterval = setInterval(() => apiRateLimiter.cleanup(), 300000)
 }
 
 // Re-export cache service functions for convenience
@@ -375,5 +378,7 @@ export {
   getCacheStats,
   generateCacheKey,
   cleanupMemoryCache,
+  startMemoryCacheCleanup,
+  stopMemoryCacheCleanup,
   DEFAULT_TTL,
 } from './cache/cache-service'

@@ -191,8 +191,6 @@ export async function cleanupExpiredData(): Promise<{
   deletedUsers: number;
   deletedAuditLogs: number;
 }> {
-  const now = new Date();
-
   // Delete users marked for deletion after retention period
   const deletionCutoff = new Date();
   deletionCutoff.setDate(deletionCutoff.getDate() - RETENTION_POLICIES.DELETED_USER_DATA);
@@ -237,6 +235,7 @@ export async function logDataAccess(
   userId: string,
   resource: string,
   action: string,
+  resourceId?: string,
   details?: Record<string, unknown>
 ): Promise<void> {
   await prisma.auditLog.create({
@@ -244,6 +243,7 @@ export async function logDataAccess(
       userId,
       action,
       resource,
+      resourceId,
       details: details ? JSON.stringify(details) : null,
       severity: 'INFO',
       timestamp: new Date(),

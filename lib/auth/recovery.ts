@@ -6,8 +6,16 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
-const secret = new TextEncoder().encode(JWT_SECRET);
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  console.warn('JWT_SECRET not set, using development default (DO NOT USE IN PRODUCTION)');
+}
+
+const secret = new TextEncoder().encode(JWT_SECRET || 'development-secret-change-in-production');
 const RECOVERY_TOKEN_EXPIRY = '1h'; // 1 hour
 
 export interface RecoveryTokenPayload {
@@ -76,6 +84,16 @@ export async function sendRecoveryEmail(email: string, token: string): Promise<b
 
 /**
  * Store recovery attempt (for rate limiting)
+ * 
+ * WARNING: This uses in-memory storage and will NOT work correctly in 
+ * distributed/multi-instance deployments. In production, use Redis or 
+ * database to store rate limit data.
+ * 
+ * Example with Redis:
+ * const key = `recovery:${email}`;
+ * const count = await redis.incr(key);
+ * if (count === 1) await redis.expire(key, 3600);
+ * if (count > 3) return { allowed: false, reason: '...' };
  */
 const recoveryAttempts = new Map<string, { count: number; lastAttempt: number }>();
 
@@ -120,7 +138,10 @@ export function cleanupRecoveryAttempts(): void {
   }
 }
 
+// Cleanup interval management
+let cleanupInterval: NodeJS.Timeout | null = null;
+
 // Clean up every 15 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupRecoveryAttempts, 15 * 60 * 1000);
+if (typeof setInterval !== 'undefined' && !cleanupInterval) {
+  cleanupInterval = setInterval(cleanupRecoveryAttempts, 15 * 60 * 1000);
 }
