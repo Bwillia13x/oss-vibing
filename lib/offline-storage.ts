@@ -13,7 +13,7 @@ interface OfflineDocument {
   id: string
   type: 'doc' | 'sheet' | 'deck' | 'note'
   title: string
-  content: any
+  content: unknown
   lastModified: number
   lastSynced?: number
   isDirty: boolean
@@ -24,7 +24,7 @@ interface SyncQueueItem {
   documentId: string
   action: 'create' | 'update' | 'delete'
   timestamp: number
-  data?: any
+  data?: unknown
 }
 
 /**
@@ -136,7 +136,7 @@ export async function deleteDocumentOffline(id: string): Promise<void> {
 /**
  * Add to sync queue
  */
-async function addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp'>): Promise<void> {
+async function _addToSyncQueue(item: Omit<SyncQueueItem, 'id' | 'timestamp'>): Promise<void> {
   const db = await initDB()
 
   const queueItem: Omit<SyncQueueItem, 'id'> = {

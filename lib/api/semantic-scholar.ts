@@ -11,9 +11,19 @@
  */
 
 import { trackApiPerformance } from '@/lib/monitoring'
+import { getOrSetCached, generateCacheKey, DEFAULT_TTL } from '@/lib/cache'
 
 const SEMANTIC_SCHOLAR_API_BASE = 'https://api.semanticscholar.org/graph/v1'
 const API_KEY = process.env.SEMANTIC_SCHOLAR_API_KEY // Optional for higher rate limits
+
+// Cache TTLs
+const CACHE_TTL = {
+  PAPER_LOOKUP: DEFAULT_TTL.DAY, // Paper metadata rarely changes
+  CITATIONS: DEFAULT_TTL.DAY, // Citation data rarely changes
+  REFERENCES: DEFAULT_TTL.DAY, // Reference data rarely changes
+  SEARCH: DEFAULT_TTL.LONG, // Search results can change more frequently
+  AUTHOR: DEFAULT_TTL.DAY, // Author data rarely changes
+}
 
 // Warn developers if API key is missing in development mode
 if (!API_KEY && process.env.NODE_ENV === 'development') {
@@ -121,50 +131,56 @@ export async function searchPapers(
     fieldsOfStudy?: string[]
   } = {}
 ): Promise<SemanticScholarSearchResult | null> {
-  const params = new URLSearchParams({
-    query,
-    offset: String(options.offset || 0),
-    limit: String(options.limit || 10),
-  })
-
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  } else {
-    // Default fields
-    params.append('fields', 'title,authors,year,abstract,citationCount,influentialCitationCount')
-  }
-
-  if (options.year) {
-    params.append('year', options.year)
-  }
-
-  if (options.fieldsOfStudy && options.fieldsOfStudy.length > 0) {
-    params.append('fieldsOfStudy', options.fieldsOfStudy.join(','))
-  }
-
-  return trackApiPerformance('semanticscholar.search', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/search?${params.toString()}`, {
-        headers: buildHeaders(),
+  const cacheKey = generateCacheKey('semanticscholar', 'search', query, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.search', async () => {
+      const params = new URLSearchParams({
+        query,
+        offset: String(options.offset || 0),
+        limit: String(options.limit || 10),
       })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
+      } else {
+        // Default fields
+        params.append('fields', 'title,authors,year,abstract,citationCount,influentialCitationCount')
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error searching Semantic Scholar:', {
-        query,
-        error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : undefined,
-      })
-      return null
-    }
-  })
+      if (options.year) {
+        params.append('year', options.year)
+      }
+
+      if (options.fieldsOfStudy && options.fieldsOfStudy.length > 0) {
+        params.append('fieldsOfStudy', options.fieldsOfStudy.join(','))
+      }
+
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/search?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error searching Semantic Scholar:', {
+          query,
+          error: error instanceof Error ? error.message : error,
+          stack: error instanceof Error ? error.stack : undefined,
+        })
+        return null
+      }
+    }),
+    CACHE_TTL.SEARCH
+  )
 }
 
 /**
@@ -176,38 +192,44 @@ export async function getPaper(
     fields?: string[]
   } = {}
 ): Promise<SemanticScholarPaper | null> {
-  const params = new URLSearchParams()
+  const cacheKey = generateCacheKey('semanticscholar', 'paper', paperId, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.getPaper', async () => {
+      const params = new URLSearchParams()
 
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  } else {
-    // Default comprehensive fields
-    params.append('fields', 
-      'paperId,title,abstract,venue,year,referenceCount,citationCount,influentialCitationCount,' +
-      'isOpenAccess,openAccessPdf,fieldsOfStudy,s2FieldsOfStudy,publicationTypes,' +
-      'publicationDate,journal,authors,externalIds,url'
-    )
-  }
-
-  return trackApiPerformance('semanticscholar.getPaper', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/${paperId}?${params.toString()}`, {
-        headers: buildHeaders(),
-      })
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
+      } else {
+        // Default comprehensive fields
+        params.append('fields', 
+          'paperId,title,abstract,venue,year,referenceCount,citationCount,influentialCitationCount,' +
+          'isOpenAccess,openAccessPdf,fieldsOfStudy,s2FieldsOfStudy,publicationTypes,' +
+          'publicationDate,journal,authors,externalIds,url'
+        )
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error getting paper:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/${paperId}?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error getting paper:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.PAPER_LOOKUP
+  )
 }
 
 /**
@@ -229,34 +251,40 @@ export async function getCitations(
     fields?: string[]
   } = {}
 ): Promise<{ offset: number; next?: number; data: SemanticScholarPaper[] } | null> {
-  const params = new URLSearchParams({
-    offset: String(options.offset || 0),
-    limit: String(options.limit || 100),
-  })
-
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  }
-
-  return trackApiPerformance('semanticscholar.getCitations', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/${paperId}/citations?${params.toString()}`, {
-        headers: buildHeaders(),
+  const cacheKey = generateCacheKey('semanticscholar', 'citations', paperId, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.getCitations', async () => {
+      const params = new URLSearchParams({
+        offset: String(options.offset || 0),
+        limit: String(options.limit || 100),
       })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error getting citations:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/${paperId}/citations?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error getting citations:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.CITATIONS
+  )
 }
 
 /**
@@ -270,34 +298,40 @@ export async function getReferences(
     fields?: string[]
   } = {}
 ): Promise<{ offset: number; next?: number; data: SemanticScholarPaper[] } | null> {
-  const params = new URLSearchParams({
-    offset: String(options.offset || 0),
-    limit: String(options.limit || 100),
-  })
-
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  }
-
-  return trackApiPerformance('semanticscholar.getReferences', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/${paperId}/references?${params.toString()}`, {
-        headers: buildHeaders(),
+  const cacheKey = generateCacheKey('semanticscholar', 'references', paperId, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.getReferences', async () => {
+      const params = new URLSearchParams({
+        offset: String(options.offset || 0),
+        limit: String(options.limit || 100),
       })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error getting references:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/paper/${paperId}/references?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error getting references:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.REFERENCES
+  )
 }
 
 /**
@@ -309,31 +343,37 @@ export async function getAuthor(
     fields?: string[]
   } = {}
 ): Promise<SemanticScholarAuthor | null> {
-  const params = new URLSearchParams()
+  const cacheKey = generateCacheKey('semanticscholar', 'author', authorId, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.getAuthor', async () => {
+      const params = new URLSearchParams()
 
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  }
-
-  return trackApiPerformance('semanticscholar.getAuthor', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/author/${authorId}?${params.toString()}`, {
-        headers: buildHeaders(),
-      })
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error getting author:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/author/${authorId}?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error getting author:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.AUTHOR
+  )
 }
 
 /**
@@ -347,35 +387,41 @@ export async function searchAuthors(
     fields?: string[]
   } = {}
 ): Promise<{ offset: number; next?: number; data: SemanticScholarAuthor[] } | null> {
-  const params = new URLSearchParams({
-    query,
-    offset: String(options.offset || 0),
-    limit: String(options.limit || 10),
-  })
-
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  }
-
-  return trackApiPerformance('semanticscholar.searchAuthors', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/author/search?${params.toString()}`, {
-        headers: buildHeaders(),
+  const cacheKey = generateCacheKey('semanticscholar', 'searchAuthors', query, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.searchAuthors', async () => {
+      const params = new URLSearchParams({
+        query,
+        offset: String(options.offset || 0),
+        limit: String(options.limit || 10),
       })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error searching authors:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/author/search?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error searching authors:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.SEARCH
+  )
 }
 
 /**
@@ -389,34 +435,40 @@ export async function getAuthorPapers(
     fields?: string[]
   } = {}
 ): Promise<{ offset: number; next?: number; data: SemanticScholarPaper[] } | null> {
-  const params = new URLSearchParams({
-    offset: String(options.offset || 0),
-    limit: String(options.limit || 100),
-  })
-
-  if (options.fields && options.fields.length > 0) {
-    params.append('fields', options.fields.join(','))
-  }
-
-  return trackApiPerformance('semanticscholar.getAuthorPapers', async () => {
-    try {
-      const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/author/${authorId}/papers?${params.toString()}`, {
-        headers: buildHeaders(),
+  const cacheKey = generateCacheKey('semanticscholar', 'authorPapers', authorId, JSON.stringify(options))
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('semanticscholar.getAuthorPapers', async () => {
+      const params = new URLSearchParams({
+        offset: String(options.offset || 0),
+        limit: String(options.limit || 100),
       })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+      if (options.fields && options.fields.length > 0) {
+        params.append('fields', options.fields.join(','))
       }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error getting author papers:', error)
-      return null
-    }
-  })
+      try {
+        const response = await fetch(`${SEMANTIC_SCHOLAR_API_BASE}/author/${authorId}/papers?${params.toString()}`, {
+          headers: buildHeaders(),
+        })
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`Semantic Scholar API error: ${response.status} ${response.statusText}`)
+        }
+
+        return await response.json()
+      } catch (error) {
+        console.error('Error getting author papers:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.AUTHOR
+  )
 }
 
 /**

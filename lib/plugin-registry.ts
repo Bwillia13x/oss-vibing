@@ -10,11 +10,30 @@ import {
   PluginRegistryEntry,
   PluginStatus,
   PluginPermission,
-  PluginMetadata,
   PluginAPI,
   PluginStorage,
   PluginLogger,
 } from './types/plugin'
+
+// Plugin extension types
+interface PluginCommand {
+  name: string
+  description: string
+  execute: (context: PluginContext, ...args: unknown[]) => unknown
+}
+
+interface PluginUIComponent {
+  name: string
+  component: unknown
+  props?: Record<string, unknown>
+}
+
+interface PluginFormat {
+  name: string
+  extension: string
+  mimeType: string
+  handler: (data: unknown) => unknown
+}
 
 /**
  * Plugin Registry - Singleton pattern
@@ -22,10 +41,10 @@ import {
 class PluginRegistry {
   private static instance: PluginRegistry
   private plugins: Map<string, PluginRegistryEntry> = new Map()
-  private commands: Map<string, any> = new Map()
-  private uiComponents: Map<string, any> = new Map()
-  private exportFormats: Map<string, any> = new Map()
-  private importFormats: Map<string, any> = new Map()
+  private commands: Map<string, PluginCommand> = new Map()
+  private uiComponents: Map<string, PluginUIComponent> = new Map()
+  private exportFormats: Map<string, PluginFormat> = new Map()
+  private importFormats: Map<string, PluginFormat> = new Map()
 
   private constructor() {}
 
@@ -289,29 +308,29 @@ class PluginRegistry {
         this.importFormats.set(formatId, { ...format, pluginId })
       },
       citations: {
-        format: (citation, style) => {
+        format: (citation, _style) => {
           // Implementation would integrate with existing citation system
           return JSON.stringify(citation)
         },
         validate: (citation) => {
           return !!citation
         },
-        search: async (query) => {
+        search: async (_query) => {
           // Implementation would integrate with existing research system
           return []
         },
       },
       files: {
-        read: async (path) => {
+        read: async (_path) => {
           this.checkPermission(config, PluginPermission.READ_FILES)
           // Implementation would integrate with file system
           return ''
         },
-        write: async (path, content) => {
+        write: async (_path, _content) => {
           this.checkPermission(config, PluginPermission.WRITE_FILES)
           // Implementation would integrate with file system
         },
-        list: async (directory) => {
+        list: async (_directory) => {
           this.checkPermission(config, PluginPermission.READ_FILES)
           // Implementation would integrate with file system
           return []
@@ -431,28 +450,28 @@ class PluginRegistry {
   /**
    * Get all registered commands
    */
-  public getCommands(): any[] {
+  public getCommands(): PluginCommand[] {
     return Array.from(this.commands.values())
   }
 
   /**
    * Get all registered UI components
    */
-  public getUIComponents(): any[] {
+  public getUIComponents(): PluginUIComponent[] {
     return Array.from(this.uiComponents.values())
   }
 
   /**
    * Get all registered export formats
    */
-  public getExportFormats(): any[] {
+  public getExportFormats(): PluginFormat[] {
     return Array.from(this.exportFormats.values())
   }
 
   /**
    * Get all registered import formats
    */
-  public getImportFormats(): any[] {
+  public getImportFormats(): PluginFormat[] {
     return Array.from(this.importFormats.values())
   }
 

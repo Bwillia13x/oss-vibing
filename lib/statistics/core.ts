@@ -7,6 +7,10 @@
 
 import * as ss from 'simple-statistics'
 import { perfMonitor } from '@/lib/performance'
+import { dataCache } from '@/lib/cache'
+
+// Cache TTL for statistical computations (10 minutes - results are deterministic)
+const STATS_CACHE_TTL_SECONDS = 600
 
 // Helper function to track API performance
 function trackApiPerformance(endpoint: string, duration: number, success: boolean): void {
@@ -231,9 +235,18 @@ export function sum(data: number[]): number {
 }
 
 /**
- * Get comprehensive descriptive statistics for a dataset
+ * Get comprehensive descriptive statistics for a dataset (with caching)
  */
 export function descriptiveStatistics(data: number[]): DescriptiveStats {
+  // Generate cache key from data
+  const cacheKey = `stats:descriptive:${JSON.stringify(data)}`
+  
+  // Try to get from cache
+  const cached = dataCache.get(cacheKey) as DescriptiveStats | null
+  if (cached !== null) {
+    return cached
+  }
+  
   const startTime = Date.now()
   try {
     validateArray(data)
@@ -248,8 +261,11 @@ export function descriptiveStatistics(data: number[]): DescriptiveStats {
       max: max(data),
       range: max(data) - min(data),
       count: data.length,
-      sum: sum(data)
+      sum: sum(data),
     }
+    
+    // Store in cache
+    dataCache.set(cacheKey, result)
     
     trackApiPerformance('statistics.descriptiveStatistics', Date.now() - startTime, true)
     return result
@@ -321,9 +337,18 @@ export function spearmanCorrelation(x: number[], y: number[]): number {
 }
 
 /**
- * Get correlation with interpretation
+ * Get correlation with interpretation (with caching)
  */
 export function correlationWithInterpretation(x: number[], y: number[], method: 'pearson' | 'spearman' = 'pearson'): CorrelationResult {
+  // Generate cache key from data and method
+  const cacheKey = `stats:correlation:${method}:${JSON.stringify(x)}:${JSON.stringify(y)}`
+  
+  // Try to get from cache
+  const cached = dataCache.get(cacheKey) as CorrelationResult | null
+  if (cached !== null) {
+    return cached
+  }
+  
   const coefficient = method === 'pearson' ? pearsonCorrelation(x, y) : spearmanCorrelation(x, y)
   const absCoeff = Math.abs(coefficient)
   
@@ -338,7 +363,12 @@ export function correlationWithInterpretation(x: number[], y: number[], method: 
   if (Math.abs(coefficient) < 0.05) direction = 'none'
   else direction = coefficient > 0 ? 'positive' : 'negative'
   
-  return { coefficient, strength, direction }
+  const result = { coefficient, strength, direction }
+  
+  // Store in cache
+  dataCache.set(cacheKey, result)
+  
+  return result
 }
 
 // ============================================================================
@@ -346,11 +376,20 @@ export function correlationWithInterpretation(x: number[], y: number[], method: 
 // ============================================================================
 
 /**
- * Perform linear regression (y = mx + b)
+ * Perform linear regression (y = mx + b) (with caching)
  * @param data - Array of [x, y] coordinate pairs
  * @returns Slope (m), intercept (b), and R² value
  */
 export function linearRegression(data: [number, number][]): RegressionResult {
+  // Generate cache key from data
+  const cacheKey = `stats:regression:${JSON.stringify(data)}`
+  
+  // Try to get from cache
+  const cached = dataCache.get(cacheKey) as RegressionResult | null
+  if (cached !== null) {
+    return cached
+  }
+  
   const startTime = Date.now()
   try {
     if (!Array.isArray(data) || data.length < 2) {
@@ -371,6 +410,9 @@ export function linearRegression(data: [number, number][]): RegressionResult {
       b: line.b,
       r2: rSquared
     }
+    
+    // Store in cache
+    dataCache.set(cacheKey, result)
     
     trackApiPerformance('statistics.linearRegression', Date.now() - startTime, true)
     return result
