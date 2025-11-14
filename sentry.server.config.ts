@@ -31,7 +31,7 @@ Sentry.init({
   tracesSampleRate: SENTRY_ENVIRONMENT === 'production' ? 0.1 : 1.0,
 
   // Configure error filtering
-  beforeSend(event, hint) {
+  beforeSend(event, _hint) {
     // Don't send events in development by default
     if (SENTRY_ENVIRONMENT === 'development' && !SENTRY_DSN) {
       return null;

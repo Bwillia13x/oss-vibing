@@ -3,22 +3,22 @@
  * Tests PDF, DOCX, PPTX, and XLSX generators
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi as _vi } from 'vitest';
 import {
   generatePDF,
-  exportToPDF,
+  exportToPDF as _exportToPDF,
   type PDFExportOptions,
 } from '@/lib/export/pdf-generator';
 import {
   generateDOCX,
-  exportToDOCX,
+  exportToDOCX as _exportToDOCX,
   type DOCXExportOptions,
 } from '@/lib/export/docx-generator';
 import {
   generatePPTX,
   parseMarkdownToSlides,
   type PPTXSlide,
-  type PPTXExportOptions,
+  type PPTXExportOptions as _PPTXExportOptions,
 } from '@/lib/export/pptx-generator';
 import {
   generateXLSX,
@@ -28,7 +28,7 @@ import {
   type XLSXSheet,
 } from '@/lib/export/xlsx-generator';
 import {
-  exportDocument,
+  exportDocument as _exportDocument,
   validateExportConfig,
   getFileExtension,
   getMimeType,

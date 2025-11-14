@@ -210,7 +210,7 @@ try {
   let errorCaught = false
   try {
     mean([])
-  } catch (e) {
+  } catch (_e) {
     errorCaught = true
   }
   assert(errorCaught, 'Empty array validation')
@@ -218,7 +218,7 @@ try {
   errorCaught = false
   try {
     mean(['not', 'numbers'])
-  } catch (e) {
+  } catch (_e) {
     errorCaught = true
   }
   assert(errorCaught, 'Non-numeric array validation')
@@ -226,7 +226,7 @@ try {
   errorCaught = false
   try {
     standardDeviation([1])
-  } catch (e) {
+  } catch (_e) {
     errorCaught = true
   }
   assert(errorCaught, 'Insufficient data for std dev')
@@ -234,7 +234,7 @@ try {
   errorCaught = false
   try {
     pearsonCorrelation([1, 2], [1, 2, 3])
-  } catch (e) {
+  } catch (_e) {
     errorCaught = true
   }
   assert(errorCaught, 'Mismatched array lengths')

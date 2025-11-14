@@ -734,8 +734,8 @@ ${result.significant ?
  */
 export function generateSummaryReport(
   data: number[],
-  datasetName: string = 'Dataset'
-): any {
+  _datasetName: string = 'Dataset'
+): Record<string, unknown> {
   const stats = descriptiveStatistics(data)
   return {
     mean: stats.mean,

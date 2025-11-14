@@ -45,7 +45,7 @@ export interface SearchResult {
  */
 export async function searchGoogleScholar(
   query: string,
-  maxResults: number = 10
+  _maxResults: number = 10
 ): Promise<ResearchPaper[]> {
   const startTime = Date.now()
   
@@ -119,10 +119,10 @@ export async function searchPubMed(
     })
     
     const fetchResponse = await fetch(`${fetchUrl}?${fetchParams}`)
-    const xmlText = await fetchResponse.text()
+    const _xmlText = await fetchResponse.text()
     
     // Parse XML (simplified - in production use a proper XML parser)
-    const papers: ResearchPaper[] = ids.map((id: string, index: number) => ({
+    const papers: ResearchPaper[] = ids.map((id: string, _index: number) => ({
       id: `pubmed-${id}`,
       title: `PubMed Paper ${id}`, // Parse from XML
       authors: [],
@@ -295,7 +295,7 @@ export async function searchIEEE(
  */
 export async function searchJSTOR(
   query: string,
-  maxResults: number = 10
+  _maxResults: number = 10
 ): Promise<ResearchPaper[]> {
   const startTime = Date.now()
   
@@ -394,7 +394,7 @@ export async function searchMultipleSources(
   // Wait for all searches to complete
   const searchResults = await Promise.allSettled(searchPromises)
   
-  searchResults.forEach((result, index) => {
+  searchResults.forEach((result, _index) => {
     if (result.status === 'fulfilled') {
       const { source, papers } = result.value
       results.push({

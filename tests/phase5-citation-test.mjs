@@ -9,7 +9,7 @@
 import {
   formatCitation,
   formatBibliography,
-  formatInTextCitation,
+  formatInTextCitation as _formatInTextCitation,
   generateCitationId,
   convertToCSL,
   convertFromCSL,
@@ -23,11 +23,11 @@ import {
 import {
   analyzeCitationCoverage,
   verifyQuotes,
-  detectStaleCitations,
-  detectFabricatedCitations,
+  detectStaleCitations as _detectStaleCitations,
+  detectFabricatedCitations as _detectFabricatedCitations,
   calculateQualityScore,
-  calculateIntegrityScore,
-  verifyCitations,
+  calculateIntegrityScore as _calculateIntegrityScore,
+  verifyCitations as _verifyCitations,
 } from '../lib/citations/verifier.ts'
 
 console.log('🧪 Phase 5.3: Citation Management Tests\n')
