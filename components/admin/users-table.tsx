@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -26,9 +26,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { MoreHorizontal, Search, Pencil, Trash2, Ban, CheckCircle } from 'lucide-react'
+import { MoreHorizontal, Search, Pencil, Trash2, Ban, CheckCircle, Loader2 } from 'lucide-react'
 import { UserFormDialog } from './user-form-dialog'
 import { DeleteUserDialog } from './delete-user-dialog'
+import { fetchUsers, updateUser, deleteUser, type User as ApiUser } from '@/lib/api/admin-users'
+import { toast } from 'sonner'
 
 interface User {
   id: string
@@ -40,63 +42,53 @@ interface User {
   status: 'active' | 'inactive'
 }
 
-// Mock data
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Alice Johnson',
-    email: 'alice.johnson@university.edu',
-    role: 'student',
-    department: 'Computer Science',
-    lastActive: '2 hours ago',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'Bob Smith',
-    email: 'bob.smith@university.edu',
-    role: 'instructor',
-    department: 'Mathematics',
-    lastActive: '1 day ago',
-    status: 'active',
-  },
-  {
-    id: '3',
-    name: 'Carol Davis',
-    email: 'carol.davis@university.edu',
-    role: 'student',
-    department: 'Biology',
-    lastActive: '5 minutes ago',
-    status: 'active',
-  },
-  {
-    id: '4',
-    name: 'David Wilson',
-    email: 'david.wilson@university.edu',
-    role: 'admin',
-    department: 'IT Services',
-    lastActive: '30 minutes ago',
-    status: 'active',
-  },
-  {
-    id: '5',
-    name: 'Eve Martinez',
-    email: 'eve.martinez@university.edu',
-    role: 'student',
-    department: 'Chemistry',
-    lastActive: '3 days ago',
-    status: 'inactive',
-  },
-]
+// Map API user to display user
+function mapApiUserToDisplayUser(apiUser: ApiUser): User {
+  return {
+    id: apiUser.id,
+    name: apiUser.name,
+    email: apiUser.email,
+    role: (apiUser.role === 'INSTRUCTOR' ? 'instructor' : 
+           apiUser.role === 'ADMIN' ? 'admin' : 'student') as 'student' | 'instructor' | 'admin',
+    department: 'N/A', // Not available in API response
+    lastActive: 'N/A', // Not available in API response
+    status: 'active', // Assume active by default
+  }
+}
+
+// TODO: Get institutionId from auth context or config
+const INSTITUTION_ID = 'inst_demo'
 
 export function UsersTable() {
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+
+  // Fetch users on component mount and when role filter changes
+  useEffect(() => {
+    loadUsers()
+  }, [roleFilter])
+
+  async function loadUsers() {
+    try {
+      setLoading(true)
+      const result = await fetchUsers(INSTITUTION_ID, {
+        role: roleFilter !== 'all' ? roleFilter.toUpperCase() : undefined,
+      })
+      setUsers(result.data.map(mapApiUserToDisplayUser))
+    } catch (error) {
+      console.error('Failed to load users:', error)
+      toast.error('Failed to load users. Please try again.')
+      // Keep existing users on error
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -106,76 +98,57 @@ export function UsersTable() {
   })
 
   const handleCreateUser = async (userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
-    // TODO: Call API to create user
-    const newUser: User = {
-      ...userData,
-      id: `usr_${Date.now()}`,
-      lastActive: 'Just now',
-      status: 'active',
+    try {
+      // Note: createUser is called from the parent page component
+      // This is just for the form dialog
+      await loadUsers()
+      toast.success('User created successfully')
+    } catch (error) {
+      console.error('Failed to create user:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create user')
+      throw error
     }
-    setUsers([...users, newUser])
   }
 
   const handleUpdateUser = async (userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
-    // TODO: Call API to update user
     if (!editingUser) return
     
-    const previousUsers = [...users]
-    
     try {
-      // Optimistically update UI
-      setUsers(users.map(user => 
-        user.id === editingUser.id 
-          ? { ...user, ...userData }
-          : user
-      ))
-      setEditingUser(null)
+      await updateUser(editingUser.id, {
+        name: userData.name,
+        email: userData.email,
+        role: userData.role.toUpperCase(),
+      })
       
-      // When API is implemented:
-      // await updateUserApi(editingUser.id, userData)
+      // Reload users to get fresh data
+      await loadUsers()
+      setEditingUser(null)
+      toast.success('User updated successfully')
     } catch (error) {
-      // Revert on error
-      setUsers(previousUsers)
+      console.error('Failed to update user:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update user')
       throw error
     }
   }
 
   const handleDeleteUser = async (userId: string) => {
-    // TODO: Call API to delete user
-    const previousUsers = [...users]
-    
     try {
-      // Optimistically update UI
-      setUsers(users.filter(user => user.id !== userId))
+      await deleteUser(userId)
       
-      // When API is implemented:
-      // await deleteUserApi(userId)
+      // Reload users to get fresh data
+      await loadUsers()
+      toast.success('User deleted successfully')
     } catch (error) {
-      // Revert on error
-      setUsers(previousUsers)
+      console.error('Failed to delete user:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete user')
       throw error
     }
   }
 
   const handleToggleStatus = async (userId: string) => {
-    // TODO: Call API to toggle user status
-    const previousUsers = [...users]
-    
-    try {
-      // Optimistically update UI
-      setUsers(users.map(user =>
-        user.id === userId
-          ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' as const }
-          : user
-      ))
-      
-      // When API is implemented:
-      // await toggleUserStatusApi(userId)
-    } catch (error) {
-      // Revert on error
-      setUsers(previousUsers)
-      throw error
-    }
+    // Note: The API doesn't currently support status toggle
+    // This would need to be implemented in the backend
+    toast.info('Status toggle not yet implemented in the API')
   }
 
   const openEditDialog = (user: User) => {
@@ -214,22 +187,37 @@ export function UsersTable() {
         </Select>
       </div>
 
+      {/* Loading state */}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
       {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Last Active</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[70px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map((user) => (
+      {!loading && (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Last Active</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[70px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    No users found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
@@ -284,15 +272,19 @@ export function UsersTable() {
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Pagination info */}
-      <div className="text-sm text-muted-foreground">
-        Showing {filteredUsers.length} of {users.length} users
-      </div>
+      {!loading && (
+        <div className="text-sm text-muted-foreground">
+          Showing {filteredUsers.length} of {users.length} users
+        </div>
+      )}
 
       {/* Dialogs */}
       <UserFormDialog

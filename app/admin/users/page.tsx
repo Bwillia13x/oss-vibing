@@ -11,18 +11,23 @@ import { BulkImportDialog } from '@/components/admin/bulk-import-dialog'
 import { UserFormDialog } from '@/components/admin/user-form-dialog'
 import { Button } from '@/components/ui/button'
 import { UserPlus, Upload, Download } from 'lucide-react'
+import { createUser, exportUsersToCSV } from '@/lib/api/admin-users'
+import { toast } from 'sonner'
+
+// TODO: Get institutionId from auth context or config
+const INSTITUTION_ID = 'inst_demo'
 
 export default function UsersPage() {
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const handleBulkImport = async (users: Array<{ name: string; email: string; role: string; department: string }>) => {
-    // TODO: Call API to bulk import users
     const response = await fetch('/api/admin/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        institutionId: 'inst_demo',
+        institutionId: INSTITUTION_ID,
         users: users.map(u => ({
           name: u.name,
           email: u.email,
@@ -45,12 +50,38 @@ export default function UsersPage() {
       throw new Error(errorMsg)
     }
     
+    // Trigger refresh of users table
+    setRefreshKey(prev => prev + 1)
+    
     return result.data
   }
 
-  const handleExport = () => {
-    // TODO: Implement export functionality
-    alert('Export functionality coming soon!')
+  const handleExport = async () => {
+    try {
+      await exportUsersToCSV(INSTITUTION_ID)
+      toast.success('Users exported successfully')
+    } catch (error) {
+      console.error('Export failed:', error)
+      toast.error('Failed to export users')
+    }
+  }
+
+  const handleCreateUser = async (userData: { name: string; email: string; role: string }) => {
+    try {
+      await createUser(INSTITUTION_ID, {
+        name: userData.name,
+        email: userData.email,
+        role: userData.role.toUpperCase(),
+      })
+      
+      // Trigger refresh of users table
+      setRefreshKey(prev => prev + 1)
+      toast.success('User created successfully')
+    } catch (error) {
+      console.error('Failed to create user:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create user')
+      throw error
+    }
   }
 
   return (
@@ -82,7 +113,7 @@ export default function UsersPage() {
 
       {/* Users table */}
       <Suspense fallback={<TableSkeleton />}>
-        <UsersTable />
+        <UsersTable key={refreshKey} />
       </Suspense>
 
       {/* Dialogs */}
@@ -95,10 +126,7 @@ export default function UsersPage() {
       <UserFormDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        onSave={async (userData) => {
-          // TODO: Call API to create user
-          console.log('Creating user:', userData)
-        }}
+        onSave={handleCreateUser}
       />
     </div>
   )
