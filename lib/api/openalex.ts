@@ -11,10 +11,18 @@
  */
 
 import { trackApiPerformance } from '@/lib/monitoring'
+import { getOrSetCached, generateCacheKey, DEFAULT_TTL } from '@/lib/cache'
 
 const OPENALEX_API_BASE = 'https://api.openalex.org'
 const POLITE_EMAIL = process.env.POLITE_EMAIL || 'support@vibeuniversity.com'
 const USER_AGENT = `VibeUniversity/0.1 (mailto:${POLITE_EMAIL})`
+
+// Cache TTLs
+const CACHE_TTL = {
+  WORK_LOOKUP: DEFAULT_TTL.DAY, // Work metadata rarely changes
+  AUTHOR_LOOKUP: DEFAULT_TTL.DAY, // Author data rarely changes
+  SEARCH: DEFAULT_TTL.LONG, // Search results can change more frequently
+}
 
 export interface OpenAlexWork {
   id: string // OpenAlex ID (e.g., https://openalex.org/W2741809807)
@@ -110,7 +118,7 @@ export interface OpenAlexSearchResult {
 }
 
 /**
- * Search for works by query
+ * Search for works by query (with caching)
  */
 export async function searchWorks(
   query: string,
@@ -121,73 +129,84 @@ export async function searchWorks(
     filter?: Record<string, string | number>
   } = {}
 ): Promise<OpenAlexSearchResult | null> {
-  const params = new URLSearchParams({
-    search: query,
-    page: String(options.page || 1),
-    per_page: String(options.perPage || 25),
-  })
-
-  if (options.sort) {
-    params.append('sort', options.sort)
-  }
-
-  if (options.filter) {
-    const filters = Object.entries(options.filter)
-      .map(([key, value]) => `${key}:${value}`)
-      .join(',')
-    if (filters) {
-      params.append('filter', filters)
-    }
-  }
-
-  return trackApiPerformance('openalex.search', async () => {
-    try {
-      const response = await fetch(`${OPENALEX_API_BASE}/works?${params.toString()}`, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
+  const cacheKey = generateCacheKey('openalex', 'search', query, options)
+  
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('openalex.search', async () => {
+      const params = new URLSearchParams({
+        search: query,
+        page: String(options.page || 1),
+        per_page: String(options.perPage || 25),
       })
 
-      if (!response.ok) {
-        throw new Error(`OpenAlex API error: ${response.status} ${response.statusText}`)
+      if (options.sort) {
+        params.append('sort', options.sort)
       }
 
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error('Error searching OpenAlex:', error)
-      return null
-    }
-  })
+      if (options.filter) {
+        const filters = Object.entries(options.filter)
+          .map(([key, value]) => `${key}:${value}`)
+          .join(',')
+        if (filters) {
+          params.append('filter', filters)
+        }
+      }
+
+      try {
+        const response = await fetch(`${OPENALEX_API_BASE}/works?${params.toString()}`, {
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`OpenAlex API error: ${response.status} ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        return data
+      } catch (error) {
+        console.error('Error searching OpenAlex:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.SEARCH
+  )
 }
 
 /**
- * Get a work by DOI
+ * Get a work by DOI (with caching)
  */
 export async function getWorkByDOI(doi: string): Promise<OpenAlexWork | null> {
   const cleanDOI = doi.trim().replace(/^https?:\/\/doi\.org\//, '')
+  const cacheKey = generateCacheKey('openalex', 'doi', cleanDOI)
   
-  return trackApiPerformance('openalex.getWorkByDOI', async () => {
-    try {
-      const response = await fetch(`${OPENALEX_API_BASE}/works/doi:${encodeURIComponent(cleanDOI)}`, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      })
+  return getOrSetCached(
+    cacheKey,
+    () => trackApiPerformance('openalex.getWorkByDOI', async () => {
+      try {
+        const response = await fetch(`${OPENALEX_API_BASE}/works/doi:${encodeURIComponent(cleanDOI)}`, {
+          headers: {
+            'User-Agent': USER_AGENT,
+          },
+        })
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
+        if (!response.ok) {
+          if (response.status === 404) {
+            return null
+          }
+          throw new Error(`OpenAlex API error: ${response.status} ${response.statusText}`)
         }
-        throw new Error(`OpenAlex API error: ${response.status} ${response.statusText}`)
-      }
 
-      return await response.json()
-    } catch (error) {
-      console.error('Error getting work by DOI:', error)
-      return null
-    }
-  })
+        return await response.json()
+      } catch (error) {
+        console.error('Error getting work by DOI:', error)
+        return null
+      }
+    }),
+    CACHE_TTL.WORK_LOOKUP
+  )
 }
 
 /**
