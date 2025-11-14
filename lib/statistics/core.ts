@@ -36,6 +36,10 @@ export interface RegressionResult {
   rSquared: number
   equation: string
   predictions?: number[]
+  // Aliases for compatibility
+  m?: number
+  b?: number
+  r2?: number
 }
 
 export interface TTestResult {
@@ -44,6 +48,10 @@ export interface TTestResult {
   degreesOfFreedom: number
   significant: boolean
   confidenceLevel: number
+  // Aliases for compatibility
+  t?: number
+  p?: number
+  df?: number
 }
 
 export interface ChiSquareResult {
@@ -155,7 +163,7 @@ export function standardDeviation(data: number[]): number {
   const startTime = Date.now()
   try {
     validateArray(data, 2, 'data')
-    const result = ss.standardDeviation(data)
+    const result = ss.sampleStandardDeviation(data)
     trackApiPerformance('statistics.standardDeviation', Date.now() - startTime, true)
     return result
   } catch (error) {
@@ -171,7 +179,7 @@ export function variance(data: number[]): number {
   const startTime = Date.now()
   try {
     validateArray(data, 2, 'data')
-    const result = ss.variance(data)
+    const result = ss.sampleVariance(data)
     trackApiPerformance('statistics.variance', Date.now() - startTime, true)
     return result
   } catch (error) {
@@ -357,7 +365,11 @@ export function linearRegression(data: [number, number][]): RegressionResult {
       slope: line.m,
       intercept: line.b,
       rSquared,
-      equation: `y = ${line.m.toFixed(4)}x + ${line.b.toFixed(4)}`
+      equation: `y = ${line.m.toFixed(4)}x + ${line.b.toFixed(4)}`,
+      // Aliases for compatibility
+      m: line.m,
+      b: line.b,
+      r2: rSquared
     }
     
     trackApiPerformance('statistics.linearRegression', Date.now() - startTime, true)
@@ -379,6 +391,16 @@ export function predict(regression: RegressionResult, xValues: number[]): number
 // ============================================================================
 // Hypothesis Testing
 // ============================================================================
+
+/**
+ * Perform two-sample t-test (tests if two samples have different means)
+ * @param sample1 - First sample
+ * @param sample2 - Second sample
+ * @param alpha - Significance level (default 0.05 for 95% confidence)
+ */
+export function tTest(sample1: number[], sample2: number[], alpha: number = 0.05): TTestResult {
+  return twoSampleTTest(sample1, sample2, alpha)
+}
 
 /**
  * Perform two-sample t-test (tests if two samples have different means)
@@ -417,7 +439,11 @@ export function twoSampleTTest(sample1: number[], sample2: number[], alpha: numb
       pValue: significant ? alpha / 2 : alpha, // Approximate
       degreesOfFreedom,
       significant,
-      confidenceLevel: 1 - alpha
+      confidenceLevel: 1 - alpha,
+      // Aliases for compatibility
+      t: tStatistic,
+      p: significant ? alpha / 2 : alpha,
+      df: degreesOfFreedom
     }
     
     trackApiPerformance('statistics.twoSampleTTest', Date.now() - startTime, true)
@@ -623,6 +649,29 @@ export function percentileRank(data: number[], value: number): number {
 }
 
 /**
+ * Calculate the value at a given percentile
+ * @param data - Dataset
+ * @param percentile - Percentile value (0-100)
+ * @returns Value at the given percentile
+ */
+export function percentile(data: number[], percentile: number): number {
+  if (percentile < 0 || percentile > 100) {
+    throw new Error('Percentile must be between 0 and 100')
+  }
+  validateArray(data)
+  const sorted = [...data].sort((a, b) => a - b)
+  const index = (percentile / 100) * (sorted.length - 1)
+  const lower = Math.floor(index)
+  const upper = Math.ceil(index)
+  const weight = index % 1
+
+  if (lower === upper) {
+    return sorted[lower]
+  }
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight
+}
+
+/**
  * Calculate confidence interval for a mean
  * @param data - Sample data
  * @param confidence - Confidence level (e.g., 0.95 for 95%)
@@ -718,12 +767,14 @@ export const statistics = {
   predict,
   
   // Hypothesis Testing
+  tTest,
   twoSampleTTest,
   chiSquareTest,
   oneWayANOVA,
   
   // Distribution
   zScore,
+  percentile,
   percentileRank,
   confidenceInterval,
   interquartileRange,

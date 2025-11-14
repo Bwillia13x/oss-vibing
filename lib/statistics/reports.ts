@@ -145,9 +145,20 @@ export function generateCorrelationReport(
   xName: string = 'Variable X',
   yName: string = 'Variable Y',
   method: 'pearson' | 'spearman' = 'pearson',
-  format: ReportFormat = 'markdown'
-): string {
+  format: ReportFormat | 'object' = 'markdown'
+): string | CorrelationReportObject {
   const result = correlationWithInterpretation(x, y, method)
+  
+  // Return object format for tests/API consumers
+  if (format === 'object') {
+    return {
+      pearson: result.coefficient,
+      coefficient: result.coefficient,
+      strength: result.strength,
+      direction: result.direction,
+      interpretation: `${result.strength} ${result.direction} correlation`
+    }
+  }
   
   if (format === 'json') {
     return JSON.stringify({
@@ -220,6 +231,15 @@ ${getCorrelationInterpretation(result)}
 </html>`
 }
 
+// Object type for correlation report
+export interface CorrelationReportObject {
+  pearson: number
+  coefficient: number
+  strength: string
+  direction: string
+  interpretation: string
+}
+
 function getCorrelationInterpretation(result: CorrelationResult): string {
   if (result.direction === 'none') {
     return 'There is essentially no linear relationship between the variables.'
@@ -249,9 +269,20 @@ export function generateRegressionReport(
   data: [number, number][],
   xName: string = 'X',
   yName: string = 'Y',
-  format: ReportFormat = 'markdown'
-): string {
+  format: ReportFormat | 'object' = 'markdown'
+): string | RegressionReportObject {
   const result = linearRegression(data)
+  
+  // Return object format for tests/API consumers
+  if (format === 'object') {
+    return {
+      slope: result.slope,
+      intercept: result.intercept,
+      r2: result.rSquared,
+      rSquared: result.rSquared,
+      equation: result.equation
+    }
+  }
   
   if (format === 'json') {
     return JSON.stringify({
@@ -335,6 +366,15 @@ ${getRegressionQuality(result.rSquared)}
   </div>
 </body>
 </html>`
+}
+
+// Object type for regression report
+export interface RegressionReportObject {
+  slope: number
+  intercept: number
+  r2: number
+  rSquared: number
+  equation: string
 }
 
 function getRegressionQuality(rSquared: number): string {
@@ -689,13 +729,58 @@ ${result.significant ?
 // Export Functions
 // ============================================================================
 
+/**
+ * Generate a summary report (alias for generateDescriptiveReport)
+ */
+export function generateSummaryReport(
+  data: number[],
+  datasetName: string = 'Dataset'
+): any {
+  const stats = descriptiveStatistics(data)
+  return {
+    mean: stats.mean,
+    median: stats.median,
+    mode: stats.mode,
+    stdDev: stats.standardDeviation,
+    variance: stats.variance,
+    min: stats.min,
+    max: stats.max,
+    range: stats.range,
+    count: stats.count,
+    sum: stats.sum
+  }
+}
+
+/**
+ * Generate a hypothesis test report (alias for generateTTestReport)
+ */
+export function generateHypothesisTestReport(
+  sample1: number[],
+  sample2: number[],
+  alpha: number = 0.05
+): any {
+  const result = twoSampleTTest(sample1, sample2, alpha)
+  return {
+    tStatistic: result.tStatistic,
+    pValue: result.pValue,
+    degreesOfFreedom: result.degreesOfFreedom,
+    significant: result.significant,
+    confidenceLevel: result.confidenceLevel,
+    conclusion: result.significant 
+      ? `There is a statistically significant difference between the groups (p < ${alpha})`
+      : `There is no statistically significant difference between the groups (p ≥ ${alpha})`
+  }
+}
+
 export const reports = {
   generateDescriptiveReport,
   generateCorrelationReport,
   generateRegressionReport,
   generateTTestReport,
   generateChiSquareReport,
-  generateANOVAReport
+  generateANOVAReport,
+  generateSummaryReport,
+  generateHypothesisTestReport
 }
 
 export default reports
