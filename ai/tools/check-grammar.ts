@@ -127,7 +127,7 @@ export const checkGrammar = ({ writer }: Params) =>
         }
         
         // Build summary message
-        let summaryParts: string[] = []
+        const summaryParts: string[] = []
         
         if (grammarResults) {
           summaryParts.push(

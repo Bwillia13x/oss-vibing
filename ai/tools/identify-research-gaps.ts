@@ -25,7 +25,7 @@ export const identifyResearchGaps = ({ writer }: Params) =>
     execute: async ({ documentPath, topic, discipline, referenceFolder }, { toolCallId }) => {
       try {
         let literatureText = ''
-        let references: any[] = []
+        const references: any[] = []
         
         // Read literature review document if provided
         if (documentPath) {

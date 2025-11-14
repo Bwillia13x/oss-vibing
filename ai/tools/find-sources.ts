@@ -325,7 +325,7 @@ export const findSources = ({ writer }: Params) =>
         }
         
         // Search across APIs with failover
-        let allSources: UnifiedCitation[] = []
+        const allSources: UnifiedCitation[] = []
         const searchLimit = DEFAULT_SEARCH_LIMIT
         
         if (provider === 'All' || provider === 'Crossref') {
