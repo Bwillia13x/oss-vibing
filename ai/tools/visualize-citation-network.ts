@@ -26,7 +26,7 @@ interface CitationEdge {
   type: 'cites' | 'cited_by' | 'co-cited'
 }
 
-export const visualizeCitationNetwork = ({ writer }: Params) =>
+export const visualizeCitationNetwork = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -36,7 +36,7 @@ export const visualizeCitationNetwork = ({ writer }: Params) =>
       minCitations: z.number().min(0).default(2).describe('Minimum citation count to include in network'),
       outputPath: z.string().default('citation-network.json').describe('Path to save network visualization data'),
     }),
-    execute: async ({ referenceFolder, documentPath, maxDepth, minCitations, outputPath }, { toolCallId }) => {
+    execute: async ({ referenceFolder, documentPath, maxDepth, minCitations, outputPath }, { toolCallId: _toolCallId }) => {
       try {
         const nodes: Map<string, CitationNode> = new Map()
         const edges: CitationEdge[] = []

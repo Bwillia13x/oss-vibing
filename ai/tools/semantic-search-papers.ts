@@ -22,7 +22,7 @@ interface Paper {
   similarity?: number
 }
 
-export const semanticSearchPapers = ({ writer }: Params) =>
+export const semanticSearchPapers = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -32,7 +32,7 @@ export const semanticSearchPapers = ({ writer }: Params) =>
       topK: z.number().min(1).max(50).default(10).describe('Number of most similar papers to return'),
       minSimilarity: z.number().min(0).max(1).default(0.3).describe('Minimum similarity threshold (0-1)'),
     }),
-    execute: async ({ query, documentPath, referenceFolder, topK, minSimilarity }, { toolCallId }) => {
+    execute: async ({ query, documentPath, referenceFolder, topK, minSimilarity }, { toolCallId: _toolCallId }) => {
       try {
         // Get query text
         let queryText = query || ''

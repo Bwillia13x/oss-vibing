@@ -38,7 +38,7 @@ interface YearStats {
   methodologies: Map<string, number>
 }
 
-export const analyzeResearchTrends = ({ writer }: Params) =>
+export const analyzeResearchTrends = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -48,7 +48,7 @@ export const analyzeResearchTrends = ({ writer }: Params) =>
       endYear: z.number().optional().describe('End year for analysis (default: latest paper)'),
       minPapers: z.number().min(2).default(3).describe('Minimum papers needed to identify a trend'),
     }),
-    execute: async ({ referenceFolder, topic, startYear, endYear, minPapers }, { toolCallId }) => {
+    execute: async ({ referenceFolder, topic, startYear, endYear, minPapers }, { toolCallId: _toolCallId }) => {
       try {
         // Load references
         const refPath = path.resolve(referenceFolder)

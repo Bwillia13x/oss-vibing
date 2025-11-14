@@ -11,7 +11,7 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
-export const evaluateThesisStrength = ({ writer }: Params) =>
+export const evaluateThesisStrength = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -24,7 +24,7 @@ export const evaluateThesisStrength = ({ writer }: Params) =>
         .default('general')
         .describe('Type of document for context-specific evaluation'),
     }),
-    execute: async ({ documentPath, thesisStatement, discipline, documentType }, { toolCallId }) => {
+    execute: async ({ documentPath, thesisStatement, discipline, documentType }, { toolCallId: _toolCallId }) => {
       try {
         let text = ''
         let explicitThesis = thesisStatement

@@ -12,7 +12,7 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
-export const detectPlagiarism = ({ writer }: Params) =>
+export const detectPlagiarism = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -20,7 +20,7 @@ export const detectPlagiarism = ({ writer }: Params) =>
       referencePaths: z.array(z.string()).optional().describe('Optional paths to reference sources for comparison'),
       includeMinorIssues: z.boolean().default(false).describe('Include low-severity issues in the report'),
     }),
-    execute: async ({ documentPath, referencePaths, includeMinorIssues }, { toolCallId }) => {
+    execute: async ({ documentPath, referencePaths, includeMinorIssues }, { toolCallId: _toolCallId }) => {
       try {
         // Read the document
         const fullPath = path.resolve(documentPath)

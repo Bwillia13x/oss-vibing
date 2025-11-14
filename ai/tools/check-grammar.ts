@@ -13,7 +13,7 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
-export const checkGrammar = ({ writer }: Params) =>
+export const checkGrammar = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -25,7 +25,7 @@ export const checkGrammar = ({ writer }: Params) =>
         .optional()
         .describe('Academic discipline for specialized style guidelines'),
     }),
-    execute: async ({ documentPath, checkTypes, discipline }, { toolCallId }) => {
+    execute: async ({ documentPath, checkTypes, discipline }, { toolCallId: _toolCallId }) => {
       try {
         // Read the document
         const fullPath = path.resolve(documentPath)
