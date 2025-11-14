@@ -216,8 +216,11 @@ export async function getCitationCount(doi: string): Promise<number> {
 /**
  * Check if a DOI is valid
  */
-export async function validateDOI(doi: string): Promise<boolean> {
-  const paper = await lookupDOI(doi)
+export async function validateDOI(
+  doi: string,
+  options: CitationAPIOptions = {}
+): Promise<boolean> {
+  const paper = await lookupDOI(doi, options)
   return paper !== null
 }
 
