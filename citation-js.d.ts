@@ -1,7 +1,7 @@
 declare module 'citation-js' {
   class Cite {
-    constructor(data: any, options?: any)
-    format(format: string, options?: any): string
+    constructor(data: unknown, options?: Record<string, unknown>)
+    format(format: string, options?: Record<string, unknown>): string
   }
   export default Cite
 }
