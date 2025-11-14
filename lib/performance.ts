@@ -7,7 +7,7 @@ interface PerformanceMetric {
   name: string
   duration: number
   timestamp: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 class PerformanceMonitor {
@@ -21,7 +21,7 @@ class PerformanceMonitor {
   /**
    * Record a performance metric
    */
-  record(name: string, duration: number, metadata?: Record<string, any>): void {
+  record(name: string, duration: number, metadata?: Record<string, unknown>): void {
     // Evict oldest if at max
     if (this.metrics.length >= this.maxMetrics) {
       this.metrics.shift()
@@ -41,12 +41,12 @@ class PerformanceMonitor {
   async time<T>(
     name: string,
     fn: () => T | Promise<T>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<T> {
     const start = performance.now()
     try {
       const result = fn()
-      if (result && typeof (result as any).then === 'function') {
+      if (result && typeof (result as Promise<T>).then === 'function') {
         // Async case
         return (result as Promise<T>)
           .then((value) => {
@@ -114,7 +114,7 @@ class PerformanceMonitor {
   /**
    * Get summary of all metrics
    */
-  getSummary() {
+  getSummary(): Record<string, { count: number; avg: number; p50: number; p95: number }> {
     const names = this.getMetricNames()
     return names.reduce(
       (acc, name) => {
@@ -129,7 +129,7 @@ class PerformanceMonitor {
         }
         return acc
       },
-      {} as Record<string, any>
+      {} as Record<string, { count: number; avg: number; p50: number; p95: number }>
     )
   }
 

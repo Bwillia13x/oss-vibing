@@ -14,7 +14,7 @@ interface ErrorData {
   message: string
   stack?: string
   timestamp: number
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 }
 
 class MonitoringService {
@@ -50,7 +50,7 @@ class MonitoringService {
   /**
    * Track an error
    */
-  trackError(error: Error | string, context?: Record<string, any>): void {
+  trackError(error: Error | string, context?: Record<string, unknown>): void {
     const errorData: ErrorData = {
       message: typeof error === 'string' ? error : error.message,
       stack: typeof error === 'string' ? undefined : error.stack,
