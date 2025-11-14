@@ -177,3 +177,31 @@ export async function mockAuthenticate(email: string, role: UserRole, institutio
 
   return await createToken(user)
 }
+
+// Re-export new authentication functions from auth module
+export {
+  createAccessToken,
+  createRefreshToken,
+  verifyToken as verifyJWT,
+  setAuthCookies,
+  getAccessToken,
+  getRefreshToken,
+  clearAuthCookies,
+  getCurrentUser,
+  refreshAccessToken,
+} from './auth/jwt-service'
+
+export {
+  generateGoogleAuthUrl,
+  validateGoogleAuthCode,
+  getGoogleUserInfo,
+  isEduEmail,
+  validateEduEmail,
+} from './auth/google-oauth'
+
+export {
+  generateRecoveryToken,
+  verifyRecoveryToken,
+  sendRecoveryEmail,
+  isRecoveryAllowed,
+} from './auth/recovery'

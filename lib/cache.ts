@@ -363,3 +363,17 @@ export const apiRateLimiter = new RateLimiter(100, 60000) // 100 requests per mi
 if (typeof setInterval !== 'undefined') {
   setInterval(() => apiRateLimiter.cleanup(), 300000)
 }
+
+// Re-export cache service functions for convenience
+export {
+  getCached,
+  setCached,
+  deleteCached,
+  deleteCachedPattern,
+  clearCache,
+  getOrSetCached,
+  getCacheStats,
+  generateCacheKey,
+  cleanupMemoryCache,
+  DEFAULT_TTL,
+} from './cache/cache-service'
