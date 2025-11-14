@@ -41,7 +41,7 @@ interface Author {
   influence: number
 }
 
-export const synthesizeLiteratureReview = ({ writer }: Params) =>
+export const synthesizeLiteratureReview = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -55,7 +55,7 @@ export const synthesizeLiteratureReview = ({ writer }: Params) =>
         .describe('How to organize the literature review'),
       includeGaps: z.boolean().default(true).describe('Include research gaps section'),
     }),
-    execute: async ({ referenceFolder, topic, discipline, organizationStyle, includeGaps }, { toolCallId }) => {
+    execute: async ({ referenceFolder, topic, discipline, organizationStyle, includeGaps }, { toolCallId: _toolCallId }) => {
       try {
         // Load references
         const refPath = path.resolve(referenceFolder)
@@ -82,7 +82,7 @@ export const synthesizeLiteratureReview = ({ writer }: Params) =>
               methodology: detectMethodology(ref.abstract || ref.title || ''),
               citationCount: ref.citationCount || 0,
             })
-          } catch (error) {
+          } catch (_error) {
             console.debug(`Skipping invalid reference file: ${file}`)
           }
         }

@@ -43,7 +43,7 @@ export function countSyllables(word: string): number {
  */
 export function getSentences(text: string): string[] {
   // Handle abbreviations and common patterns
-  let processed = text
+  const processed = text
     .replace(/Dr\./g, 'Dr_')
     .replace(/Mr\./g, 'Mr_')
     .replace(/Mrs\./g, 'Mrs_')

@@ -45,7 +45,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload.user as AuthUser
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }

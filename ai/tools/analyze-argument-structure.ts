@@ -11,7 +11,7 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
-export const analyzeArgumentStructure = ({ writer }: Params) =>
+export const analyzeArgumentStructure = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -23,7 +23,7 @@ export const analyzeArgumentStructure = ({ writer }: Params) =>
         .default(['all'])
         .describe('Specific aspects of argument to analyze'),
     }),
-    execute: async ({ documentPath, discipline, focusAreas }, { toolCallId }) => {
+    execute: async ({ documentPath, discipline, focusAreas }, { toolCallId: _toolCallId }) => {
       try {
         // Read the document
         const fullPath = path.resolve(documentPath)

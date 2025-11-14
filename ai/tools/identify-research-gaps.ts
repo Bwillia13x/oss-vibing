@@ -11,7 +11,7 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
-export const identifyResearchGaps = ({ writer }: Params) =>
+export const identifyResearchGaps = ({ writer: _writer }: Params) =>
   tool({
     description,
     inputSchema: z.object({
@@ -22,10 +22,10 @@ export const identifyResearchGaps = ({ writer }: Params) =>
         .describe('Academic discipline for context'),
       referenceFolder: z.string().optional().describe('Path to folder with reference files'),
     }),
-    execute: async ({ documentPath, topic, discipline, referenceFolder }, { toolCallId }) => {
+    execute: async ({ documentPath, topic, discipline, referenceFolder }, { toolCallId: _toolCallId }) => {
       try {
         let literatureText = ''
-        let references: any[] = []
+        const references: any[] = []
         
         // Read literature review document if provided
         if (documentPath) {
