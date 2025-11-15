@@ -11,6 +11,9 @@ import { Server as HTTPServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import * as Y from 'yjs';
 import { setPersistence, getPersistence } from './persistence';
+import { authenticateWebSocket, requireAuth, getAuthenticatedUser } from './auth';
+import { checkRoomAccess, RoomPermission } from './acl';
+import { checkConnectionRateLimit, checkMessageRateLimit, checkUpdateRateLimit } from './rate-limiter';
 
 interface CollaborationRoom {
   doc: Y.Doc;
@@ -34,11 +37,42 @@ export class CollaborationServer {
   }
 
   private setupWebSocketServer(): void {
-    this.wss.on('connection', (ws: WebSocket, request) => {
+    this.wss.on('connection', async (ws: WebSocket, request) => {
       const url = new URL(request.url || '', `http://${request.headers.host}`);
       const roomName = url.searchParams.get('room') || 'default';
+      const token = url.searchParams.get('token');
 
-      console.log(`New connection to room: ${roomName}`);
+      // Authenticate the connection
+      if (!token) {
+        console.warn('WebSocket connection without token');
+        ws.close(4001, 'Authentication required');
+        return;
+      }
+
+      const user = authenticateWebSocket(ws, token);
+      if (!user) {
+        console.warn('WebSocket authentication failed');
+        ws.close(4001, 'Invalid token');
+        return;
+      }
+
+      // Check rate limit
+      const rateLimitCheck = await checkConnectionRateLimit(user.userId);
+      if (!rateLimitCheck.allowed) {
+        console.warn(`Connection rate limit exceeded for user ${user.userId}`);
+        ws.close(4029, 'Too many connections');
+        return;
+      }
+
+      // Check room access
+      const hasAccess = await checkRoomAccess(user.userId, roomName, RoomPermission.VIEWER);
+      if (!hasAccess) {
+        console.warn(`Access denied to room ${roomName} for user ${user.userId}`);
+        ws.close(4003, 'Access denied');
+        return;
+      }
+
+      console.log(`User ${user.userName} (${user.userId}) connected to room: ${roomName}`);
 
       // Get or create room
       let room = this.rooms.get(roomName);
@@ -63,6 +97,22 @@ export class CollaborationServer {
       // Handle messages from client
       ws.on('message', async (data: Buffer) => {
         try {
+          const user = getAuthenticatedUser(ws);
+          if (!user) {
+            ws.close(4001, 'Unauthorized');
+            return;
+          }
+
+          // Check message rate limit
+          const messageAllowed = await checkMessageRateLimit(user.userId);
+          if (!messageAllowed) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Rate limit exceeded. Please slow down.',
+            }));
+            return;
+          }
+
           const message = JSON.parse(data.toString());
           await this.handleMessage(ws, roomName, message);
         } catch (error) {
@@ -124,10 +174,25 @@ export class CollaborationServer {
       return;
     }
 
+    const user = getAuthenticatedUser(ws);
+    if (!user) {
+      return;
+    }
+
     room.lastActivity = Date.now();
 
     switch (message.type) {
       case 'sync-update':
+        // Check update rate limit
+        const updateAllowed = await checkUpdateRateLimit(user.userId);
+        if (!updateAllowed) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Update rate limit exceeded. Please slow down.',
+          }));
+          return;
+        }
+
         // Apply update to room's document
         const update = new Uint8Array(message.update);
         Y.applyUpdate(room.doc, update);
