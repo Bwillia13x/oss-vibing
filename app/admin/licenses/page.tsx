@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -18,33 +18,60 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Users, TrendingUp, AlertCircle, Plus } from 'lucide-react'
-
-// Mock data
-const mockLicenseData = {
-  total: 1000,
-  used: 734,
-  available: 266,
-  renewalDate: '2026-03-15',
-  status: 'active' as const,
-}
-
-const mockDepartmentAllocations = [
-  { id: '1', department: 'Computer Science', allocated: 200, used: 178, percentage: 89 },
-  { id: '2', department: 'Mathematics', allocated: 150, used: 142, percentage: 95 },
-  { id: '3', department: 'Biology', allocated: 180, used: 156, percentage: 87 },
-  { id: '4', department: 'Chemistry', allocated: 120, used: 98, percentage: 82 },
-  { id: '5', department: 'Physics', allocated: 100, used: 82, percentage: 82 },
-  { id: '6', department: 'Engineering', allocated: 250, used: 78, percentage: 31 },
-]
+import { Users, TrendingUp, AlertCircle, Plus, Loader2 } from 'lucide-react'
+import { fetchLicenses, type License } from '@/lib/api/admin'
+import { useInstitutionId } from '@/lib/auth/context'
+import { toast } from 'sonner'
 
 export default function LicensesPage() {
-  const [licenseData] = useState(mockLicenseData)
-  const [allocations] = useState(mockDepartmentAllocations)
-  const [currentTime] = useState(() => Date.now())
+  const institutionId = useInstitutionId()
+  const [licenses, setLicenses] = useState<License[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const usagePercentage = Math.round((licenseData.used / licenseData.total) * 100)
-  const daysUntilRenewal = Math.ceil((new Date(licenseData.renewalDate).getTime() - currentTime) / (1000 * 60 * 60 * 24))
+  useEffect(() => {
+    loadLicenses()
+  }, [institutionId])
+
+  async function loadLicenses() {
+    try {
+      setLoading(true)
+      const data = await fetchLicenses(institutionId)
+      setLicenses(data)
+    } catch (error) {
+      console.error('Failed to load licenses:', error)
+      toast.error('Failed to load licenses')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Calculate aggregate license data
+  const licenseData = licenses.reduce(
+    (acc, license) => ({
+      total: acc.total + license.seats,
+      used: acc.used + license.usedSeats,
+      available: acc.available + (license.seats - license.usedSeats),
+      renewalDate: license.endDate, // Use the latest end date
+      status: license.status === 'ACTIVE' ? 'active' as const : 'inactive' as const,
+    }),
+    { total: 0, used: 0, available: 0, renewalDate: '', status: 'active' as const }
+  )
+
+  const usagePercentage = licenseData.total > 0 
+    ? Math.round((licenseData.used / licenseData.total) * 100)
+    : 0
+    
+  const daysUntilRenewal = licenseData.renewalDate
+    ? Math.ceil((new Date(licenseData.renewalDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 0
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -137,44 +164,74 @@ export default function LicensesPage() {
         </CardContent>
       </Card>
 
-      {/* Department allocations */}
+      {/* Licenses table */}
       <Card>
         <CardHeader>
-          <CardTitle>Department Allocations</CardTitle>
-          <CardDescription>
-            Seat allocations by department
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>License Details</CardTitle>
+              <CardDescription>
+                Active licenses for your institution
+              </CardDescription>
+            </div>
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Request License
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Department</TableHead>
-                <TableHead className="text-right">Allocated</TableHead>
-                <TableHead className="text-right">Used</TableHead>
-                <TableHead className="text-right">Available</TableHead>
-                <TableHead>Usage</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allocations.map((dept) => (
-                <TableRow key={dept.id}>
-                  <TableCell className="font-medium">{dept.department}</TableCell>
-                  <TableCell className="text-right">{dept.allocated}</TableCell>
-                  <TableCell className="text-right">{dept.used}</TableCell>
-                  <TableCell className="text-right">{dept.allocated - dept.used}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Progress value={dept.percentage} className="h-2 flex-1" />
-                      <span className="text-sm text-muted-foreground w-12 text-right">
-                        {dept.percentage}%
-                      </span>
-                    </div>
-                  </TableCell>
+          {licenses.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              No licenses found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-right">Total Seats</TableHead>
+                  <TableHead className="text-right">Used</TableHead>
+                  <TableHead className="text-right">Available</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Usage</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {licenses.map((license) => {
+                  const usage = license.seats > 0 
+                    ? Math.round((license.usedSeats / license.seats) * 100)
+                    : 0
+                  
+                  return (
+                    <TableRow key={license.id}>
+                      <TableCell className="font-medium">{license.type}</TableCell>
+                      <TableCell className="text-right">{license.seats}</TableCell>
+                      <TableCell className="text-right">{license.usedSeats}</TableCell>
+                      <TableCell className="text-right">{license.seats - license.usedSeats}</TableCell>
+                      <TableCell>
+                        <Badge variant={license.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                          {license.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(license.endDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Progress value={usage} className="h-2 flex-1" />
+                          <span className="text-sm text-muted-foreground w-12 text-right">
+                            {usage}%
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

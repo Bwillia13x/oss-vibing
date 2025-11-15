@@ -4,38 +4,42 @@
  * Client-side header buttons for help and settings
  */
 
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { HelpCircle, Settings } from 'lucide-react'
+import { HelpDialog } from '@/components/help-dialog'
+import { SettingsDialog } from '@/components/settings-dialog'
 
 export function HeaderButtons() {
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
   return (
     <>
-      {/* TODO: Wire up Help button to open help/documentation dialog */}
       <Button
         variant="ghost"
         size="icon"
         title="Help & Documentation"
         aria-label="Help & Documentation"
         className="hidden md:flex"
-        onClick={() => {
-          console.log('Help button clicked - TODO: Open help dialog')
-        }}
+        onClick={() => setIsHelpOpen(true)}
       >
         <HelpCircle className="h-5 w-5" />
       </Button>
-      {/* TODO: Wire up Settings button to open settings dialog */}
+      
       <Button
         variant="ghost"
         size="icon"
         title="Settings"
         aria-label="Settings"
         className="hidden md:flex"
-        onClick={() => {
-          console.log('Settings button clicked - TODO: Open settings dialog')
-        }}
+        onClick={() => setIsSettingsOpen(true)}
       >
         <Settings className="h-5 w-5" />
       </Button>
+
+      <HelpDialog open={isHelpOpen} onOpenChange={setIsHelpOpen} />
+      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </>
   )
 }

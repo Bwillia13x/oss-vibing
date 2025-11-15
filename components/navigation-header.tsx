@@ -9,6 +9,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { HelpDialog } from '@/components/help-dialog'
+import { SettingsDialog } from '@/components/settings-dialog'
 import {
   Settings,
   HelpCircle,
@@ -24,6 +26,8 @@ import {
 
 export function NavigationHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const navigation = [
     { name: 'Documents', href: 'javascript:void(0)', icon: FileText, description: 'Write essays and papers' },
@@ -65,30 +69,26 @@ export function NavigationHeader() {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
-          {/* TODO: Wire up Help button to open help/documentation dialog */}
           <Button
             variant="ghost"
             size="icon"
             title="Help & Documentation"
             aria-label="Help & Documentation"
-            onClick={() => {
-              console.log('Help button clicked - TODO: Open help dialog')
-            }}
+            onClick={() => setIsHelpOpen(true)}
           >
             <HelpCircle className="h-5 w-5" />
           </Button>
-          {/* TODO: Wire up Settings button to open settings dialog */}
+          
           <Button
             variant="ghost"
             size="icon"
             title="Settings"
             aria-label="Settings"
-            onClick={() => {
-              console.log('Settings button clicked - TODO: Open settings dialog')
-            }}
+            onClick={() => setIsSettingsOpen(true)}
           >
             <Settings className="h-5 w-5" />
           </Button>
+          
           <ThemeToggle />
 
           {/* Mobile Menu Toggle */}
@@ -129,6 +129,10 @@ export function NavigationHeader() {
           </div>
         </div>
       )}
+
+      {/* Help and Settings Dialogs */}
+      <HelpDialog open={isHelpOpen} onOpenChange={setIsHelpOpen} />
+      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </header>
   )
 }

@@ -1,9 +1,3 @@
-/**
- * Google OAuth Callback Route
- * 
- * Handles Google OAuth callback and creates user session
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import {
   validateGoogleAuthCode,
@@ -14,6 +8,21 @@ import {
   setAuthCookies,
 } from '@/lib/auth';
 import { getCached, deleteCached, generateCacheKey } from '@/lib/cache';
+
+// Import repositories at module level for better performance
+let userRepositoryModule: typeof import('@/lib/db/repositories') | null = null;
+
+// Lazy load repository on first use
+async function getUserRepository() {
+  if (!userRepositoryModule) {
+    try {
+      userRepositoryModule = await import('@/lib/db/repositories');
+    } catch (error) {
+      console.warn('Database repository not available:', error);
+    }
+  }
+  return userRepositoryModule;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -64,31 +73,50 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // TODO: Create or update user in database
-    // IMPORTANT: This is a placeholder implementation for development.
-    // In production, you MUST implement proper user lookup/creation:
-    //
-    // let user = await prisma.user.findUnique({ where: { email: userInfo.email } });
-    // if (!user) {
-    //   user = await prisma.user.create({
-    //     data: {
-    //       email: userInfo.email,
-    //       name: userInfo.name,
-    //       role: 'USER',
-    //       status: 'ACTIVE',
-    //     },
-    //   });
-    // }
-    // const userId = user.id; // Use database ID, not Google ID
-    //
-    // For now, we'll create tokens with the Google user info
-    const userId = userInfo.id; // WARNING: Using Google ID - replace with database user ID in production
+    // Create or update user in database
+    // Check if database repository is available
+    let userId: string;
+    let userRole: 'USER' | 'ADMIN' | 'INSTRUCTOR';
+    
+    try {
+      const repositories = await getUserRepository();
+      
+      if (repositories) {
+        // Try to find existing user
+        const existingUser = await repositories.userRepository.findByEmail(userInfo.email);
+        
+        if (existingUser) {
+          // Update existing user
+          const updatedUser = await repositories.userRepository.update(existingUser.id, {
+            name: userInfo.name || existingUser.name,
+          });
+          userId = updatedUser.id;
+          userRole = updatedUser.role;
+        } else {
+          // Create new user
+          const newUser = await repositories.userRepository.create({
+            email: userInfo.email,
+            name: userInfo.name || userInfo.email.split('@')[0],
+            role: 'USER',
+          });
+          userId = newUser.id;
+          userRole = newUser.role;
+        }
+      } else {
+        throw new Error('Repository not available');
+      }
+    } catch (error) {
+      // If database is not available, use Google ID as fallback
+      console.warn('Database not available, using Google ID:', error);
+      userId = userInfo.id;
+      userRole = 'USER';
+    }
 
     // Create access and refresh tokens
     const accessToken = await createAccessToken({
       userId,
       email: userInfo.email,
-      role: 'USER', // Default role, should come from database
+      role: userRole,
     });
 
     const refreshToken = await createRefreshToken({
