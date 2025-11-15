@@ -335,12 +335,13 @@ export class GrobidClient {
    * Clean extracted text (remove extra whitespace, decode entities)
    */
   private cleanText(text: string): string {
+    // Decode HTML entities in correct order to avoid double-escaping
     return text
-      .replace(/&amp;/g, '&')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&')  // Decode &amp; last to avoid double-decoding
       .replace(/\s+/g, ' ')
       .trim()
   }

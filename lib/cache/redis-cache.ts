@@ -214,7 +214,11 @@ export class RedisCache {
         }
       } else {
         // Clear matching keys from fallback cache
-        const regex = new RegExp(pattern.replace('*', '.*'))
+        // Escape special regex characters and convert glob pattern to regex
+        const regexPattern = pattern
+          .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // Escape regex special chars
+          .replace(/\*/g, '.*')  // Convert glob * to regex .*
+        const regex = new RegExp(`^${regexPattern}$`)
         for (const key of this.fallbackCache.keys()) {
           if (regex.test(key)) {
             this.fallbackCache.delete(key)

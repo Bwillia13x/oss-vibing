@@ -160,8 +160,11 @@ export class OpenAlexClient {
     try {
       // Handle DOI format
       let workId = id
-      if (id.startsWith('10.') || id.includes('doi.org')) {
-        workId = id.replace(/^https?:\/\/(dx\.)?doi\.org\//, 'https://doi.org/')
+      // Strict DOI URL validation
+      const doiUrlRegex = /^https?:\/\/(dx\.)?doi\.org\//
+      if (id.startsWith('10.') || doiUrlRegex.test(id)) {
+        // Only process if it's a valid DOI URL or DOI string
+        workId = id.replace(doiUrlRegex, 'https://doi.org/')
       } else if (!id.startsWith('W')) {
         workId = `W${id}`
       }
