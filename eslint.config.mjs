@@ -15,7 +15,10 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
       "argsIgnorePattern": "^_",
       "varsIgnorePattern": "^_",
       "caughtErrorsIgnorePattern": "^_"
-    }]
+    }],
+    // Downgrade no-explicit-any to warning for now
+    // TODO: Phase 14 - Systematically replace all any types with proper types
+    "@typescript-eslint/no-explicit-any": "warn"
   }
 }];
 

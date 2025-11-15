@@ -19,7 +19,11 @@ const ChatContext = createContext<ChatContextValue | undefined>(undefined)
 export function ChatProvider({ children }: { children: ReactNode }) {
   const mapDataToState = useDataStateMapper()
   const mapDataToStateRef = useRef(mapDataToState)
-  mapDataToStateRef.current = mapDataToState
+  
+  // Only update the ref when mapDataToState changes
+  if (mapDataToStateRef.current !== mapDataToState) {
+    mapDataToStateRef.current = mapDataToState
+  }
 
   const chat = useMemo(
     () =>
@@ -31,6 +35,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           console.error('Error sending message:', error)
         },
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
 

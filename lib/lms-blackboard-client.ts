@@ -77,6 +77,52 @@ export interface BlackboardEnrollment {
   created: string
 }
 
+// Internal Blackboard API response types
+interface BlackboardContent {
+  id: string
+  title: string
+  description?: string
+  contentHandler?: {
+    id: string
+  }
+  availability?: {
+    duration?: {
+      end?: string
+    }
+  }
+}
+
+interface BlackboardContentResponse {
+  results: BlackboardContent[]
+}
+
+interface BlackboardAssignmentDetails {
+  id: string
+  title: string
+  description?: string
+  availability?: {
+    duration?: {
+      end?: string
+    }
+  }
+  grading?: {
+    points?: number
+  }
+}
+
+interface BlackboardGradeItem {
+  userId: string
+  score?: number
+  text?: string
+  notes?: string
+  gradeNotation?: string
+  exempt?: boolean
+}
+
+interface BlackboardGradeResponse {
+  results: BlackboardGradeItem[]
+}
+
 /**
  * Blackboard Learn LMS API client
  */
@@ -219,7 +265,7 @@ export class BlackboardClient {
 
     try {
       // Get course contents first
-      const contents = await this.request<{ results: any[] }>(
+      const contents = await this.request<BlackboardContentResponse>(
         `/courses/${courseId}/contents`
       )
 
@@ -229,7 +275,7 @@ export class BlackboardClient {
         if (content.contentHandler?.id === 'resource/x-bb-assignment') {
           // Get assignment details
           try {
-            const assignment = await this.request<any>(
+            const assignment = await this.request<BlackboardAssignmentDetails>(
               `/courses/${courseId}/contents/${content.id}`
             )
 
@@ -366,7 +412,7 @@ export class BlackboardClient {
     const startTime = Date.now()
 
     try {
-      const response = await this.request<{ results: any[] }>(
+      const response = await this.request<BlackboardGradeResponse>(
         `/courses/${courseId}/gradebook/columns/${contentId}/users?limit=1000`
       )
 
@@ -413,7 +459,7 @@ export class BlackboardClient {
 
     try {
       // Create content item
-      const content = await this.request<any>(`/courses/${courseId}/contents`, {
+      const content = await this.request<BlackboardContent>(`/courses/${courseId}/contents`, {
         method: 'POST',
         body: JSON.stringify({
           title: assignment.title,

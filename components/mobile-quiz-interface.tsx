@@ -48,6 +48,7 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
   const [answers, setAnswers] = useState<Record<string, { selected: number; correct: boolean }>>({})
   const [showExplanation, setShowExplanation] = useState(false)
   const [startTime] = useState(() => Date.now())
+  const [completionTime, setCompletionTime] = useState<number | null>(null)
   const [timeRemaining, setTimeRemaining] = useState(timeLimit)
 
   const currentQuestion = questions[currentIndex]
@@ -97,13 +98,17 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
     const correct = Object.values(answers).filter((a) => a.correct).length
     const total = questions.length
     const score = Math.round((correct / total) * 100)
+    const duration = Date.now() - startTime
+    
+    // Store completion time for display
+    setCompletionTime(duration)
     
     const results: QuizResults = {
       total,
       correct,
       incorrect: total - correct,
       score,
-      duration: Date.now() - startTime,
+      duration,
       answers,
     }
     onComplete?.(results)
@@ -141,7 +146,7 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
             </div>
             
             <div className="text-sm text-muted-foreground">
-              Completed in {formatTime(Math.floor((Date.now() - startTime) / 1000))}
+              Completed in {formatTime(Math.floor((completionTime || 0) / 1000))}
             </div>
           </div>
         </div>
