@@ -99,15 +99,18 @@ export class BlackboardClient {
     }
 
     try {
+      // Encode credentials for Basic Auth
+      const credentials = Buffer.from(`${this.config.applicationId}:${this.config.applicationKey}`).toString('base64')
+      
       const response = await fetch(`${this.config.baseUrl}/learn/api/public/v1/oauth2/token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${credentials}`,
         },
         body: new URLSearchParams({
           grant_type: 'client_credentials',
         }),
-        credentials: 'include',
       })
 
       if (!response.ok) {

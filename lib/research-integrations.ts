@@ -52,7 +52,8 @@ export async function searchGoogleScholar(
     const serpApiKey = process.env.NEXT_PUBLIC_SERPAPI_KEY
     
     // If Serpapi key is available, use it for real searches
-    if (serpApiKey && typeof window !== 'undefined') {
+    // Works in both client and server contexts
+    if (serpApiKey) {
       return await searchGoogleScholarWithSerpapi(query, maxResults, serpApiKey)
     }
     

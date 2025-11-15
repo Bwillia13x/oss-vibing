@@ -36,12 +36,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   // Load user from localStorage on mount
+  // Note: For production, consider using httpOnly cookies to store sensitive auth data
+  // to protect against XSS attacks. localStorage is used here for simplicity but
+  // should not store tokens or other sensitive credentials.
   useEffect(() => {
     const loadUser = () => {
       try {
         const storedUser = localStorage.getItem('vibe-auth-user')
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser)
+          // Only store non-sensitive user info (no tokens)
           setUser(parsedUser)
         }
       } catch (error) {

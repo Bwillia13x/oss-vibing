@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Palette, Upload, Save, Eye, Loader2, X } from 'lucide-react'
+import { Palette, Save, Eye, Loader2, X } from 'lucide-react'
 import {
   fetchBrandingSettings,
   updateBrandingSettings,
@@ -72,6 +72,8 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Client-side validation is first line of defense
+    // Note: Server should also validate file content (magic bytes) for security
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please upload an image file')

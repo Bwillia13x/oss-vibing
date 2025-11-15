@@ -1,9 +1,3 @@
-/**
- * Google OAuth Callback Route
- * 
- * Handles Google OAuth callback and creates user session
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import {
   validateGoogleAuthCode,
@@ -14,6 +8,21 @@ import {
   setAuthCookies,
 } from '@/lib/auth';
 import { getCached, deleteCached, generateCacheKey } from '@/lib/cache';
+
+// Import repositories at module level for better performance
+let userRepositoryModule: typeof import('@/lib/db/repositories') | null = null;
+
+// Lazy load repository on first use
+async function getUserRepository() {
+  if (!userRepositoryModule) {
+    try {
+      userRepositoryModule = await import('@/lib/db/repositories');
+    } catch (error) {
+      console.warn('Database repository not available:', error);
+    }
+  }
+  return userRepositoryModule;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -67,30 +76,34 @@ export async function GET(req: NextRequest) {
     // Create or update user in database
     // Check if database repository is available
     let userId: string;
-    let userRole: 'USER' | 'ADMIN' | 'INSTRUCTOR' = 'USER';
+    let userRole: 'USER' | 'ADMIN' | 'INSTRUCTOR';
     
     try {
-      const { userRepository } = await import('@/lib/db/repositories');
+      const repositories = await getUserRepository();
       
-      // Try to find existing user
-      const existingUser = await userRepository.findByEmail(userInfo.email);
-      
-      if (existingUser) {
-        // Update existing user
-        const updatedUser = await userRepository.update(existingUser.id, {
-          name: userInfo.name || existingUser.name,
-        });
-        userId = updatedUser.id;
-        userRole = updatedUser.role;
+      if (repositories) {
+        // Try to find existing user
+        const existingUser = await repositories.userRepository.findByEmail(userInfo.email);
+        
+        if (existingUser) {
+          // Update existing user
+          const updatedUser = await repositories.userRepository.update(existingUser.id, {
+            name: userInfo.name || existingUser.name,
+          });
+          userId = updatedUser.id;
+          userRole = updatedUser.role;
+        } else {
+          // Create new user
+          const newUser = await repositories.userRepository.create({
+            email: userInfo.email,
+            name: userInfo.name || userInfo.email.split('@')[0],
+            role: 'USER',
+          });
+          userId = newUser.id;
+          userRole = newUser.role;
+        }
       } else {
-        // Create new user
-        const newUser = await userRepository.create({
-          email: userInfo.email,
-          name: userInfo.name || userInfo.email.split('@')[0],
-          role: 'USER',
-        });
-        userId = newUser.id;
-        userRole = newUser.role;
+        throw new Error('Repository not available');
       }
     } catch (error) {
       // If database is not available, use Google ID as fallback

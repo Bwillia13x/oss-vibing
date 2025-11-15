@@ -418,7 +418,10 @@ export class MoodleClient {
   }
 
   /**
-   * Create a new assignment
+   * Create a new assignment in a course
+   * Note: Moodle doesn't provide a standard web service for creating assignments.
+   * This requires custom web service implementation or administrator database access.
+   * @throws Error indicating the operation is not supported
    */
   async createAssignment(
     courseId: number,
@@ -429,9 +432,7 @@ export class MoodleClient {
       cutoffdate?: number
       grade: number
     }
-  ): Promise<MoodleAssignment> {
-    const startTime = Date.now()
-
+  ): Promise<never> {
     try {
       // Note: Moodle doesn't have a direct web service for creating assignments
       // This would typically require a custom web service or database access

@@ -247,6 +247,18 @@ export async function updateBrandingSettings(
  * Upload institution logo
  */
 export async function uploadLogo(institutionId: string, file: File): Promise<string> {
+  // Validate file type and size before uploading
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 'image/webp']
+  const maxSize = 2 * 1024 * 1024 // 2MB
+  
+  if (!allowedTypes.includes(file.type.toLowerCase())) {
+    throw new Error('Invalid file type. Only PNG, JPEG, SVG, and WebP files are allowed.')
+  }
+  
+  if (file.size > maxSize) {
+    throw new Error('File size exceeds the 2MB limit.')
+  }
+
   const formData = new FormData()
   formData.append('logo', file)
   formData.append('institutionId', institutionId)

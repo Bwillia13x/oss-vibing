@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -115,19 +115,21 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setHasChanges(true)
   }
 
+  // Apply theme changes using useEffect instead of direct DOM manipulation
+  useEffect(() => {
+    if (settings.theme !== 'system') {
+      document.documentElement.classList.toggle('dark', settings.theme === 'dark')
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      document.documentElement.classList.toggle('dark', prefersDark)
+    }
+  }, [settings.theme])
+
   const handleSave = () => {
     try {
       localStorage.setItem('vibe-user-settings', JSON.stringify(settings))
       setHasChanges(false)
       toast.success('Settings saved successfully')
-      
-      // Apply theme change if needed
-      if (settings.theme !== 'system') {
-        document.documentElement.classList.toggle('dark', settings.theme === 'dark')
-      } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        document.documentElement.classList.toggle('dark', prefersDark)
-      }
     } catch (error) {
       console.error('Failed to save settings:', error)
       toast.error('Failed to save settings')
