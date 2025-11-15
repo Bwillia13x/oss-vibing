@@ -9,6 +9,8 @@
 
 import { redisCache } from './redis-cache'
 import { crossrefClient, type CrossrefWork } from '../citations/crossref-client'
+import { openAlexClient, type OpenAlexWork } from '../citations/openalex-client'
+import { semanticScholarClient, type SemanticScholarPaper } from '../citations/semantic-scholar-client'
 
 /**
  * Cache TTL constants (in seconds)
@@ -18,7 +20,9 @@ const CACHE_TTL = {
   CROSSREF_SEARCH: 1 * 3600, // 1 hour - search results update frequently
   GROBID_RESULT: -1, // Permanent - PDF processing is deterministic
   OPENALEX_SEARCH: 1 * 3600, // 1 hour
+  OPENALEX_WORK: 7 * 24 * 3600, // 7 days
   SEMANTIC_SCHOLAR: 2 * 3600, // 2 hours
+  SEMANTIC_SCHOLAR_PAPER: 7 * 24 * 3600, // 7 days
 } as const
 
 /**
@@ -117,6 +121,131 @@ export async function cachedCrossrefAuthorSearch(
  */
 export async function clearCrossrefCache(): Promise<void> {
   await redisCache.clear('crossref:*')
+}
+
+/**
+ * Cached OpenAlex work lookup
+ * 
+ * @param workId - OpenAlex work ID or DOI
+ * @returns Work metadata or null if not found
+ */
+export async function cachedOpenAlexLookup(
+  workId: string
+): Promise<OpenAlexWork | null> {
+  const cacheKey = `openalex:work:${workId}`
+
+  const cached = await redisCache.get<OpenAlexWork>(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  const result = await openAlexClient.getWork(workId)
+
+  if (result) {
+    await redisCache.set(cacheKey, result, CACHE_TTL.OPENALEX_WORK)
+  }
+
+  return result
+}
+
+/**
+ * Cached OpenAlex search
+ * 
+ * @param query - Search query
+ * @param options - Search options
+ * @returns Array of work metadata
+ */
+export async function cachedOpenAlexSearch(
+  query: string,
+  options: {
+    limit?: number
+    yearRange?: { start: number; end: number }
+    openAccessOnly?: boolean
+  } = {}
+): Promise<OpenAlexWork[]> {
+  const cacheKey = `openalex:search:${query}:${JSON.stringify(options)}`
+
+  const cached = await redisCache.get<OpenAlexWork[]>(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  const result = await openAlexClient.searchWorks(query, options)
+
+  if (result && result.length > 0) {
+    await redisCache.set(cacheKey, result, CACHE_TTL.OPENALEX_SEARCH)
+  }
+
+  return result
+}
+
+/**
+ * Cached Semantic Scholar paper lookup
+ * 
+ * @param paperId - Paper ID or DOI
+ * @returns Paper metadata or null if not found
+ */
+export async function cachedSemanticScholarLookup(
+  paperId: string
+): Promise<SemanticScholarPaper | null> {
+  const cacheKey = `semanticscholar:paper:${paperId}`
+
+  const cached = await redisCache.get<SemanticScholarPaper>(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  const result = await semanticScholarClient.getPaper(paperId)
+
+  if (result) {
+    await redisCache.set(cacheKey, result, CACHE_TTL.SEMANTIC_SCHOLAR_PAPER)
+  }
+
+  return result
+}
+
+/**
+ * Cached Semantic Scholar search
+ * 
+ * @param query - Search query
+ * @param options - Search options
+ * @returns Array of papers
+ */
+export async function cachedSemanticScholarSearch(
+  query: string,
+  options: {
+    limit?: number
+    yearRange?: { start: number; end: number }
+  } = {}
+): Promise<SemanticScholarPaper[]> {
+  const cacheKey = `semanticscholar:search:${query}:${JSON.stringify(options)}`
+
+  const cached = await redisCache.get<SemanticScholarPaper[]>(cacheKey)
+  if (cached) {
+    return cached
+  }
+
+  const result = await semanticScholarClient.searchPapers(query, options)
+
+  if (result && result.length > 0) {
+    await redisCache.set(cacheKey, result, CACHE_TTL.SEMANTIC_SCHOLAR)
+  }
+
+  return result
+}
+
+/**
+ * Clear all OpenAlex cached data
+ */
+export async function clearOpenAlexCache(): Promise<void> {
+  await redisCache.clear('openalex:*')
+}
+
+/**
+ * Clear all Semantic Scholar cached data
+ */
+export async function clearSemanticScholarCache(): Promise<void> {
+  await redisCache.clear('semanticscholar:*')
 }
 
 /**
