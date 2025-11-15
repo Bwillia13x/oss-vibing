@@ -23,3 +23,7 @@ export {
   hashData,
   validateEncryption,
 } from './encryption';
+
+export {
+  runRetentionCleanup,
+} from './retention-cleanup';

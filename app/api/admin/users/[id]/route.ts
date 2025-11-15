@@ -12,7 +12,7 @@ import { requireRole, requireInstitutionAccess } from '@/lib/auth'
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now()
 
@@ -27,6 +27,7 @@ export async function PUT(
       )
     }
 
+    const params = await context.params
     const userId = params.id
     const updateData = await req.json()
 
@@ -101,7 +102,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now()
 
@@ -116,6 +117,7 @@ export async function DELETE(
       )
     }
 
+    const params = await context.params
     const userId = params.id
 
     // Get user to verify it exists

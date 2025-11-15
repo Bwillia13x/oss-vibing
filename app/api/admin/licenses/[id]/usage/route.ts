@@ -11,7 +11,7 @@ import { licenseRepository } from '@/lib/db/repositories'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now()
 
@@ -26,6 +26,7 @@ export async function GET(
       )
     }
 
+    const params = await context.params
     const licenseId = params.id
 
     // Authentication check - admins only

@@ -4,7 +4,7 @@ import { BarLoader } from 'react-spinners'
 import { CompassIcon, RefreshCwIcon } from 'lucide-react'
 import { Panel, PanelHeader } from '@/components/panels/panels'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -14,20 +14,15 @@ interface Props {
 }
 
 export function Preview({ className, disabled, url }: Props) {
-  const prevUrlRef = useRef(url)
-  const [currentUrl, setCurrentUrl] = useState(url)
+  // Use the prop directly as the source of truth for currentUrl
   const [error, setError] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState(url || '')
   const [isLoading, setIsLoading] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const loadStartTime = useRef<number | null>(null)
-
-  // Sync prop changes without useEffect (React 19 pattern)
-  if (url !== prevUrlRef.current) {
-    prevUrlRef.current = url
-    setCurrentUrl(url)
-    setInputValue(url || '')
-  }
+  
+  // Use url prop directly
+  const currentUrl = url
 
   const refreshIframe = () => {
     if (iframeRef.current && currentUrl) {

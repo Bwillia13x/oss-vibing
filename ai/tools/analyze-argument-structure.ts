@@ -157,14 +157,11 @@ function analyzeThesis(text: string, sections: Array<{ title: string; content: s
   const isDebatable = !(/\b(?:is|are|was|were)\b/.test(thesisStatement) && thesisStatement.split(' ').length < 15)
   
   return {
-    found: thesisFound,
+    present: thesisFound,
     statement: thesisStatement.slice(0, 500),
-    clarity: thesisClarity,
-    characteristics: {
-      specific: hasSpecificity,
-      argumentative: isArgumentative,
-      debatable: isDebatable,
-    },
+    clarity: thesisClarity as 'clear' | 'unclear' | 'absent',
+    strength: (isArgumentative && isDebatable ? 'strong' : hasSpecificity ? 'moderate' : 'weak') as 'strong' | 'moderate' | 'weak',
+    specificity: (hasSpecificity ? 'specific' : 'general') as 'specific' | 'general' | 'vague',
     recommendations: generateThesisRecommendations(thesisFound, thesisStatement, discipline),
   }
 }
@@ -179,7 +176,7 @@ function analyzeClaims(text: string, _sections: Array<{ title: string; content: 
     /\b(?:evidence shows|research indicates|studies demonstrate)\b/i,
   ]
   
-  const claims: Array<{ text: string; type: string; strength: string }> = []
+  const claims: Array<{ text: string; type: string; support: string; strength: string }> = []
   
   for (const paragraph of paragraphs) {
     const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 20)
@@ -191,6 +188,7 @@ function analyzeClaims(text: string, _sections: Array<{ title: string; content: 
           claims.push({
             text: sentence.trim().slice(0, 200),
             type: hasEvidence ? 'evidenced' : 'assertion',
+            support: hasEvidence ? 'supported' : 'unsupported',
             strength: hasEvidence ? 'strong' : 'moderate',
           })
           break
@@ -200,13 +198,8 @@ function analyzeClaims(text: string, _sections: Array<{ title: string; content: 
   }
   
   return {
-    totalClaims: claims.length,
+    count: claims.length,
     claims: claims.slice(0, 10), // Top 10 claims
-    distribution: {
-      evidenced: claims.filter(c => c.type === 'evidenced').length,
-      assertions: claims.filter(c => c.type === 'assertion').length,
-    },
-    recommendations: generateClaimsRecommendations(claims),
   }
 }
 
@@ -225,15 +218,23 @@ function analyzeEvidence(text: string, discipline: string) {
                                    (discipline === 'Humanities' && theoreticalEvidence > 0) ||
                                    (discipline === 'Social Sciences' && empiricalEvidence > 0)
   
+  // Determine quality based on evidence density and appropriateness
+  let quality: 'strong' | 'moderate' | 'weak'
+  if (evidenceDensity > 10 && appropriateForDiscipline && citationCount > 5) {
+    quality = 'strong'
+  } else if (evidenceDensity > 5 || citationCount > 2) {
+    quality = 'moderate'
+  } else {
+    quality = 'weak'
+  }
+  
   return {
     types: {
       empirical: empiricalEvidence,
       theoretical: theoreticalEvidence,
       statistical: statisticalEvidence,
     },
-    citations: citationCount,
-    density: Math.round(evidenceDensity * 10) / 10,
-    quality: appropriateForDiscipline ? 'appropriate' : 'review',
+    quality,
     recommendations: generateEvidenceRecommendations(
       { empirical: empiricalEvidence, theoretical: theoreticalEvidence, statistical: statisticalEvidence },
       citationCount,
@@ -456,66 +457,77 @@ function formatAnalysisMessage(analysis: ArgumentStructureAnalysis, documentPath
 }
 
 // Recommendation generators
-function generateThesisRecommendations(found: boolean, statement: string, discipline: string): string {
+function generateThesisRecommendations(found: boolean, statement: string, discipline: string): string[] {
   if (!found) {
-    return `- Add a clear thesis statement in the introduction that states your main argument\n- Make it specific and debatable\n- For ${discipline}, ensure it aligns with field conventions`
+    return [
+      'Add a clear thesis statement in the introduction that states your main argument',
+      'Make it specific and debatable',
+      `For ${discipline}, ensure it aligns with field conventions`
+    ]
   }
   
   const recs: string[] = []
   
   if (statement.length < 50) {
-    recs.push('- Expand thesis to be more specific and detailed')
+    recs.push('Expand thesis to be more specific and detailed')
   }
   if (statement.length > 300) {
-    recs.push('- Condense thesis to be more concise and focused')
+    recs.push('Condense thesis to be more concise and focused')
   }
   if (!/\b(?:argue|demonstrate|show)\b/i.test(statement)) {
-    recs.push('- Make thesis more argumentative (use "argues," "demonstrates," etc.)')
+    recs.push('Make thesis more argumentative (use "argues," "demonstrates," etc.)')
   }
   
-  return recs.length > 0 ? recs.join('\n') : '- Thesis is strong; maintain clarity throughout paper'
+  return recs.length > 0 ? recs : ['Thesis is strong; maintain clarity throughout paper']
 }
 
-function generateClaimsRecommendations(claims: Array<{ type: string; strength: string }>): string {
+function generateClaimsRecommendations(claims: Array<{ type: string; strength: string }>): string[] {
   const evidencedRatio = claims.length > 0 
     ? claims.filter(c => c.type === 'evidenced').length / claims.length 
     : 0
   
   if (claims.length < 3) {
-    return '- Add more supporting claims to strengthen your argument\n- Each major section should have at least one clear claim'
+    return [
+      'Add more supporting claims to strengthen your argument',
+      'Each major section should have at least one clear claim'
+    ]
   }
   
   if (evidencedRatio < 0.6) {
-    return '- Support more claims with evidence from sources\n- Use empirical data, expert testimony, or scholarly research\n- Add citations to strengthen assertions'
+    return [
+      'Support more claims with evidence from sources',
+      'Use empirical data, expert testimony, or scholarly research',
+      'Add citations to strengthen assertions'
+    ]
   }
   
-  return '- Claims are well-supported; continue this pattern throughout'
+  return ['Claims are well-supported; continue this pattern throughout']
 }
 
 function generateEvidenceRecommendations(
   types: { empirical: number; theoretical: number; statistical: number },
   citations: number,
   discipline: string
-): string {
+): string[] {
   const recs: string[] = []
   
   if (citations < 5) {
-    recs.push('- Add more citations to support your claims (aim for at least 1-2 per paragraph)')
+    recs.push('Add more citations to support your claims (aim for at least 1-2 per paragraph)')
   }
   
   if (discipline === 'STEM' && types.statistical < types.empirical * 0.3) {
-    recs.push('- Include more statistical evidence (STEM papers benefit from quantitative data)')
+    recs.push('Include more statistical evidence (STEM papers benefit from quantitative data)')
   }
   
   if (discipline === 'Humanities' && types.theoretical === 0) {
-    recs.push('- Incorporate more theoretical frameworks to contextualize your analysis')
+    recs.push('Incorporate more theoretical frameworks to contextualize your analysis')
   }
   
   if (discipline === 'Social Sciences' && types.empirical === 0) {
-    recs.push('- Add empirical evidence from studies or surveys')
+    recs.push('Add empirical evidence from studies or surveys')
   }
   
-  return recs.length > 0 ? recs.join('\n') : '- Evidence is appropriate for your discipline'
+  return recs.length > 0 ? recs : ['Evidence is appropriate for your discipline']
 }
 
 function generateLogicalFlowRecommendations(density: number): string {
