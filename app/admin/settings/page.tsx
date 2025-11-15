@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -182,10 +183,11 @@ export default function SettingsPage() {
               {settings.logoUrl ? (
                 <div className="flex items-center gap-4">
                   <div className="relative h-24 w-24 rounded-lg border overflow-hidden">
-                    <img
+                    <Image
                       src={settings.logoUrl}
                       alt="Institution logo"
-                      className="h-full w-full object-contain"
+                      fill
+                      className="object-contain"
                     />
                   </div>
                   <div className="space-y-2">
@@ -326,11 +328,12 @@ export default function SettingsPage() {
             <CardContent>
               <div className="rounded-lg border p-8 space-y-4">
                 {settings.logoUrl && (
-                  <div className="flex justify-center">
-                    <img
+                  <div className="flex justify-center relative h-16">
+                    <Image
                       src={settings.logoUrl}
                       alt="Logo preview"
-                      className="h-16 object-contain"
+                      fill
+                      className="object-contain"
                     />
                   </div>
                 )}
