@@ -10,7 +10,7 @@ import {
   PluginRegistryEntry,
   PluginStatus,
   PluginPermission,
-  PluginMetadata,
+  // PluginMetadata,
   PluginAPI,
   PluginStorage,
   PluginLogger,
@@ -289,29 +289,29 @@ class PluginRegistry {
         this.importFormats.set(formatId, { ...format, pluginId })
       },
       citations: {
-        format: (citation, style) => {
+        format: (citation, _style) => {
           // Implementation would integrate with existing citation system
           return JSON.stringify(citation)
         },
         validate: (citation) => {
           return !!citation
         },
-        search: async (query) => {
+        search: async (_query) => {
           // Implementation would integrate with existing research system
           return []
         },
       },
       files: {
-        read: async (path) => {
+        read: async (_path) => {
           this.checkPermission(config, PluginPermission.READ_FILES)
           // Implementation would integrate with file system
           return ''
         },
-        write: async (path, content) => {
+        write: async (_path, _content) => {
           this.checkPermission(config, PluginPermission.WRITE_FILES)
           // Implementation would integrate with file system
         },
-        list: async (directory) => {
+        list: async (_directory) => {
           this.checkPermission(config, PluginPermission.READ_FILES)
           // Implementation would integrate with file system
           return []

@@ -15,7 +15,7 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 
 // Mock data storage (in production, this would be a database)
-const ANALYTICS_DIR = join(process.cwd(), 'analytics')
+// const ANALYTICS_DIR = join(process.cwd(), 'analytics')
 const PROGRESS_DIR = join(process.cwd(), 'progress')
 const PLAGIARISM_DIR = join(process.cwd(), 'plagiarism')
 

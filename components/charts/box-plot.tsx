@@ -82,8 +82,9 @@ export function BoxPlot({
     renderBoxPlot(ctx, boxPlotData, labels || ['Dataset'], height)
 
     return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy()
+      const chart = chartRef.current
+      if (chart) {
+        chart.destroy()
       }
     }
   }, [boxPlotData, labels, height])

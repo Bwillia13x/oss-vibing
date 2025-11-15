@@ -5,7 +5,7 @@
  * Provides a touch-friendly quiz experience with mobile-first design
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -55,46 +55,7 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
   const progress = ((currentIndex + 1) / questions.length) * 100
   const isAnswered = currentQuestion && answers[currentQuestion.id] !== undefined
 
-  // Timer countdown
-  useEffect(() => {
-    if (!timeLimit || !timeRemaining) return
-
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev && prev <= 1) {
-          handleComplete()
-          return 0
-        }
-        return prev ? prev - 1 : 0
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [timeLimit, timeRemaining])
-
-  const handleAnswerSelect = (optionIndex: number) => {
-    if (isAnswered) return // Prevent changing answer
-    
-    setSelectedAnswer(optionIndex)
-    const isCorrect = optionIndex === currentQuestion.correctAnswer
-    setAnswers({
-      ...answers,
-      [currentQuestion.id]: { selected: optionIndex, correct: isCorrect },
-    })
-    setShowExplanation(true)
-  }
-
-  const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-      setSelectedAnswer(null)
-      setShowExplanation(false)
-    } else {
-      handleComplete()
-    }
-  }
-
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     const correct = Object.values(answers).filter((a) => a.correct).length
     const total = questions.length
     const score = Math.round((correct / total) * 100)
@@ -112,7 +73,46 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
       answers,
     }
     onComplete?.(results)
+  }, [answers, questions.length, startTime, onComplete])
+
+  // Timer countdown
+  useEffect(() => {
+    if (!timeLimit || !timeRemaining) return
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev && prev <= 1) {
+          handleComplete()
+          return 0
+        }
+        return prev ? prev - 1 : 0
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [timeLimit, timeRemaining, handleComplete])
+      ...answers,
+      [currentQuestion.id]: { selected: optionIndex, correct: isCorrect },
+    })
+    setShowExplanation(true)
   }
+
+  const handleNext = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1)
+      setSelectedAnswer(null)
+      setShowExplanation(false)
+    } else {
+      handleComplete()
+    }
+  }
+
+  const handleAnswerSelect = (optionIndex: number) => {
+    if (isAnswered) return // Prevent changing answer
+    
+    setSelectedAnswer(optionIndex)
+    const isCorrect = optionIndex === currentQuestion.correctAnswer
+    setAnswers({
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)

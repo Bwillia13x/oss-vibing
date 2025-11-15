@@ -195,7 +195,7 @@ class SimpleCache<T = any> {
     let totalHits = 0
     let validEntries = 0
 
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [_key, entry] of this.cache.entries()) {
       if (Date.now() - entry.timestamp <= this.ttl) {
         validEntries++
         totalHits += entry.hits

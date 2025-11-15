@@ -35,7 +35,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           console.error('Error sending message:', error)
         },
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   )
 

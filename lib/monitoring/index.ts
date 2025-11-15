@@ -411,10 +411,10 @@ export function startSpan(name: string, op: string) {
         level: 'info',
       });
     },
-    setTag: (key: string, value: string) => {
+    setTag: (_key: string, _value: string) => {
       // Tags are not supported on breadcrumbs
     },
-    setData: (key: string, value: any) => {
+    setData: (_key: string, _value: any) => {
       // Data is not supported on breadcrumbs
     },
   };
