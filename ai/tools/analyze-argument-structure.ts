@@ -250,6 +250,8 @@ function analyzeLogicalFlow(sections: Array<{ title: string; content: string }>,
   ]
   
   let transitionCount = 0
+  const transitions: Array<{ from: string; to: string; quality: string }> = []
+  
   for (const word of transitionWords) {
     const regex = new RegExp(`\\b${word}\\b`, 'gi')
     const matches = text.match(regex)
@@ -259,10 +261,37 @@ function analyzeLogicalFlow(sections: Array<{ title: string; content: string }>,
   const totalSentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10).length
   const transitionDensity = totalSentences > 0 ? (transitionCount / totalSentences) * 100 : 0
   
+  // Determine coherence based on transition density and section flow
+  let coherence: 'high' | 'moderate' | 'low'
+  if (transitionDensity > 5 && sections.length > 0) {
+    coherence = 'high'
+  } else if (transitionDensity > 2) {
+    coherence = 'moderate'
+  } else {
+    coherence = 'low'
+  }
+  
+  // Analyze transitions between sections
+  for (let i = 0; i < sections.length - 1; i++) {
+    const fromSection = sections[i].title || `Section ${i + 1}`
+    const toSection = sections[i + 1].title || `Section ${i + 2}`
+    const sectionContent = sections[i].content
+    
+    // Check if there are transitions at the end of current section
+    const hasTransition = transitionWords.some(word => 
+      new RegExp(`\\b${word}\\b`, 'i').test(sectionContent.slice(-200))
+    )
+    
+    transitions.push({
+      from: fromSection,
+      to: toSection,
+      quality: hasTransition ? 'smooth' : 'abrupt'
+    })
+  }
+  
   return {
-    transitionsUsed: transitionCount,
-    transitionDensity: Math.round(transitionDensity * 10) / 10,
-    quality: transitionDensity > 5 ? 'good' : transitionDensity > 2 ? 'fair' : 'needs improvement',
+    coherence,
+    transitions,
     recommendations: generateLogicalFlowRecommendations(transitionDensity),
   }
 }
@@ -276,6 +305,7 @@ function analyzeCounterarguments(text: string) {
   
   let counterargCount = 0
   let rebuttalCount = 0
+  const counterarguments: Array<{ text: string; response?: string }> = []
   
   const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0)
   
@@ -284,19 +314,29 @@ function analyzeCounterarguments(text: string) {
       const matches = paragraph.match(indicator)
       if (matches) {
         counterargCount += matches.length
+        
+        // Extract counterargument text
+        const counterargText = paragraph.slice(0, 200).trim()
+        
         // Check for rebuttals nearby
+        let rebuttalText: string | undefined
         if (/\b(?:nevertheless|nonetheless|yet|but|still|refute|counter)\b/i.test(paragraph)) {
           rebuttalCount++
+          rebuttalText = paragraph.slice(200, 400).trim() || undefined
         }
+        
+        counterarguments.push({
+          text: counterargText,
+          response: rebuttalText
+        })
       }
     }
   }
   
   return {
-    counterargumentsFound: counterargCount,
-    rebuttalsFound: rebuttalCount,
-    quality: counterargCount > 0 ? 'present' : 'absent',
-    balance: counterargCount > 0 && rebuttalCount >= counterargCount * 0.7 ? 'balanced' : 'unbalanced',
+    present: counterargCount > 0,
+    count: counterargCount,
+    counterarguments: counterarguments.slice(0, 5), // Top 5
     recommendations: generateCounterargsRecommendations(counterargCount, rebuttalCount),
   }
 }
@@ -309,37 +349,40 @@ function calculateArgumentStrength(analysis: ArgumentStructureAnalysis): number 
     if (analysis.thesis.present) score += 15
     if (analysis.thesis.clarity === 'clear') score += 5
     if (analysis.thesis.specificity === 'specific') score += 5
-    if (analysis.thesis.characteristics.argumentative) score += 3
-    if (analysis.thesis.characteristics.debatable) score += 2
+    // Note: characteristics field was removed in type updates
+    score += 5 // Base points for having a thesis
   }
   
   // Claims strength (25 points)
   if (analysis.claims) {
-    const claimScore = Math.min(analysis.claims.totalClaims * 2, 15)
+    const claimScore = Math.min(analysis.claims.count * 2, 15)
     score += claimScore
-    const evidencedRatio = analysis.claims.totalClaims > 0 
-      ? analysis.claims.distribution.evidenced / analysis.claims.totalClaims 
+    const evidencedRatio = analysis.claims.count > 0 
+      ? analysis.claims.claims.filter(c => c.type === 'evidenced').length / analysis.claims.count
       : 0
     score += evidencedRatio * 10
   }
   
   // Evidence strength (25 points)
   if (analysis.evidence) {
-    if (analysis.evidence.quality === 'appropriate') score += 10
-    score += Math.min(analysis.evidence.citations * 0.5, 10)
-    score += Math.min(analysis.evidence.density, 5)
+    if (analysis.evidence.quality === 'strong') score += 15
+    else if (analysis.evidence.quality === 'moderate') score += 10
+    else score += 5
+    // Use types count as proxy for evidence amount
+    const evidenceCount = Object.values(analysis.evidence.types).reduce((a, b) => a + b, 0)
+    score += Math.min(evidenceCount * 0.1, 10)
   }
   
   // Logical flow (10 points)
   if (analysis.logicalFlow) {
-    if (analysis.logicalFlow.quality === 'good') score += 10
-    else if (analysis.logicalFlow.quality === 'fair') score += 5
+    if (analysis.logicalFlow.coherence === 'high') score += 10
+    else if (analysis.logicalFlow.coherence === 'moderate') score += 5
   }
   
   // Counterarguments (10 points)
   if (analysis.counterarguments) {
-    if (analysis.counterarguments.quality === 'present') score += 5
-    if (analysis.counterarguments.balance === 'balanced') score += 5
+    if (analysis.counterarguments.present) score += 5
+    if (analysis.counterarguments.count >= 2) score += 5
   }
   
   return Math.min(Math.round(score), 100)
@@ -364,25 +407,31 @@ function generateStrengthSummary(analysis: ArgumentStructureAnalysis, score: num
     weaknesses.push('thesis needs clarification')
   }
   
-  if (analysis.claims?.distribution.evidenced > analysis.claims?.distribution.assertions) {
-    strengths.push('well-supported claims')
-  } else if (analysis.claims?.totalClaims > 0) {
-    weaknesses.push('claims need more evidence')
+  if (analysis.claims) {
+    const evidencedCount = analysis.claims.claims.filter(c => c.type === 'evidenced').length
+    const totalCount = analysis.claims.count
+    if (evidencedCount > totalCount * 0.6) {
+      strengths.push('well-supported claims')
+    } else if (totalCount > 0) {
+      weaknesses.push('claims need more evidence')
+    }
   }
   
-  if (analysis.evidence?.quality === 'appropriate') {
-    strengths.push('appropriate evidence for discipline')
+  if (analysis.evidence?.quality === 'strong') {
+    strengths.push('strong evidence for discipline')
+  } else if (analysis.evidence?.quality === 'moderate') {
+    strengths.push('adequate evidence')
   } else {
     weaknesses.push('evidence quality needs improvement')
   }
   
-  if (analysis.logicalFlow?.quality === 'good') {
+  if (analysis.logicalFlow?.coherence === 'high') {
     strengths.push('strong logical flow')
   } else {
     weaknesses.push('improve transitions between ideas')
   }
   
-  if (analysis.counterarguments?.quality === 'present') {
+  if (analysis.counterarguments?.present) {
     strengths.push('addresses counterarguments')
   } else {
     weaknesses.push('add counterarguments and rebuttals')
@@ -404,26 +453,33 @@ function generateStrengthSummary(analysis: ArgumentStructureAnalysis, score: num
 function formatAnalysisMessage(analysis: ArgumentStructureAnalysis, documentPath: string): string {
   let message = `# Argument Structure Analysis: ${path.basename(documentPath)}\n\n`
   
-  message += `${analysis.overallStrength.summary}\n\n`
+  // Add overall score if available
+  if (analysis.overallScore) {
+    message += `Overall Score: ${analysis.overallScore.value}/100\n\n`
+  }
   
   if (analysis.thesis) {
     message += `## Thesis Analysis\n`
-    message += `Status: ${analysis.thesis.found ? '✓ Found' : '✗ Not found'}\n`
-    if (analysis.thesis.found) {
+    message += `Status: ${analysis.thesis.present ? '✓ Found' : '✗ Not found'}\n`
+    if (analysis.thesis.present) {
       message += `Clarity: ${analysis.thesis.clarity}\n`
-      message += `Specific: ${analysis.thesis.characteristics.specific ? 'Yes' : 'No'}\n`
-      message += `Argumentative: ${analysis.thesis.characteristics.argumentative ? 'Yes' : 'No'}\n`
-      message += `Debatable: ${analysis.thesis.characteristics.debatable ? 'Yes' : 'No'}\n`
+      message += `Strength: ${analysis.thesis.strength}\n`
+      message += `Specificity: ${analysis.thesis.specificity}\n`
+      if (analysis.thesis.statement) {
+        message += `Statement: "${analysis.thesis.statement.slice(0, 200)}..."\n`
+      }
     }
-    message += `\nRecommendations:\n${analysis.thesis.recommendations}\n\n`
+    if (analysis.thesis.recommendations) {
+      message += `\nRecommendations:\n${analysis.thesis.recommendations.map(r => `- ${r}`).join('\n')}\n\n`
+    }
   }
   
   if (analysis.claims) {
     message += `## Claims Analysis\n`
-    message += `Total Claims: ${analysis.claims.totalClaims}\n`
-    message += `Evidenced Claims: ${analysis.claims.distribution.evidenced}\n`
-    message += `Unsupported Assertions: ${analysis.claims.distribution.assertions}\n`
-    message += `\nRecommendations:\n${analysis.claims.recommendations}\n\n`
+    message += `Total Claims: ${analysis.claims.count}\n`
+    const evidencedCount = analysis.claims.claims.filter(c => c.type === 'evidenced').length
+    message += `Evidenced Claims: ${evidencedCount}\n`
+    message += `Unsupported Assertions: ${analysis.claims.count - evidencedCount}\n\n`
   }
   
   if (analysis.evidence) {
@@ -431,26 +487,28 @@ function formatAnalysisMessage(analysis: ArgumentStructureAnalysis, documentPath
     message += `Empirical: ${analysis.evidence.types.empirical}\n`
     message += `Theoretical: ${analysis.evidence.types.theoretical}\n`
     message += `Statistical: ${analysis.evidence.types.statistical}\n`
-    message += `Citations: ${analysis.evidence.citations}\n`
-    message += `Evidence Density: ${analysis.evidence.density} per 1000 words\n`
     message += `Quality: ${analysis.evidence.quality}\n`
-    message += `\nRecommendations:\n${analysis.evidence.recommendations}\n\n`
+    if (analysis.evidence.recommendations) {
+      message += `\nRecommendations:\n${analysis.evidence.recommendations.map(r => `- ${r}`).join('\n')}\n\n`
+    }
   }
   
   if (analysis.logicalFlow) {
     message += `## Logical Flow\n`
-    message += `Transitions Used: ${analysis.logicalFlow.transitionsUsed}\n`
-    message += `Transition Density: ${analysis.logicalFlow.transitionDensity}%\n`
-    message += `Quality: ${analysis.logicalFlow.quality}\n`
-    message += `\nRecommendations:\n${analysis.logicalFlow.recommendations}\n\n`
+    message += `Coherence: ${analysis.logicalFlow.coherence}\n`
+    message += `Transitions: ${analysis.logicalFlow.transitions.length}\n`
+    if (analysis.logicalFlow.recommendations) {
+      message += `\nRecommendations:\n${analysis.logicalFlow.recommendations.map(r => `- ${r}`).join('\n')}\n\n`
+    }
   }
   
   if (analysis.counterarguments) {
     message += `## Counterarguments\n`
-    message += `Counterarguments: ${analysis.counterarguments.counterargumentsFound}\n`
-    message += `Rebuttals: ${analysis.counterarguments.rebuttalsFound}\n`
-    message += `Balance: ${analysis.counterarguments.balance}\n`
-    message += `\nRecommendations:\n${analysis.counterarguments.recommendations}\n\n`
+    message += `Present: ${analysis.counterarguments.present ? 'Yes' : 'No'}\n`
+    message += `Count: ${analysis.counterarguments.count}\n`
+    if (analysis.counterarguments.recommendations) {
+      message += `\nRecommendations:\n${analysis.counterarguments.recommendations.map(r => `- ${r}`).join('\n')}\n\n`
+    }
   }
   
   return message
@@ -530,26 +588,41 @@ function generateEvidenceRecommendations(
   return recs.length > 0 ? recs : ['Evidence is appropriate for your discipline']
 }
 
-function generateLogicalFlowRecommendations(density: number): string {
+function generateLogicalFlowRecommendations(density: number): string[] {
   if (density < 2) {
-    return '- Add more transition words to improve flow between ideas\n- Use "however," "therefore," "moreover," etc.\n- Connect paragraphs with bridging sentences'
+    return [
+      'Add more transition words to improve flow between ideas',
+      'Use "however," "therefore," "moreover," etc.',
+      'Connect paragraphs with bridging sentences'
+    ]
   }
   
   if (density > 10) {
-    return '- Reduce overuse of transition words; let logic speak for itself\n- Ensure transitions are meaningful, not formulaic'
+    return [
+      'Reduce overuse of transition words; let logic speak for itself',
+      'Ensure transitions are meaningful, not formulaic'
+    ]
   }
   
-  return '- Logical flow is good; maintain consistency'
+  return ['Logical flow is good; maintain consistency']
 }
 
-function generateCounterargsRecommendations(counterargCount: number, rebuttalCount: number): string {
+function generateCounterargsRecommendations(counterargCount: number, rebuttalCount: number): string[] {
   if (counterargCount === 0) {
-    return '- Address potential counterarguments to strengthen your position\n- Consider opposing views and explain why your argument is stronger\n- This demonstrates critical thinking and fairness'
+    return [
+      'Address potential counterarguments to strengthen your position',
+      'Consider opposing views and explain why your argument is stronger',
+      'This demonstrates critical thinking and fairness'
+    ]
   }
   
   if (rebuttalCount < counterargCount * 0.5) {
-    return '- Add rebuttals to the counterarguments you\'ve raised\n- Don\'t just mention opposing views—explain why they\'re insufficient\n- Use phrases like "however," "nevertheless," "this objection fails because..."'
+    return [
+      'Add rebuttals to the counterarguments you\'ve raised',
+      'Don\'t just mention opposing views—explain why they\'re insufficient',
+      'Use phrases like "however," "nevertheless," "this objection fails because..."'
+    ]
   }
   
-  return '- Counterarguments and rebuttals are well-balanced'
+  return ['Counterarguments and rebuttals are well-balanced']
 }

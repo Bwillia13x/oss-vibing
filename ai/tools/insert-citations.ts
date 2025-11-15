@@ -141,7 +141,7 @@ export const insertCitations = ({ writer }: Params) =>
         
         // Look for citations in references folder
         const referencesDir = path.join(process.cwd(), 'references')
-        const allCitations: Citation[] = [...docContent.citations]
+        const allCitations: Citation[] = Array.isArray(docContent.citations) ? [...docContent.citations as Citation[]] : []
         
         // Try to load reference files
         try {
@@ -170,9 +170,12 @@ export const insertCitations = ({ writer }: Params) =>
             foundCitations.push(citation)
             
             // Add to document citations if not already there
-            const existsInDoc = docContent.citations.some((c: Citation) => c.id === citation.id)
+            if (!Array.isArray(docContent.citations)) {
+              docContent.citations = []
+            }
+            const existsInDoc = (docContent.citations as Citation[]).some((c: Citation) => c.id === citation.id)
             if (!existsInDoc) {
-              docContent.citations.push(citation)
+              (docContent.citations as Citation[]).push(citation)
             }
           } else {
             missingKeys.push(key)
@@ -187,11 +190,15 @@ export const insertCitations = ({ writer }: Params) =>
         }))
         
         // Add citation markers to document
-        if (!docContent.citationMarkers) {
+        if (!Array.isArray(docContent.citationMarkers)) {
           docContent.citationMarkers = []
         }
         
-        docContent.citationMarkers.push({
+        (docContent.citationMarkers as Array<{
+          location: string;
+          citations: unknown[];
+          insertedAt: string;
+        }>).push({
           location: location || 'end of document',
           citations: inTextCitations,
           insertedAt: timestamp,

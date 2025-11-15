@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
 
         <TabsContent value="usage" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <UsageChart data={analytics.usageOverTime} />
+            <UsageChart />
             <Card>
               <CardHeader>
                 <CardTitle>Top Features</CardTitle>

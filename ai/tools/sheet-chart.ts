@@ -158,8 +158,8 @@ export const sheetChart = ({ writer }: Params) =>
         
         // Prepare chart for response
         const charts = [{
-          type: kind,
-          title: chartConfig.title,
+          type: kind as string,
+          title: chartConfig.title || 'Untitled Chart',
         }]
 
         writer.write({

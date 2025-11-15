@@ -17,7 +17,7 @@ export const outlineDoc = ({ writer }: Params) =>
       length: z.number().optional().describe('Target length in pages'),
       style: z.enum(['APA', 'MLA', 'Chicago']).optional().describe('Citation style'),
     }),
-    execute: async ({ topic, level, _length, _style }, { toolCallId }) => {
+    execute: async ({ topic, level, length: _length, style: _style }, { toolCallId }) => {
       writer.write({
         id: toolCallId,
         type: 'data-uni-outline',
