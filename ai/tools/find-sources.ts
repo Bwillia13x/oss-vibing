@@ -5,6 +5,7 @@ import description from './find-sources.md'
 import z from 'zod/v3'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { cachedCrossrefSearch } from '@/lib/cache/api-cache'
 
 // Configuration constants
 const DEFAULT_SEARCH_LIMIT = 10 // Default number of results per API provider
@@ -105,32 +106,21 @@ interface UnifiedCitation {
   source: 'Crossref' | 'OpenAlex' | 'SemanticScholar'
 }
 
-// Search Crossref API
+// Search Crossref API with caching
 async function searchCrossref(query: string, yearRange?: { start: number; end: number }, limit = 10) {
   try {
-    const baseUrl = 'https://api.crossref.org/works'
-    const params = new URLSearchParams({
-      query: query,
-      rows: limit.toString(),
-      select: 'DOI,title,author,container-title,published,volume,issue,page,URL,type',
-    })
+    // Use cached Crossref search for better performance
+    const works = await cachedCrossrefSearch(query, limit)
     
-    if (yearRange) {
-      params.append('filter', `from-pub-date:${yearRange.start},until-pub-date:${yearRange.end}`)
+    // Filter by year range if specified
+    if (yearRange && works.length > 0) {
+      return works.filter(work => {
+        const year = extractYear(work)
+        return year && year >= yearRange.start && year <= yearRange.end
+      })
     }
     
-    const response = await fetch(`${baseUrl}?${params.toString()}`, {
-      headers: {
-        'User-Agent': 'VibeUniversity/0.1.0 (mailto:support@vibeuniversity.edu)',
-      },
-    })
-    
-    if (!response.ok) {
-      throw new Error(`Crossref API error: ${response.statusText}`)
-    }
-    
-    const data: CrossrefResponse = await response.json()
-    return data.message?.items || []
+    return works
   } catch (error) {
     console.error('Error searching Crossref:', error)
     return []
