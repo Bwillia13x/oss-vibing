@@ -18,7 +18,7 @@ import { semanticScholarClient, type SemanticScholarPaper } from '../citations/s
 const CACHE_TTL = {
   CROSSREF_DOI: 7 * 24 * 3600, // 7 days - DOI metadata rarely changes
   CROSSREF_SEARCH: 1 * 3600, // 1 hour - search results update frequently
-  GROBID_RESULT: -1, // Permanent - PDF processing is deterministic
+  GROBID_RESULT: 90 * 24 * 3600, // 90 days - PDF processing is mostly deterministic, but allow eventual refresh
   OPENALEX_SEARCH: 1 * 3600, // 1 hour
   OPENALEX_WORK: 7 * 24 * 3600, // 7 days
   SEMANTIC_SCHOLAR: 2 * 3600, // 2 hours

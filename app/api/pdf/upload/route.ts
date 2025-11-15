@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     // Enrich citations with Crossref data (for citations with DOIs)
     const enrichedCitations = await Promise.all(
       metadata.citations.map(async (citation) => {
-        if (citation.doi) {
+        if (citation.doi && !citation.enriched) {
           try {
             const crossrefData = await cachedCrossrefLookup(citation.doi)
             return {
