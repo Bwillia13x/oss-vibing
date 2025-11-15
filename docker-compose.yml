@@ -27,6 +27,40 @@ services:
     #       cpus: '1'
     #       memory: 2G
 
+  # Redis for caching API responses
+  redis:
+    image: redis:7-alpine
+    container_name: vibe-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # LanguageTool for grammar checking (optional)
+  languagetool:
+    image: erikvl87/languagetool:latest
+    container_name: vibe-languagetool
+    ports:
+      - "8081:8010"
+    environment:
+      - langtool_languageModel=/ngrams
+      - Java_Xms=512m
+      - Java_Xmx=2g
+    restart: unless-stopped
+    # Uncomment to limit resources
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 2G
+
   # Optional: Add PostgreSQL for production database
   # postgres:
   #   image: postgres:16-alpine
@@ -41,17 +75,7 @@ services:
   #     - postgres_data:/var/lib/postgresql/data
   #   restart: unless-stopped
 
-  # Optional: Add Redis for caching
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: vibe-redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis_data:/data
-  #   restart: unless-stopped
-  #   command: redis-server --appendonly yes
-
-# volumes:
-#   postgres_data:
-#   redis_data:
+volumes:
+  redis_data:
+# Uncomment if using PostgreSQL
+# postgres_data:
