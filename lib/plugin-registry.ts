@@ -10,7 +10,6 @@ import {
   PluginRegistryEntry,
   PluginStatus,
   PluginPermission,
-  // PluginMetadata,
   PluginAPI,
   PluginStorage,
   PluginLogger,

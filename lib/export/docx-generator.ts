@@ -12,13 +12,8 @@ import {
   HeadingLevel,
   AlignmentType,
   TableOfContents,
-  // Table,
-  // TableRow,
-  // TableCell,
-  // WidthType,
   BorderStyle,
   Packer,
-  // ImageRun,
 } from 'docx';
 
 export interface DOCXExportOptions {

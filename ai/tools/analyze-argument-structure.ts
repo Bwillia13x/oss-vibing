@@ -539,29 +539,6 @@ function generateThesisRecommendations(found: boolean, statement: string, discip
   return recs.length > 0 ? recs : ['Thesis is strong; maintain clarity throughout paper']
 }
 
-function generateClaimsRecommendations(claims: Array<{ type: string; strength: string }>): string[] {
-  const evidencedRatio = claims.length > 0 
-    ? claims.filter(c => c.type === 'evidenced').length / claims.length 
-    : 0
-  
-  if (claims.length < 3) {
-    return [
-      'Add more supporting claims to strengthen your argument',
-      'Each major section should have at least one clear claim'
-    ]
-  }
-  
-  if (evidencedRatio < 0.6) {
-    return [
-      'Support more claims with evidence from sources',
-      'Use empirical data, expert testimony, or scholarly research',
-      'Add citations to strengthen assertions'
-    ]
-  }
-  
-  return ['Claims are well-supported; continue this pattern throughout']
-}
-
 function generateEvidenceRecommendations(
   types: { empirical: number; theoretical: number; statistical: number },
   citations: number,
