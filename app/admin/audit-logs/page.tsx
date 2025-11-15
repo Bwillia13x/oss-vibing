@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,169 +25,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Download, Search, Filter, Shield, User, FileText, Settings, Trash, Edit } from 'lucide-react'
-
-// Mock audit log data
-const auditLogs = [
-  {
-    id: '1',
-    timestamp: new Date('2025-11-13T14:30:00'),
-    admin: 'admin@university.edu',
-    action: 'User Created',
-    resourceType: 'User',
-    resourceId: 'user_123',
-    details: 'Created new user: john.doe@university.edu',
-    ipAddress: '192.168.1.100',
-    severity: 'info',
-  },
-  {
-    id: '2',
-    timestamp: new Date('2025-11-13T14:25:00'),
-    admin: 'admin@university.edu',
-    action: 'License Updated',
-    resourceType: 'License',
-    resourceId: 'license_456',
-    details: 'Increased CS Department allocation from 50 to 75 seats',
-    ipAddress: '192.168.1.100',
-    severity: 'warning',
-  },
-  {
-    id: '3',
-    timestamp: new Date('2025-11-13T14:20:00'),
-    admin: 'admin@university.edu',
-    action: 'User Suspended',
-    resourceType: 'User',
-    resourceId: 'user_789',
-    details: 'Suspended user: suspicious.activity@university.edu',
-    ipAddress: '192.168.1.100',
-    severity: 'critical',
-  },
-  {
-    id: '4',
-    timestamp: new Date('2025-11-13T14:15:00'),
-    admin: 'superadmin@university.edu',
-    action: 'Settings Changed',
-    resourceType: 'Settings',
-    resourceId: 'branding_001',
-    details: 'Updated institution branding colors',
-    ipAddress: '192.168.1.50',
-    severity: 'info',
-  },
-  {
-    id: '5',
-    timestamp: new Date('2025-11-13T14:10:00'),
-    admin: 'admin@university.edu',
-    action: 'Bulk Import',
-    resourceType: 'User',
-    resourceId: 'bulk_import_20251113',
-    details: 'Imported 45 users from CSV file students_fall2025.csv',
-    ipAddress: '192.168.1.100',
-    severity: 'info',
-  },
-  {
-    id: '6',
-    timestamp: new Date('2025-11-13T14:05:00'),
-    admin: 'admin@university.edu',
-    action: 'User Deleted',
-    resourceType: 'User',
-    resourceId: 'user_deleted',
-    details: 'Deleted user account: graduated.student@university.edu',
-    ipAddress: '192.168.1.100',
-    severity: 'warning',
-  },
-  {
-    id: '7',
-    timestamp: new Date('2025-11-13T14:00:00'),
-    admin: 'superadmin@university.edu',
-    action: 'Admin Role Granted',
-    resourceType: 'User',
-    resourceId: 'user_999',
-    details: 'Granted admin role to faculty.member@university.edu',
-    ipAddress: '192.168.1.50',
-    severity: 'critical',
-  },
-  {
-    id: '8',
-    timestamp: new Date('2025-11-13T13:55:00'),
-    admin: 'admin@university.edu',
-    action: 'Data Export',
-    resourceType: 'Export',
-    resourceId: 'export_001',
-    details: 'Exported student progress data for Fall 2025',
-    ipAddress: '192.168.1.100',
-    severity: 'info',
-  },
-]
-
-const actionTypes = [
-  'All Actions',
-  'User Created',
-  'User Updated',
-  'User Deleted',
-  'User Suspended',
-  'License Updated',
-  'Settings Changed',
-  'Admin Role Granted',
-  'Bulk Import',
-  'Data Export',
-]
-
-const severityColors = {
-  info: 'bg-blue-100 text-blue-800 border-blue-200',
-  warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  critical: 'bg-red-100 text-red-800 border-red-200',
-}
-
-const actionIcons = {
-  'User Created': User,
-  'User Updated': Edit,
-  'User Deleted': Trash,
-  'User Suspended': Shield,
-  'License Updated': FileText,
-  'Settings Changed': Settings,
-  'Admin Role Granted': Shield,
-  'Bulk Import': FileText,
-  'Data Export': Download,
-}
+import { Download, Search, Filter, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { fetchAuditLogs, exportAuditLogs, type AuditLog } from '@/lib/api/admin'
+import { useInstitutionId } from '@/lib/auth/context'
+import { toast } from 'sonner'
 
 export default function AuditLogsPage() {
+  const institutionId = useInstitutionId()
+  const [logs, setLogs] = useState<AuditLog[]>([])
+  const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
+  
+  // Filters
   const [searchQuery, setSearchQuery] = useState('')
-  const [actionFilter, setActionFilter] = useState('All Actions')
+  const [actionFilter, setActionFilter] = useState('all')
   const [severityFilter, setSeverityFilter] = useState('all')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const perPage = 20
 
-  const filteredLogs = auditLogs.filter((log) => {
-    const matchesSearch = 
-      log.admin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.details.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesAction = actionFilter === 'All Actions' || log.action === actionFilter
-    const matchesSeverity = severityFilter === 'all' || log.severity === severityFilter
+  useEffect(() => {
+    loadLogs()
+  }, [institutionId, actionFilter, severityFilter, startDate, endDate, currentPage])
 
-    return matchesSearch && matchesAction && matchesSeverity
+  async function loadLogs() {
+    try {
+      setLoading(true)
+      const result = await fetchAuditLogs({
+        institutionId,
+        action: actionFilter !== 'all' ? actionFilter : undefined,
+        severity: severityFilter !== 'all' ? severityFilter : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        page: currentPage,
+        perPage,
+      })
+      
+      setLogs(result.data)
+      setTotalPages(result.pagination?.totalPages || 1)
+    } catch (error) {
+      console.error('Failed to load audit logs:', error)
+      toast.error('Failed to load audit logs')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleExport() {
+    try {
+      setExporting(true)
+      await exportAuditLogs({
+        institutionId,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+      })
+      toast.success('Audit logs exported successfully')
+    } catch (error) {
+      console.error('Failed to export:', error)
+      toast.error('Failed to export audit logs')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  function getSeverityVariant(severity: string): 'default' | 'secondary' | 'destructive' {
+    switch (severity.toUpperCase()) {
+      case 'CRITICAL':
+      case 'ERROR':
+        return 'destructive'
+      case 'WARNING':
+        return 'default'
+      default:
+        return 'secondary'
+    }
+  }
+
+  const filteredLogs = logs.filter(log => {
+    if (!searchQuery) return true
+    const search = searchQuery.toLowerCase()
+    return (
+      log.action.toLowerCase().includes(search) ||
+      log.resource.toLowerCase().includes(search) ||
+      log.details?.toLowerCase().includes(search) ||
+      log.userId.toLowerCase().includes(search)
+    )
   })
 
-  const handleExport = () => {
-    // In production, this would export to CSV
-    const csv = [
-      ['Timestamp', 'Admin', 'Action', 'Resource Type', 'Details', 'IP Address', 'Severity'],
-      ...filteredLogs.map(log => [
-        log.timestamp.toISOString(),
-        log.admin,
-        log.action,
-        log.resourceType,
-        log.details,
-        log.ipAddress,
-        log.severity,
-      ])
-    ].map(row => row.join(',')).join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
-  }
+  // Calculate statistics
+  const totalEvents = logs.length
+  const criticalEvents = logs.filter(log => log.severity === 'CRITICAL' || log.severity === 'ERROR').length
+  const warningEvents = logs.filter(log => log.severity === 'WARNING').length
 
   return (
     <div className="space-y-6">
@@ -198,8 +129,12 @@ export default function AuditLogsPage() {
             Track all administrative actions and changes
           </p>
         </div>
-        <Button onClick={handleExport}>
-          <Download className="mr-2 h-4 w-4" />
+        <Button onClick={handleExport} disabled={exporting}>
+          {exporting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
           Export to CSV
         </Button>
       </div>
@@ -209,14 +144,14 @@ export default function AuditLogsPage() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Total Events</CardDescription>
-            <CardTitle className="text-2xl">{auditLogs.length}</CardTitle>
+            <CardTitle className="text-2xl">{totalEvents}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Critical Events</CardDescription>
             <CardTitle className="text-2xl text-red-600">
-              {auditLogs.filter(log => log.severity === 'critical').length}
+              {criticalEvents}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -224,15 +159,15 @@ export default function AuditLogsPage() {
           <CardHeader className="pb-3">
             <CardDescription>Warning Events</CardDescription>
             <CardTitle className="text-2xl text-yellow-600">
-              {auditLogs.filter(log => log.severity === 'warning').length}
+              {warningEvents}
             </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Active Admins</CardDescription>
+            <CardDescription>Info Events</CardDescription>
             <CardTitle className="text-2xl">
-              {new Set(auditLogs.map(log => log.admin)).size}
+              {totalEvents - criticalEvents - warningEvents}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -241,41 +176,59 @@ export default function AuditLogsPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            <div className="relative lg:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search logs by admin or details..."
+                placeholder="Search logs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
               />
             </div>
+            
             <Select value={actionFilter} onValueChange={setActionFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger>
                 <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by action" />
+                <SelectValue placeholder="All Actions" />
               </SelectTrigger>
               <SelectContent>
-                {actionTypes.map((action) => (
-                  <SelectItem key={action} value={action}>
-                    {action}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">All Actions</SelectItem>
+                <SelectItem value="USER_CREATED">User Created</SelectItem>
+                <SelectItem value="USER_UPDATED">User Updated</SelectItem>
+                <SelectItem value="USER_DELETED">User Deleted</SelectItem>
+                <SelectItem value="LICENSE_UPDATED">License Updated</SelectItem>
+                <SelectItem value="SETTINGS_CHANGED">Settings Changed</SelectItem>
               </SelectContent>
             </Select>
+            
             <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="w-[200px]">
-                <Shield className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by severity" />
+              <SelectTrigger>
+                <SelectValue placeholder="All Severities" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Severities</SelectItem>
-                <SelectItem value="info">Info</SelectItem>
-                <SelectItem value="warning">Warning</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="INFO">Info</SelectItem>
+                <SelectItem value="WARNING">Warning</SelectItem>
+                <SelectItem value="ERROR">Error</SelectItem>
+                <SelectItem value="CRITICAL">Critical</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                placeholder="Start date"
+              />
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                placeholder="End date"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -285,57 +238,88 @@ export default function AuditLogsPage() {
         <CardHeader>
           <CardTitle>Activity Log</CardTitle>
           <CardDescription>
-            Showing {filteredLogs.length} of {auditLogs.length} events
+            {filteredLogs.length} events {searchQuery && `matching "${searchQuery}"`}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>Admin</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Severity</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLogs.map((log) => {
-                const Icon = actionIcons[log.action as keyof typeof actionIcons] || FileText
-                return (
-                  <TableRow key={log.id}>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {log.timestamp.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="font-medium">{log.admin}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                        <span>{log.action}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-md">
-                      <div className="truncate text-sm" title={log.details}>
-                        {log.details}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {log.ipAddress}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline"
-                        className={severityColors[log.severity as keyof typeof severityColors]}
-                      >
-                        {log.severity}
-                      </Badge>
-                    </TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              No audit logs found
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Timestamp</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Resource</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>Severity</TableHead>
                   </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-mono text-xs">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-sm">{log.userId}</TableCell>
+                      <TableCell className="font-medium">{log.action}</TableCell>
+                      <TableCell className="text-sm">
+                        {log.resource}
+                        {log.resourceId && (
+                          <span className="text-muted-foreground"> ({log.resourceId})</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm max-w-md truncate">
+                        {log.details || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getSeverityVariant(log.severity)}>
+                          {log.severity}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
