@@ -1,7 +1,7 @@
 import type { ChatUIMessage } from './types'
 import { MessagePart } from './message-part'
 import { BotIcon, UserIcon } from 'lucide-react'
-import { memo, createContext, useContext, useState, useEffect, useMemo } from 'react'
+import { memo, createContext, useContext, useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -21,10 +21,6 @@ export const useReasoningContext = () => {
 }
 
 export const Message = memo(function Message({ message }: Props) {
-  const [expandedReasoningIndex, setExpandedReasoningIndex] = useState<
-    number | null
-  >(null)
-
   const reasoningParts = useMemo(() => 
     message.parts
       .map((part, index) => ({ part, index }))
@@ -32,13 +28,17 @@ export const Message = memo(function Message({ message }: Props) {
     [message.parts]
   )
 
-  useEffect(() => {
+  // Calculate the latest reasoning index - this is derived state, no useState needed for the default
+  const defaultExpandedIndex = useMemo(() => {
     if (reasoningParts.length > 0) {
-      const latestReasoningIndex =
-        reasoningParts[reasoningParts.length - 1].index
-      setExpandedReasoningIndex(latestReasoningIndex)
+      return reasoningParts[reasoningParts.length - 1].index
     }
+    return null
   }, [reasoningParts])
+
+  const [expandedReasoningIndex, setExpandedReasoningIndex] = useState<
+    number | null
+  >(defaultExpandedIndex)
 
   return (
     <ReasoningContext.Provider

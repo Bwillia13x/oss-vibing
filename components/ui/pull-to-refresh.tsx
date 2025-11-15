@@ -72,7 +72,7 @@ export function PullToRefresh({
     }
   }
 
-  const progress = Math.min((pullDistance / threshold) * 100, 100)
+  const _progress = Math.min((pullDistance / threshold) * 100, 100)
   const shouldTrigger = pullDistance >= threshold
 
   return (

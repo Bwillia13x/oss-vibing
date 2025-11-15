@@ -163,7 +163,7 @@ export function createBarChartData(
 ): ChartData<'bar'> {
   return {
     labels,
-    datasets: datasets.map((dataset, index) => ({
+    datasets: datasets.map((dataset, _index) => ({
       label: dataset.label,
       data: dataset.data,
       backgroundColor: dataset.backgroundColor || getDefaultColors(dataset.data.length, 0.6),

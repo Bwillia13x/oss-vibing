@@ -361,7 +361,7 @@ const DEFAULT_DIRECTORY_SETTINGS: DirectoryDisclosureSettings = {
  * Get user's directory disclosure preferences
  */
 export async function getDirectoryDisclosureSettings(
-  userId: string
+  _userId: string
 ): Promise<DirectoryDisclosureSettings> {
   // In production, fetch from a dedicated consent/preferences table
   // For now, return defaults
@@ -394,7 +394,7 @@ export async function updateDirectoryDisclosureSettings(
 export async function verifyLegitimateEducationalInterest(
   requestorId: string,
   targetUserId: string,
-  resource: string
+  _resource: string
 ): Promise<{
   allowed: boolean;
   reason: string;

@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -48,11 +48,7 @@ export default function AuditLogsPage() {
   const [totalPages, setTotalPages] = useState(1)
   const perPage = 20
 
-  useEffect(() => {
-    loadLogs()
-  }, [institutionId, actionFilter, severityFilter, startDate, endDate, currentPage])
-
-  async function loadLogs() {
+  const loadLogs = useCallback(async () => {
     try {
       setLoading(true)
       const result = await fetchAuditLogs({
@@ -73,7 +69,11 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [institutionId, actionFilter, severityFilter, startDate, endDate, currentPage, perPage])
+
+  useEffect(() => {
+    loadLogs()
+  }, [loadLogs])
 
   async function handleExport() {
     try {

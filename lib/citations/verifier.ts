@@ -148,7 +148,7 @@ const CLAIM_KEYWORDS = [
 export function analyzeCitationCoverage(
   content: string,
   citations: CitationInput[],
-  options: VerificationOptions = {}
+  _options: VerificationOptions = {}
 ): {
   totalSentences: number
   citedSentences: number

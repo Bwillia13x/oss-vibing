@@ -319,7 +319,7 @@ export function getStoredEvents(): Array<{
     const storageKey = 'vibe_analytics_events';
     const existing = localStorage.getItem(storageKey);
     return existing ? JSON.parse(existing) : [];
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
@@ -335,7 +335,7 @@ export function clearStoredEvents(): void {
   try {
     const storageKey = 'vibe_analytics_events';
     localStorage.removeItem(storageKey);
-  } catch (error) {
+  } catch (_error) {
     // Ignore errors
   }
 }

@@ -15,7 +15,7 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 
 // Mock data storage (in production, this would be a database)
-const ANALYTICS_DIR = join(process.cwd(), 'analytics')
+// const ANALYTICS_DIR = join(process.cwd(), 'analytics')
 const PROGRESS_DIR = join(process.cwd(), 'progress')
 const PLAGIARISM_DIR = join(process.cwd(), 'plagiarism')
 
@@ -211,9 +211,9 @@ function calculateStartDate(
 }
 
 async function getUserAnalytics(
-  institutionId: string,
-  startDate: Date,
-  endDate: Date
+  _institutionId: string,
+  _startDate: Date,
+  _endDate: Date
 ): Promise<UsageAnalytics[]> {
   // In production, query database for user analytics in date range
   // For now, return empty array

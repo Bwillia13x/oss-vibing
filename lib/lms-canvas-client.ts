@@ -48,6 +48,37 @@ export interface Course {
   enrollmentTermId: string
 }
 
+// Internal Canvas API response types
+interface CanvasAssignment {
+  id: number
+  name: string
+  description?: string
+  due_at: string | null
+  points_possible?: number
+  submission_types?: string[]
+}
+
+interface CanvasSubmission {
+  id: number
+  assignment_id: number
+  user_id: number
+  submitted_at: string | null
+  score: number | null
+  grade: string | null
+  submission_type: string
+  body?: string
+  url?: string
+}
+
+interface CanvasSubmissionData {
+  submission: {
+    submission_type: string
+    body?: string
+    url?: string
+    file_ids?: string[]
+  }
+}
+
 /**
  * Canvas LMS API client
  */
@@ -101,7 +132,7 @@ export class CanvasClient {
       throw new Error('Course ID is required')
     }
 
-    const assignments = await this.request<any[]>(
+    const assignments = await this.request<CanvasAssignment[]>(
       `/courses/${cid}/assignments?per_page=100`
     )
 
@@ -125,7 +156,7 @@ export class CanvasClient {
       throw new Error('Course ID is required')
     }
 
-    const assignment = await this.request<any>(
+    const assignment = await this.request<CanvasAssignment>(
       `/courses/${cid}/assignments/${assignmentId}`
     )
 
@@ -162,7 +193,7 @@ export class CanvasClient {
       throw new Error('Course ID is required')
     }
 
-    const data: any = {
+    const data: CanvasSubmissionData = {
       submission: {
         submission_type: submission.submissionType,
       },
@@ -178,7 +209,7 @@ export class CanvasClient {
       data.submission.file_ids = submission.fileIds
     }
 
-    const result = await this.request<any>(
+    const result = await this.request<CanvasSubmission>(
       `/courses/${cid}/assignments/${assignmentId}/submissions`,
       {
         method: 'POST',
@@ -208,7 +239,7 @@ export class CanvasClient {
       throw new Error('Course ID is required')
     }
 
-    const result = await this.request<any>(
+    const result = await this.request<CanvasSubmission>(
       `/courses/${cid}/assignments/${assignmentId}/submissions/${userId}`
     )
 

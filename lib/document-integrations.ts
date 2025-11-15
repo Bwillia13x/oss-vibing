@@ -140,7 +140,7 @@ function convertGoogleDocsToMarkdown(data: any): string {
 export async function exportToGoogleDocs(
   doc: DocumentContent,
   accessToken: string,
-  folderId?: string
+  _folderId?: string
 ): Promise<string> {
   const startTime = Date.now()
   

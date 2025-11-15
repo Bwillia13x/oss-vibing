@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Table,
   TableBody,
@@ -68,12 +68,7 @@ export function UsersTable() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
-  // Fetch users on component mount and when role filter changes
-  useEffect(() => {
-    loadUsers()
-  }, [roleFilter])
-
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true)
       const result = await fetchUsers(institutionId, {
@@ -87,7 +82,12 @@ export function UsersTable() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [institutionId, roleFilter])
+
+  // Fetch users on component mount and when role filter changes
+  useEffect(() => {
+    loadUsers()
+  }, [loadUsers])
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,7 +96,7 @@ export function UsersTable() {
     return matchesSearch && matchesRole
   })
 
-  const handleCreateUser = async (userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
+  const handleCreateUser = async (_userData: Omit<User, 'id' | 'lastActive' | 'status'>) => {
     try {
       // Note: createUser is called from the parent page component
       // This is just for the form dialog
@@ -144,7 +144,7 @@ export function UsersTable() {
     }
   }
 
-  const handleToggleStatus = async (userId: string) => {
+  const handleToggleStatus = async (_userId: string) => {
     // Note: The API doesn't currently support status toggle
     // This would need to be implemented in the backend
     toast.info('Status toggle not yet implemented in the API')

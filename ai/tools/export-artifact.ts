@@ -208,7 +208,7 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
   // Set presentation properties
   pptx.author = deckData.author || 'Vibe University'
   pptx.title = deckData.title || 'Presentation'
-  pptx.subject = deckData.description || 'Academic Presentation'
+  pptx.subject = (deckData.description || 'Academic Presentation') as unknown as string
   
   // Title slide
   const titleSlide = pptx.addSlide()
@@ -236,7 +236,7 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
   }
   
   if (deckData.date) {
-    titleSlide.addText(deckData.date, {
+    titleSlide.addText(deckData.date as unknown as string, {
       x: 0.5,
       y: 4.2,
       w: 9,
@@ -272,7 +272,7 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
 
       if (hasContent && hasBullets) {
         // Render content at baseY, bullets below content
-        slide.addText(slideData.content, {
+        slide.addText((slideData.content || '') as unknown as string, {
           x: 0.5,
           y: baseY,
           w: 9,
@@ -281,7 +281,7 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
           color: '444444',
           valign: 'top',
         })
-        slide.addText(slideData.bullets, {
+        slide.addText(slideData.bullets as unknown as string, {
           x: 1,
           y: baseY + 1.3, // Offset bullets below content
           w: 8,
@@ -291,7 +291,7 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
           color: '444444',
         })
       } else if (hasContent) {
-        slide.addText(slideData.content, {
+        slide.addText((slideData.content || '') as unknown as string, {
           x: 0.5,
           y: baseY,
           w: 9,
@@ -301,7 +301,7 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
           valign: 'top',
         })
       } else if (hasBullets) {
-        slide.addText(slideData.bullets, {
+        slide.addText(slideData.bullets as unknown as string, {
           x: 1,
           y: baseY,
           w: 8,
@@ -312,9 +312,10 @@ async function exportToPPTX(deckData: DeckData, exportPath: string, options?: Ex
         })
       }
       
-      // Add notes if present
-      if (slideData.notes) {
-        slide.addNotes(slideData.notes)
+      // Add notes if present (using index access since notes isn't in type)
+      const notes = (slideData as Record<string, unknown>).notes
+      if (typeof notes === 'string') {
+        slide.addNotes(notes)
       }
     })
   }

@@ -9,7 +9,8 @@
  * - Performance monitoring
  */
 
-import { trackApiPerformance } from '@/lib/monitoring'
+// Monitoring import (for future use)
+// import { trackApiPerformance } from '@/lib/monitoring'
 
 export interface ApiClientOptions {
   maxRetries?: number
@@ -78,7 +79,7 @@ function isCacheValid(timestamp: number, ttl: number): boolean {
 export async function fetchWithRetry<T>(
   url: string,
   options: ApiClientOptions & RequestInit = {},
-  apiName: string = 'api'
+  _apiName: string = 'api'
 ): Promise<ApiResponse<T>> {
   const config = { ...DEFAULT_OPTIONS, ...options }
   const cacheKey = getCacheKey(url, options)

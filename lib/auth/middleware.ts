@@ -115,7 +115,7 @@ export async function requireInstructor(
 /**
  * Get user from request (returns null if not authenticated)
  */
-export async function getUser(req: NextRequest): Promise<{
+export async function getUser(_req: NextRequest): Promise<{
   userId: string;
   email: string;
   role: string;

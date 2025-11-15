@@ -97,7 +97,7 @@ export const formatBibliography = ({ writer }: Params) =>
         }
         
         // Gather citations from document
-        const citations: Citation[] = docContent.citations || []
+        const citations: Citation[] = Array.isArray(docContent.citations) ? docContent.citations as Citation[] : []
         
         if (citations.length === 0) {
           writer.write({

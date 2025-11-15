@@ -5,7 +5,7 @@
  * Provides a touch-friendly quiz experience with mobile-first design
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -48,11 +48,32 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
   const [answers, setAnswers] = useState<Record<string, { selected: number; correct: boolean }>>({})
   const [showExplanation, setShowExplanation] = useState(false)
   const [startTime] = useState(() => Date.now())
+  const [completionTime, setCompletionTime] = useState<number | null>(null)
   const [timeRemaining, setTimeRemaining] = useState(timeLimit)
 
   const currentQuestion = questions[currentIndex]
   const progress = ((currentIndex + 1) / questions.length) * 100
   const isAnswered = currentQuestion && answers[currentQuestion.id] !== undefined
+
+  const handleComplete = useCallback(() => {
+    const correct = Object.values(answers).filter((a) => a.correct).length
+    const total = questions.length
+    const score = Math.round((correct / total) * 100)
+    const duration = Date.now() - startTime
+    
+    // Store completion time for display
+    setCompletionTime(duration)
+    
+    const results: QuizResults = {
+      total,
+      correct,
+      incorrect: total - correct,
+      score,
+      duration,
+      answers,
+    }
+    onComplete?.(results)
+  }, [answers, questions.length, startTime, onComplete])
 
   // Timer countdown
   useEffect(() => {
@@ -69,14 +90,7 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [timeLimit, timeRemaining])
-
-  const handleAnswerSelect = (optionIndex: number) => {
-    if (isAnswered) return // Prevent changing answer
-    
-    setSelectedAnswer(optionIndex)
-    const isCorrect = optionIndex === currentQuestion.correctAnswer
-    setAnswers({
+  }, [timeLimit, timeRemaining, handleComplete])
       ...answers,
       [currentQuestion.id]: { selected: optionIndex, correct: isCorrect },
     })
@@ -93,21 +107,12 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
     }
   }
 
-  const handleComplete = () => {
-    const correct = Object.values(answers).filter((a) => a.correct).length
-    const total = questions.length
-    const score = Math.round((correct / total) * 100)
+  const handleAnswerSelect = (optionIndex: number) => {
+    if (isAnswered) return // Prevent changing answer
     
-    const results: QuizResults = {
-      total,
-      correct,
-      incorrect: total - correct,
-      score,
-      duration: Date.now() - startTime,
-      answers,
-    }
-    onComplete?.(results)
-  }
+    setSelectedAnswer(optionIndex)
+    const isCorrect = optionIndex === currentQuestion.correctAnswer
+    setAnswers({
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -141,7 +146,7 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
             </div>
             
             <div className="text-sm text-muted-foreground">
-              Completed in {formatTime(Math.floor((Date.now() - startTime) / 1000))}
+              Completed in {formatTime(Math.floor((completionTime || 0) / 1000))}
             </div>
           </div>
         </div>

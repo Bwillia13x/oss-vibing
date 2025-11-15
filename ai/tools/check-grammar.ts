@@ -13,6 +13,12 @@ interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
 
+interface JsonDocument {
+  sections?: Array<{ content?: string }>;
+  content?: string;
+  [key: string]: unknown;
+}
+
 export const checkGrammar = ({ writer: _writer }: Params) =>
   tool({
     description,
@@ -66,6 +72,8 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
         interface GrammarSummary {
           errors: number;
           warnings: number;
+          suggestions?: number;
+          passiveVoiceCount?: number;
           [key: string]: unknown;
         }
         
@@ -96,9 +104,13 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
             totalIssues: number;
             errors: number;
             warnings: number;
+            suggestions?: number;
+            passiveVoiceCount?: number;
             issues: GrammarIssue[];
           };
-          readability?: ReturnType<typeof calculateReadabilityScores>;
+          readability?: ReturnType<typeof calculateReadabilityScores> & {
+            academicRecommendation?: string;
+          };
           [key: string]: unknown;
         }
         
@@ -128,13 +140,19 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
             statistics: {
               words: readabilityResults.statistics.words,
               sentences: readabilityResults.statistics.sentences,
+              syllables: readabilityResults.statistics.syllables,
+              characters: readabilityResults.statistics.characters,
               averageWordsPerSentence: Math.round(readabilityResults.statistics.averageWordsPerSentence * 10) / 10,
+              averageSyllablesPerWord: readabilityResults.statistics.averageSyllablesPerWord,
               complexWords: readabilityResults.statistics.complexWords,
             },
             scores: {
               fleschReadingEase: Math.round(readabilityResults.scores.fleschReadingEase * 10) / 10,
               fleschKincaidGrade: Math.round(readabilityResults.scores.fleschKincaidGrade * 10) / 10,
               gunningFog: Math.round(readabilityResults.scores.gunningFog * 10) / 10,
+              smogIndex: Math.round(readabilityResults.scores.smogIndex * 10) / 10,
+              colemanLiauIndex: Math.round(readabilityResults.scores.colemanLiauIndex * 10) / 10,
+              automatedReadabilityIndex: Math.round(readabilityResults.scores.automatedReadabilityIndex * 10) / 10,
             },
             interpretation: readabilityResults.interpretation,
             academicRecommendation: getAcademicReadabilityRecommendation(
@@ -155,7 +173,7 @@ export const checkGrammar = ({ writer: _writer }: Params) =>
             `${grammarResults.summary.suggestions} suggestions`
           )
           
-          if (grammarResults.summary.passiveVoiceCount > 0) {
+          if (grammarResults.summary.passiveVoiceCount && grammarResults.summary.passiveVoiceCount > 0) {
             summaryParts.push(
               `Detected ${grammarResults.summary.passiveVoiceCount} instances of passive voice`
             )

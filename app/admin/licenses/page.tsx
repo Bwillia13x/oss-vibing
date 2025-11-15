@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -28,11 +28,7 @@ export default function LicensesPage() {
   const [licenses, setLicenses] = useState<License[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadLicenses()
-  }, [institutionId])
-
-  async function loadLicenses() {
+  const loadLicenses = useCallback(async () => {
     try {
       setLoading(true)
       const data = await fetchLicenses(institutionId)
@@ -43,7 +39,11 @@ export default function LicensesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [institutionId])
+
+  useEffect(() => {
+    loadLicenses()
+  }, [loadLicenses])
 
   // Calculate aggregate license data
   const licenseData = licenses.reduce(

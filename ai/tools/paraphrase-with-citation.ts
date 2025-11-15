@@ -17,7 +17,7 @@ export const paraphraseWithCitation = ({ writer }: Params) =>
       referenceId: z.string().describe('Citation key for the source'),
       style: z.enum(['APA', 'MLA', 'Chicago']).default('APA').describe('Citation style'),
     }),
-    execute: async ({ docPath, _selectionId, referenceId, style }, { toolCallId }) => {
+    execute: async ({ docPath, selectionId: _selectionId, referenceId, style }, { toolCallId }) => {
       const timestamp = new Date().toISOString()
 
       writer.write({

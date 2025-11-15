@@ -5,7 +5,7 @@
  * Implements touch gestures and mobile-first design
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -78,16 +78,11 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
     }
   }
 
-  const handleFlip = () => {
+  const handleFlip = useCallback(() => {
     setIsFlipped(!isFlipped)
-  }
+  }, [isFlipped])
 
-  const handleAnswer = (answer: 'correct' | 'incorrect' | 'skipped') => {
-    setResults({ ...results, [currentCard.id]: answer })
-    handleNext()
-  }
-
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(currentIndex + 1)
       setIsFlipped(false)
@@ -102,14 +97,19 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
       }
       onComplete?.(reviewResults)
     }
-  }
+  }, [currentIndex, flashcards.length, results, startTime, onComplete])
 
-  const handlePrevious = () => {
+  const handleAnswer = useCallback((answer: 'correct' | 'incorrect' | 'skipped') => {
+    setResults({ ...results, [currentCard.id]: answer })
+    handleNext()
+  }, [results, currentCard.id, handleNext])
+
+  const handlePrevious = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
       setIsFlipped(false)
     }
-  }
+  }, [currentIndex])
 
   const handleRestart = () => {
     setCurrentIndex(0)

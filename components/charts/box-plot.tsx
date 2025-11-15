@@ -52,14 +52,13 @@ interface BoxPlotStats {
 export function BoxPlot({ 
   data, 
   labels,
-  options, 
+  options: _options, 
   title = 'Box Plot',
   showOutliers = true,
   height = 300,
   className = ''
 }: BoxPlotProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const chartRef = useRef<ChartJS<'bar'> | null>(null)
 
   // Calculate box plot statistics
   const boxPlotData = useMemo(() => {
@@ -73,19 +72,12 @@ export function BoxPlot({
     const ctx = canvasRef.current.getContext('2d')
     if (!ctx) return
 
-    // Destroy existing chart
-    if (chartRef.current) {
-      chartRef.current.destroy()
-    }
+    // Clear canvas before re-rendering
+    const canvas = ctx.canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     // Create visualization using custom rendering
     renderBoxPlot(ctx, boxPlotData, labels || ['Dataset'], height)
-
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy()
-      }
-    }
   }, [boxPlotData, labels, height])
 
   /**

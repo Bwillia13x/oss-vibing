@@ -84,6 +84,19 @@ export interface MoodleEnrollment {
   timemodified: number
 }
 
+// Internal Moodle API response types
+interface MoodleCourseSection {
+  modules?: MoodleCourseModule[]
+  [key: string]: unknown
+}
+
+interface MoodleCourseModule {
+  id: number
+  name: string
+  modname: string
+  [key: string]: unknown
+}
+
 /**
  * Moodle LMS API client
  */
@@ -99,7 +112,7 @@ export class MoodleClient {
    */
   private async request<T>(
     functionName: string,
-    params: Record<string, any> = {}
+    params: Record<string, string | number | boolean> = {}
   ): Promise<T> {
     const url = new URL(`${this.config.baseUrl}/webservice/rest/server.php`)
     url.searchParams.append('wstoken', this.config.token)
@@ -424,8 +437,8 @@ export class MoodleClient {
    * @throws Error indicating the operation is not supported
    */
   async createAssignment(
-    courseId: number,
-    assignment: {
+    _courseId: number,
+    _assignment: {
       name: string
       intro: string
       duedate?: number
@@ -451,19 +464,19 @@ export class MoodleClient {
   /**
    * Get course modules/activities
    */
-  async getCourseModules(courseId: number): Promise<any[]> {
+  async getCourseModules(courseId: number): Promise<MoodleCourseModule[]> {
     const startTime = Date.now()
 
     try {
-      const response = await this.request<any>(
+      const response = await this.request<MoodleCourseSection[]>(
         'core_course_get_contents',
         {
           courseid: courseId,
         }
       )
 
-      const modules: any[] = []
-      response.forEach((section: any) => {
+      const modules: MoodleCourseModule[] = []
+      response.forEach((section) => {
         if (section.modules) {
           modules.push(...section.modules)
         }

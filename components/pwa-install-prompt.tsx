@@ -88,7 +88,7 @@ export function PWAInstallPrompt() {
         clearTimeout(promptTimer)
       }
     }
-  }, [])
+  }, [isInstalled])
 
   const handleInstall = async () => {
     if (!deferredPrompt) {
