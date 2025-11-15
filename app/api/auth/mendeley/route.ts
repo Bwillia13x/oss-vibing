@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { cookies } from 'next/headers';
+import { randomBytes } from 'crypto';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -29,6 +29,14 @@ export async function GET(request: NextRequest) {
     // Generate state for CSRF protection
     const stateValue = generateRandomState();
     
+    // Store state in a cookie
+    cookies().set('mendeley_oauth_state', stateValue, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 600, // 10 minutes
+    });
+    
     const authUrl = new URL('https://api.mendeley.com/oauth/authorize');
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('client_id', process.env.MENDELEY_CLIENT_ID || '');
@@ -40,6 +48,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Validate state (CSRF protection)
+    const storedState = cookies().get('mendeley_oauth_state')?.value;
+
+    if (!storedState || storedState !== state) {
+      console.error('CSRF: State mismatch');
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_URL}/settings/integrations?error=csrf_detected`
+      );
+    }
+
+    // Clear the state cookie after validation
+    cookies().delete('mendeley_oauth_state');
+    
     // Exchange code for access token
     const tokenResponse = await fetch('https://api.mendeley.com/oauth/token', {
       method: 'POST',
@@ -63,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenResponse.json();
-    const { access_token, refresh_token, expires_in } = tokenData;
+    const { access_token } = tokenData;
 
     // Get user profile from Mendeley
     const profileResponse = await fetch('https://api.mendeley.com/profiles/me', {
@@ -80,11 +101,17 @@ export async function GET(request: NextRequest) {
     const { id: mendeleyUserId, display_name } = profile;
 
     // Get current user from session
-    const currentUserId = 'current-user-id'; // TODO: Get from session
+    const user = await getUserFromRequest(request);
+
+    if (!user) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_URL}/settings/integrations?error=unauthorized`
+      );
+    }
 
     // Store integration in database
     console.log('Mendeley integration successful:', {
-      userId: currentUserId,
+      userId: user.id,
       mendeleyUserId,
       displayName: display_name,
     });
@@ -93,12 +120,12 @@ export async function GET(request: NextRequest) {
     // await prisma.integration.upsert({
     //   where: {
     //     userId_provider: {
-    //       userId: currentUserId,
+    //       userId: user.id,
     //       provider: 'mendeley',
     //     },
     //   },
     //   create: {
-    //     userId: currentUserId,
+    //     userId: user.id,
     //     provider: 'mendeley',
     //     accessToken: access_token,
     //     refreshToken: refresh_token,
@@ -128,6 +155,5 @@ export async function GET(request: NextRequest) {
 }
 
 function generateRandomState(): string {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
+  return randomBytes(32).toString('hex');
 }

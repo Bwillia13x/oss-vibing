@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getUserFromRequest } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -15,13 +16,20 @@ const prisma = new PrismaClient();
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Get user from session
-    const userId = 'current-user-id'; // Placeholder
+    // Get authenticated user
+    const user = await getUserFromRequest(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Get all documents (rooms) owned by or shared with the user
     const rooms = await prisma.document.findMany({
       where: {
-        userId, // Owner
+        userId: user.id, // Owner
       },
       select: {
         id: true,
@@ -54,8 +62,8 @@ export async function GET(request: NextRequest) {
       },
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
-      isOwner: room.userId === userId,
-      permission: room.userId === userId ? 'owner' : 'viewer',
+      isOwner: room.userId === user.id,
+      permission: room.userId === user.id ? 'owner' : 'viewer',
     }));
 
     return NextResponse.json({
@@ -77,6 +85,16 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user
+    const user = await getUserFromRequest(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { name, type = 'NOTE', content = '' } = body;
 
@@ -87,13 +105,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Get user from session
-    const userId = 'current-user-id'; // Placeholder
-
     // Create new document (room)
     const room = await prisma.document.create({
       data: {
-        userId,
+        userId: user.id,
         title: name,
         type,
         content,

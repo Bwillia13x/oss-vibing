@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { cookies } from 'next/headers';
+import { randomBytes } from 'crypto';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -29,8 +29,13 @@ export async function GET(request: NextRequest) {
     // Generate state for CSRF protection
     const stateValue = generateRandomState();
     
-    // Store state in session/database (simplified here)
-    // In production, use a proper session store
+    // Store state in a cookie
+    cookies().set('zotero_oauth_state', stateValue, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 600, // 10 minutes
+    });
     
     const authUrl = new URL('https://www.zotero.org/oauth/authorize');
     authUrl.searchParams.set('response_type', 'code');
@@ -44,7 +49,17 @@ export async function GET(request: NextRequest) {
 
   try {
     // Validate state (CSRF protection)
-    // In production, verify state matches what was sent
+    const storedState = cookies().get('zotero_oauth_state')?.value;
+
+    if (!storedState || storedState !== state) {
+      console.error('CSRF: State mismatch');
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_URL}/settings/integrations?error=csrf_detected`
+      );
+    }
+
+    // Clear the state cookie after validation
+    cookies().delete('zotero_oauth_state');
     
     // Exchange code for access token
     const tokenResponse = await fetch('https://www.zotero.org/oauth/access', {
@@ -68,17 +83,22 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenResponse.json();
-    const { access_token, userID, username } = tokenData;
+    const { userID, username } = tokenData;
 
     // Get current user from session
-    // In production, use proper session management
-    const currentUserId = 'current-user-id'; // TODO: Get from session
+    const user = await getUserFromRequest(request);
+
+    if (!user) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_URL}/settings/integrations?error=unauthorized`
+      );
+    }
 
     // Store integration in database
     // Note: This requires an Integration model in Prisma schema
     // For now, we'll log it
     console.log('Zotero integration successful:', {
-      userId: currentUserId,
+      userId: user.id,
       zoteroUserId: userID,
       zoteroUsername: username,
     });
@@ -87,12 +107,12 @@ export async function GET(request: NextRequest) {
     // await prisma.integration.upsert({
     //   where: {
     //     userId_provider: {
-    //       userId: currentUserId,
+    //       userId: user.id,
     //       provider: 'zotero',
     //     },
     //   },
     //   create: {
-    //     userId: currentUserId,
+    //     userId: user.id,
     //     provider: 'zotero',
     //     accessToken: access_token,
     //     externalUserId: userID,
@@ -118,6 +138,5 @@ export async function GET(request: NextRequest) {
 }
 
 function generateRandomState(): string {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
+  return randomBytes(32).toString('hex');
 }

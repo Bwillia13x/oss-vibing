@@ -5,7 +5,7 @@
  * Week 3-4: Integration Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { 
   authenticateWebSocket, 
   generateWebSocketToken,
@@ -13,7 +13,6 @@ import {
   hasPermission 
 } from '@/lib/collaboration/auth';
 import { 
-  checkRoomAccess, 
   RoomPermission,
   getPermissionLevel,
   hasPermissionLevel 

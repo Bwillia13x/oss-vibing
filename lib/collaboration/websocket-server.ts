@@ -11,7 +11,7 @@ import { Server as HTTPServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import * as Y from 'yjs';
 import { setPersistence, getPersistence } from './persistence';
-import { authenticateWebSocket, requireAuth, getAuthenticatedUser } from './auth';
+import { authenticateWebSocket, getAuthenticatedUser } from './auth';
 import { checkRoomAccess, RoomPermission } from './acl';
 import { checkConnectionRateLimit, checkMessageRateLimit, checkUpdateRateLimit } from './rate-limiter';
 

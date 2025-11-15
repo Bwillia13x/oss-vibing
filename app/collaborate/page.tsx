@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Users, Trash2, Settings, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, FileText, AlertCircle, Loader2 } from 'lucide-react';
 
 interface Room {
   id: string;

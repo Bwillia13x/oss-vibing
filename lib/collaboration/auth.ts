@@ -87,7 +87,7 @@ export function generateWebSocketToken(payload: Omit<WebSocketAuthPayload, 'iat'
  */
 export function hasPermission(ws: WebSocket, permission: string): boolean {
   const user = (ws as any).user as WebSocketAuthPayload | undefined;
-  if (!user) return false;
+  if (!user || !user.permissions) return false;
   
   return user.permissions.includes(permission) || user.permissions.includes('*');
 }

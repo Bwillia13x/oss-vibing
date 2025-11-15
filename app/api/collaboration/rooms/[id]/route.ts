@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { checkRoomAccess, RoomPermission } from '@/lib/collaboration/acl';
+import { getUserFromRequest } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -21,11 +22,18 @@ export async function GET(
   try {
     const { id } = params;
     
-    // TODO: Get user from session
-    const userId = 'current-user-id'; // Placeholder
+    // Get authenticated user
+    const user = await getUserFromRequest(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Check access
-    const hasAccess = await checkRoomAccess(userId, id, RoomPermission.VIEWER);
+    const hasAccess = await checkRoomAccess(user.id, id, RoomPermission.VIEWER);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'Access denied' },
@@ -66,8 +74,8 @@ export async function GET(
       },
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
-      isOwner: room.userId === userId,
-      permission: room.userId === userId ? 'owner' : 'viewer',
+      isOwner: room.userId === user.id,
+      permission: room.userId === user.id ? 'owner' : 'viewer',
     };
 
     return NextResponse.json(formattedRoom);
@@ -93,11 +101,18 @@ export async function PATCH(
     const body = await request.json();
     const { name, content } = body;
 
-    // TODO: Get user from session
-    const userId = 'current-user-id'; // Placeholder
+    // Get authenticated user
+    const user = await getUserFromRequest(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Check access - need EDITOR permission to update
-    const hasAccess = await checkRoomAccess(userId, id, RoomPermission.EDITOR);
+    const hasAccess = await checkRoomAccess(user.id, id, RoomPermission.EDITOR);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'Access denied - editor permission required' },
@@ -135,8 +150,8 @@ export async function PATCH(
       },
       createdAt: room.createdAt,
       updatedAt: room.updatedAt,
-      isOwner: room.userId === userId,
-      permission: room.userId === userId ? 'owner' : 'editor',
+      isOwner: room.userId === user.id,
+      permission: room.userId === user.id ? 'owner' : 'editor',
     };
 
     return NextResponse.json(formattedRoom);
@@ -160,11 +175,18 @@ export async function DELETE(
   try {
     const { id } = params;
 
-    // TODO: Get user from session
-    const userId = 'current-user-id'; // Placeholder
+    // Get authenticated user
+    const user = await getUserFromRequest(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
 
     // Check access - need OWNER permission to delete
-    const hasAccess = await checkRoomAccess(userId, id, RoomPermission.OWNER);
+    const hasAccess = await checkRoomAccess(user.id, id, RoomPermission.OWNER);
     if (!hasAccess) {
       return NextResponse.json(
         { error: 'Access denied - only owner can delete rooms' },
