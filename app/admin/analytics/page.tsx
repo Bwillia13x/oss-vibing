@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UsageChart } from '@/components/admin/usage-chart'
@@ -20,11 +20,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week')
 
-  useEffect(() => {
-    loadAnalytics()
-  }, [institutionId, period])
-
-  async function loadAnalytics() {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true)
       const data = await fetchAnalytics({ institutionId, period })
@@ -35,7 +31,11 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [institutionId, period])
+
+  useEffect(() => {
+    loadAnalytics()
+  }, [loadAnalytics])
 
   if (loading || !analytics) {
     return (
@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
         </div>
         <select
           value={period}
-          onChange={(e) => setPeriod(e.target.value as any)}
+          onChange={(e) => setPeriod(e.target.value as 'day' | 'week' | 'month' | 'year')}
           className="rounded-md border px-3 py-2"
         >
           <option value="day">Last 24 Hours</option>
@@ -208,6 +208,6 @@ function ToolUsageBar({ tool, usage }: { tool: string; usage: number }) {
   )
 }
 
-function ChartSkeleton() {
+function _ChartSkeleton() {
   return <div className="h-80 rounded-lg bg-muted animate-pulse" />
 }

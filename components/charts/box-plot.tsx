@@ -52,7 +52,7 @@ interface BoxPlotStats {
 export function BoxPlot({ 
   data, 
   labels,
-  options, 
+  options: _options, 
   title = 'Box Plot',
   showOutliers = true,
   height = 300,

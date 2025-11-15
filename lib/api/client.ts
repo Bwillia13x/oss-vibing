@@ -9,7 +9,8 @@
  * - Performance monitoring
  */
 
-import { trackApiPerformance } from '@/lib/monitoring'
+// Monitoring import (for future use)
+// import { trackApiPerformance } from '@/lib/monitoring'
 
 export interface ApiClientOptions {
   maxRetries?: number

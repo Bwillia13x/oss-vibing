@@ -4,7 +4,7 @@ import { BarLoader } from 'react-spinners'
 import { CompassIcon, RefreshCwIcon } from 'lucide-react'
 import { Panel, PanelHeader } from '@/components/panels/panels'
 import { ScrollArea } from '@radix-ui/react-scroll-area'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Props {

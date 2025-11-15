@@ -5,13 +5,12 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Palette, Save, Eye, Loader2, X } from 'lucide-react'
 import {
   fetchBrandingSettings,
@@ -38,11 +37,7 @@ export default function SettingsPage() {
     customCSS: '',
   })
 
-  useEffect(() => {
-    loadSettings()
-  }, [institutionId])
-
-  async function loadSettings() {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true)
       const data = await fetchBrandingSettings(institutionId)
@@ -53,7 +48,11 @@ export default function SettingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [institutionId])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   async function handleSave() {
     try {

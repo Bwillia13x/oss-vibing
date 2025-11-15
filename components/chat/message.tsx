@@ -1,7 +1,7 @@
 import type { ChatUIMessage } from './types'
 import { MessagePart } from './message-part'
 import { BotIcon, UserIcon } from 'lucide-react'
-import { memo, createContext, useContext, useState, useEffect, useMemo } from 'react'
+import { memo, createContext, useContext, useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Props {

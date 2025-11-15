@@ -13,15 +13,16 @@ import {
   ClassAnalytics,
   PlagiarismReport,
 } from './types/institutional'
-import { readdir, readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+// File system utilities (for future use)
+// import { readdir, readFile, writeFile } from 'fs/promises'
+// import { join } from 'path'
+// import { existsSync } from 'fs'
 
-// Mock data storage directories
-const ASSIGNMENTS_DIR = join(process.cwd(), 'assignments')
-const SUBMISSIONS_DIR = join(process.cwd(), 'submissions')
-const COURSES_DIR = join(process.cwd(), 'courses')
-const RUBRICS_DIR = join(process.cwd(), 'rubrics')
+// Mock data storage directories (for future use)
+// const ASSIGNMENTS_DIR = join(process.cwd(), 'assignments')
+// const SUBMISSIONS_DIR = join(process.cwd(), 'submissions')
+// const COURSES_DIR = join(process.cwd(), 'courses')
+// const RUBRICS_DIR = join(process.cwd(), 'rubrics')
 
 /**
  * Create a new assignment
@@ -65,7 +66,7 @@ export async function updateAssignment(
  * Get assignment by ID
  */
 export async function getAssignment(
-  assignmentId: string
+  _assignmentId: string
 ): Promise<Assignment | null> {
   // In production, query database
   return null
@@ -75,7 +76,7 @@ export async function getAssignment(
  * Get all assignments for a course
  */
 export async function getCourseAssignments(
-  courseId: string
+  _courseId: string
 ): Promise<Assignment[]> {
   // In production, query database
   return []
@@ -100,7 +101,7 @@ export async function saveRubric(
 /**
  * Get rubric by ID
  */
-export async function getRubric(rubricId: string): Promise<Rubric | null> {
+export async function getRubric(_rubricId: string): Promise<Rubric | null> {
   // In production, query database
   return null
 }
@@ -109,7 +110,7 @@ export async function getRubric(rubricId: string): Promise<Rubric | null> {
  * Get all rubrics for an instructor
  */
 export async function getInstructorRubrics(
-  instructorId: string
+  _instructorId: string
 ): Promise<Rubric[]> {
   // In production, query database
   return []
@@ -123,7 +124,7 @@ export async function gradeSubmission(
   grade: number,
   rubricScores?: Record<string, number>,
   feedback?: string,
-  instructorId?: string
+  _instructorId?: string
 ): Promise<Submission> {
   // In production, update database
   const submission: Submission = {
@@ -143,8 +144,8 @@ export async function gradeSubmission(
  * Get submissions for an assignment
  */
 export async function getAssignmentSubmissions(
-  assignmentId: string,
-  status?: Submission['status']
+  _assignmentId: string,
+  _status?: Submission['status']
 ): Promise<Submission[]> {
   // In production, query database with optional status filter
   return []
@@ -154,8 +155,8 @@ export async function getAssignmentSubmissions(
  * Get submissions by student
  */
 export async function getStudentSubmissions(
-  studentId: string,
-  courseId?: string
+  _studentId: string,
+  _courseId?: string
 ): Promise<Submission[]> {
   // In production, query database
   return []
@@ -233,7 +234,7 @@ export async function submitPeerReview(
  * Get peer reviews for a submission
  */
 export async function getPeerReviewsForSubmission(
-  submissionId: string
+  _submissionId: string
 ): Promise<PeerReview[]> {
   // In production, query database
   return []
@@ -342,7 +343,7 @@ export async function checkSubmissionPlagiarism(
 /**
  * Get course by ID
  */
-export async function getCourse(courseId: string): Promise<Course | null> {
+export async function getCourse(_courseId: string): Promise<Course | null> {
   // In production, query database
   return null
 }
@@ -351,7 +352,7 @@ export async function getCourse(courseId: string): Promise<Course | null> {
  * Get instructor courses
  */
 export async function getInstructorCourses(
-  instructorId: string
+  _instructorId: string
 ): Promise<Course[]> {
   // In production, query database
   return []

@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic';
  * 
  * @requires Admin authentication (should be implemented)
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // TODO: Add admin authentication check
     // For now, this is an open endpoint - should be restricted in production

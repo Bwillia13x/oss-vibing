@@ -211,9 +211,9 @@ function calculateStartDate(
 }
 
 async function getUserAnalytics(
-  institutionId: string,
-  startDate: Date,
-  endDate: Date
+  _institutionId: string,
+  _startDate: Date,
+  _endDate: Date
 ): Promise<UsageAnalytics[]> {
   // In production, query database for user analytics in date range
   // For now, return empty array

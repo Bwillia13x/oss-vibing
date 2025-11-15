@@ -9,10 +9,11 @@ export * from './docx-generator';
 export * from './pptx-generator';
 export * from './xlsx-generator';
 
-import { generatePDF, exportToPDF, type PDFExportOptions } from './pdf-generator';
-import { generateDOCX, exportToDOCX, type DOCXExportOptions } from './docx-generator';
-import { generatePPTX, exportToPPTX, parseMarkdownToSlides, type PPTXExportOptions, type PPTXSlide } from './pptx-generator';
-import { generateXLSX, exportToXLSX, type XLSXExportOptions, type XLSXSheet } from './xlsx-generator';
+// Export generators (available for direct use if needed)
+// import { generatePDF, exportToPDF, type PDFExportOptions } from './pdf-generator';
+// import { generateDOCX, exportToDOCX, type DOCXExportOptions } from './docx-generator';
+// import { generatePPTX, exportToPPTX, parseMarkdownToSlides, type PPTXExportOptions, type PPTXSlide } from './pptx-generator';
+// import { generateXLSX, exportToXLSX, type XLSXExportOptions, type XLSXSheet } from './xlsx-generator';
 
 export type ExportFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';
 
