@@ -25,14 +25,17 @@ describe('OpenAlex API', () => {
   });
 
   test('should search papers by query', { timeout: 10000 }, async () => {
-    const results = await searchWorks('quantum computing', { perPage: 5 });
+    const result = await searchWorks('quantum computing', { perPage: 5 });
     
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(5);
-    
-    if (results.length > 0) {
-      const firstResult = results[0];
-      expect(firstResult.title).toBeTruthy();
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.results)).toBe(true);
+      expect(result.results.length).toBeLessThanOrEqual(5);
+      
+      if (result.results.length > 0) {
+        const firstResult = result.results[0];
+        expect(firstResult.title || firstResult.display_name).toBeTruthy();
+      }
     }
   });
 
@@ -49,14 +52,20 @@ describe('OpenAlex API', () => {
 
   test('should respect search limit', { timeout: 10000 }, async () => {
     const limit = 2;
-    const results = await searchWorks('neural networks', { perPage: limit });
+    const result = await searchWorks('neural networks', { perPage: limit });
     
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(limit);
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.results)).toBe(true);
+      expect(result.results.length).toBeLessThanOrEqual(limit);
+    }
   });
 
   test('should handle empty search results', { timeout: 10000 }, async () => {
-    const results = await searchWorks('xyzabcnonexistentterm12345', { perPage: 5 });
-    expect(Array.isArray(results)).toBe(true);
+    const result = await searchWorks('xyzabcnonexistentterm12345', { perPage: 5 });
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.results)).toBe(true);
+    }
   });
 });

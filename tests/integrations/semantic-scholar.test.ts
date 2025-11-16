@@ -25,14 +25,17 @@ describe('Semantic Scholar API', () => {
   });
 
   test('should search papers by query', { timeout: 10000 }, async () => {
-    const results = await searchPapers('deep learning', { limit: 5 });
+    const result = await searchPapers('deep learning', { limit: 5 });
     
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(5);
-    
-    if (results.length > 0) {
-      const firstResult = results[0];
-      expect(firstResult.title).toBeTruthy();
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeLessThanOrEqual(5);
+      
+      if (result.data.length > 0) {
+        const firstResult = result.data[0];
+        expect(firstResult.title).toBeTruthy();
+      }
     }
   });
 
@@ -49,10 +52,13 @@ describe('Semantic Scholar API', () => {
 
   test('should limit search results', { timeout: 10000 }, async () => {
     const limit = 3;
-    const results = await searchPapers('computer science', { limit });
+    const result = await searchPapers('computer science', { limit });
     
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(limit);
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeLessThanOrEqual(limit);
+    }
   });
 
   test('should handle network errors gracefully', { timeout: 10000 }, async () => {
