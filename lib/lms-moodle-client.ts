@@ -455,7 +455,7 @@ export class MoodleClient {
       monitoring.trackError(error as Error, {
         provider: 'moodle',
         operation: 'create_assignment',
-        courseId: courseId.toString(),
+        courseId: _courseId.toString(),
       })
       throw error
     }

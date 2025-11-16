@@ -201,7 +201,14 @@ export class SemanticScholarClient {
     }
 
     const authors: Author[] = (paper.authors || []).map(author => {
-      const nameParts = author.name.split(' ');
+      const nameParts = author.name.trim().split(/\s+/);
+      if (nameParts.length === 1) {
+        // Single name - treat as family name
+        return {
+          family: nameParts[0],
+          given: '',
+        };
+      }
       return {
         family: nameParts[nameParts.length - 1],
         given: nameParts.slice(0, -1).join(' '),
@@ -226,7 +233,14 @@ export class SemanticScholarClient {
     const title = paper.title || 'Untitled';
     
     const authors: Author[] = (paper.authors || []).map(author => {
-      const nameParts = author.name.split(' ');
+      const nameParts = author.name.trim().split(/\s+/);
+      if (nameParts.length === 1) {
+        // Single name - treat as family name
+        return {
+          family: nameParts[0],
+          given: '',
+        };
+      }
       return {
         family: nameParts[nameParts.length - 1],
         given: nameParts.slice(0, -1).join(' '),
