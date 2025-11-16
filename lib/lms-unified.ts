@@ -9,7 +9,7 @@
  * Automatically detects and uses the configured LMS provider.
  */
 
-import { CanvasClient, createCanvasClient, type CanvasCourse, type CanvasAssignment } from './lms-canvas-client'
+import { CanvasClient, createCanvasClient, getCanvasConfig, type Course as CanvasCourse, type Assignment as CanvasAssignment } from './lms-canvas-client'
 import { BlackboardClient, createBlackboardClient, type BlackboardCourse, type BlackboardAssignment } from './lms-blackboard-client'
 import { MoodleClient, createMoodleClient, type MoodleCourse, type MoodleAssignment } from './lms-moodle-client'
 
@@ -66,7 +66,8 @@ export class LMSManager {
 
   constructor() {
     // Initialize available clients
-    this.canvasClient = createCanvasClient()
+    const canvasConfig = getCanvasConfig()
+    this.canvasClient = canvasConfig ? createCanvasClient(canvasConfig) : null
     this.blackboardClient = createBlackboardClient()
     this.moodleClient = createMoodleClient()
 
