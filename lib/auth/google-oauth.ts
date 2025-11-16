@@ -34,11 +34,11 @@ export function getGoogleClient(): Google | null {
 /**
  * Generate Google OAuth authorization URL
  */
-export async function generateGoogleAuthUrl(state: string): Promise<string | null> {
+export async function generateGoogleAuthUrl(state: string, codeVerifier: string): Promise<string | null> {
   const client = getGoogleClient();
   if (!client) return null;
 
-  const url = client.createAuthorizationURL(state, [
+  const url = client.createAuthorizationURL(state, codeVerifier, [
     'openid',
     'profile',
     'email',
@@ -50,7 +50,7 @@ export async function generateGoogleAuthUrl(state: string): Promise<string | nul
 /**
  * Validate authorization code and get tokens
  */
-export async function validateGoogleAuthCode(code: string): Promise<{
+export async function validateGoogleAuthCode(code: string, codeVerifier: string): Promise<{
   accessToken: string;
   refreshToken?: string;
   idToken?: string;
@@ -59,7 +59,7 @@ export async function validateGoogleAuthCode(code: string): Promise<{
   if (!client) return null;
 
   try {
-    const tokens = await client.validateAuthorizationCode(code);
+    const tokens = await client.validateAuthorizationCode(code, codeVerifier);
     return {
       accessToken: tokens.accessToken(),
       refreshToken: tokens.refreshToken(),

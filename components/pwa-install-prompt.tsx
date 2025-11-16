@@ -76,7 +76,8 @@ export function PWAInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 
     // Detect iOS devices (they don't support beforeinstallprompt)
-    if (isIOSDevice && !isInStandaloneMode) {
+    const isInStandaloneMode = (window.navigator as any).standalone === true
+    if (isIOS && !isInStandaloneMode) {
       promptTimer = setTimeout(() => {
         setShowPrompt(true)
       }, 5000)
@@ -88,7 +89,7 @@ export function PWAInstallPrompt() {
         clearTimeout(promptTimer)
       }
     }
-  }, [isInstalled])
+  }, [isInstalled, isIOS])
 
   const handleInstall = async () => {
     if (!deferredPrompt) {

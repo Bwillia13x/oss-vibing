@@ -44,18 +44,9 @@ export async function PUT(
     }
 
     // Authentication and authorization - admins only
-    // Use the user's institution for authorization if available
-    if (existingUser.institutionId) {
-      const authResult = await requireInstitutionAccess(req, existingUser.institutionId, ['admin', 'institution-admin'])
-      if (authResult instanceof NextResponse) {
-        return authResult
-      }
-    } else {
-      // For users without an institution, require admin role
-      const authResult = await requireRole(req, ['admin'])
-      if (authResult instanceof NextResponse) {
-        return authResult
-      }
+    const authResult = await requireRole(req, ['admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
     }
 
     // Update user
@@ -130,18 +121,9 @@ export async function DELETE(
     }
 
     // Authentication and authorization - admins only
-    // Use the user's institution for authorization if available
-    if (existingUser.institutionId) {
-      const authResult = await requireInstitutionAccess(req, existingUser.institutionId, ['admin', 'institution-admin'])
-      if (authResult instanceof NextResponse) {
-        return authResult
-      }
-    } else {
-      // For users without an institution, require admin role
-      const authResult = await requireRole(req, ['admin'])
-      if (authResult instanceof NextResponse) {
-        return authResult
-      }
+    const authResult = await requireRole(req, ['admin'])
+    if (authResult instanceof NextResponse) {
+      return authResult
     }
 
     // Soft delete user

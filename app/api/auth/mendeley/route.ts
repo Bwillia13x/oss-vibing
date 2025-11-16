@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     const stateValue = generateRandomState();
     
     // Store state in a cookie
-    cookies().set('mendeley_oauth_state', stateValue, {
+    const cookieStore = await cookies();
+    cookieStore.set('mendeley_oauth_state', stateValue, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -49,7 +50,8 @@ export async function GET(request: NextRequest) {
 
   try {
     // Validate state (CSRF protection)
-    const storedState = cookies().get('mendeley_oauth_state')?.value;
+    const cookieStore = await cookies();
+    const storedState = cookieStore.get('mendeley_oauth_state')?.value;
 
     if (!storedState || storedState !== state) {
       console.error('CSRF: State mismatch');
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Clear the state cookie after validation
-    cookies().delete('mendeley_oauth_state');
+    cookieStore.delete('mendeley_oauth_state');
     
     // Exchange code for access token
     const tokenResponse = await fetch('https://api.mendeley.com/oauth/token', {

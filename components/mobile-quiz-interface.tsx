@@ -91,6 +91,13 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
 
     return () => clearInterval(timer)
   }, [timeLimit, timeRemaining, handleComplete])
+
+  const handleAnswerSelect = (optionIndex: number) => {
+    if (isAnswered) return // Prevent changing answer
+    
+    setSelectedAnswer(optionIndex)
+    const isCorrect = optionIndex === currentQuestion.correctAnswer
+    setAnswers({
       ...answers,
       [currentQuestion.id]: { selected: optionIndex, correct: isCorrect },
     })
@@ -106,13 +113,6 @@ export function MobileQuizInterface({ questions, onComplete, timeLimit }: QuizIn
       handleComplete()
     }
   }
-
-  const handleAnswerSelect = (optionIndex: number) => {
-    if (isAnswered) return // Prevent changing answer
-    
-    setSelectedAnswer(optionIndex)
-    const isCorrect = optionIndex === currentQuestion.correctAnswer
-    setAnswers({
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)

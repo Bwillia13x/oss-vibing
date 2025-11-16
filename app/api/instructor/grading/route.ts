@@ -9,7 +9,6 @@ import {
   getAssignmentSubmissions,
   getStudentSubmissions,
   exportGradesToLMS,
-  Submission
 } from '@/lib/instructor-tools'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
@@ -43,7 +42,7 @@ export async function GET(req: NextRequest) {
     if (assignmentId) {
       const submissions = await getAssignmentSubmissions(
         assignmentId,
-        status as Submission['status'] | undefined
+        (status as "submitted" | "graded" | "returned" | "late" | undefined) || undefined
       )
       
       return NextResponse.json({

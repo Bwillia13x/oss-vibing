@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Authentication and authorization check
-    const authResult = await requireRole(req, ['INSTRUCTOR', 'ADMIN'])
+    const authResult = await requireRole(req, ['instructor', 'admin'])
     if (authResult instanceof NextResponse) {
       return authResult
     }
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Authentication and authorization check
-    const authResult = await requireRole(req, ['USER', 'INSTRUCTOR', 'ADMIN'])
+    const authResult = await requireRole(req, ['student', 'instructor', 'admin'])
     if (authResult instanceof NextResponse) {
       return authResult
     }

@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       action: 'branding.created',
       resource: 'branding',
       resourceId: branding.institutionId,
-      details: branding,
+      details: branding as unknown as Record<string, unknown>,
       severity: 'INFO',
     })
 

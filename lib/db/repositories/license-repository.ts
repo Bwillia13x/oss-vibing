@@ -125,8 +125,8 @@ export class LicenseRepository extends BaseRepository {
 
         if (filters?.search) {
           where.OR = [
-            { institution: { contains: filters.search, mode: 'insensitive' } },
-            { institutionId: { contains: filters.search, mode: 'insensitive' } },
+            { institution: { contains: filters.search } },
+            { institutionId: { contains: filters.search } },
           ]
         }
 

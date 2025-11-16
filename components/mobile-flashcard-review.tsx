@@ -78,11 +78,11 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
     }
   }
 
-  const handleFlip = useCallback(() => {
+  const handleFlip = () => {
     setIsFlipped(!isFlipped)
-  }, [isFlipped])
+  }
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(currentIndex + 1)
       setIsFlipped(false)
@@ -97,19 +97,19 @@ export function MobileFlashcardReview({ flashcards, onComplete }: FlashcardRevie
       }
       onComplete?.(reviewResults)
     }
-  }, [currentIndex, flashcards.length, results, startTime, onComplete])
+  }
 
-  const handleAnswer = useCallback((answer: 'correct' | 'incorrect' | 'skipped') => {
+  const handleAnswer = (answer: 'correct' | 'incorrect' | 'skipped') => {
     setResults({ ...results, [currentCard.id]: answer })
     handleNext()
-  }, [results, currentCard.id, handleNext])
+  }
 
-  const handlePrevious = useCallback(() => {
+  const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
       setIsFlipped(false)
     }
-  }, [currentIndex])
+  }
 
   const handleRestart = () => {
     setCurrentIndex(0)

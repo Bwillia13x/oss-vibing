@@ -46,15 +46,21 @@ export default function LicensesPage() {
   }, [loadLicenses])
 
   // Calculate aggregate license data
-  const licenseData = licenses.reduce(
+  const licenseData = licenses.reduce<{
+    total: number;
+    used: number;
+    available: number;
+    renewalDate: string;
+    status: 'active' | 'inactive';
+  }>(
     (acc, license) => ({
       total: acc.total + license.seats,
       used: acc.used + license.usedSeats,
       available: acc.available + (license.seats - license.usedSeats),
       renewalDate: license.endDate, // Use the latest end date
-      status: license.status === 'ACTIVE' ? 'active' as const : 'inactive' as const,
+      status: license.status === 'ACTIVE' ? 'active' : 'inactive',
     }),
-    { total: 0, used: 0, available: 0, renewalDate: '', status: 'active' as const }
+    { total: 0, used: 0, available: 0, renewalDate: '', status: 'active' }
   )
 
   const usagePercentage = licenseData.total > 0 
