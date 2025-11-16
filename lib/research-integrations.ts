@@ -133,6 +133,7 @@ function generateMockPapers(query: string, maxResults: number): ResearchPaper[] 
   // Generate some realistic-looking mock data
   for (let i = 0; i < Math.min(maxResults, 5); i++) {
     mockPapers.push({
+      id: `mock-${Date.now()}-${i}`,
       title: `${query}: A Comprehensive Study (${2020 + i})`,
       authors: [`Author ${i + 1}`, `Researcher ${i + 1}`],
       year: 2020 + i,
