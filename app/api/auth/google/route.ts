@@ -12,8 +12,11 @@ export async function GET() {
   try {
     // Generate random state for CSRF protection
     const state = crypto.randomUUID();
+    
+    // Generate code verifier for PKCE
+    const codeVerifier = crypto.randomUUID();
 
-    // Store state in cache for verification (5 minutes)
+    // Store state and code verifier in cache for verification (5 minutes)
     // NOTE: This uses cache storage which may not be reliable if Redis is unavailable
     // and server restarts between auth initiation and callback. For production,
     // consider using HTTP-only cookies or database storage for OAuth state.
@@ -22,10 +25,10 @@ export async function GET() {
     //   httpOnly: true, secure: true, sameSite: 'lax', maxAge: 300
     // });
     const stateKey = generateCacheKey('oauth_state', state);
-    await setCached(stateKey, { created: Date.now() }, DEFAULT_TTL.SHORT);
+    await setCached(stateKey, { created: Date.now(), codeVerifier }, DEFAULT_TTL.SHORT);
 
     // Generate Google OAuth URL
-    const authUrl = await generateGoogleAuthUrl(state);
+    const authUrl = await generateGoogleAuthUrl(state, codeVerifier);
 
     if (!authUrl) {
       return NextResponse.json(

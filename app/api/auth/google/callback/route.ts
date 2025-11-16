@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     // Verify state (CSRF protection)
     const stateKey = generateCacheKey('oauth_state', state);
-    const storedState = await getCached(stateKey);
+    const storedState = await getCached(stateKey) as { created: number; codeVerifier: string } | null;
     if (!storedState) {
       return NextResponse.redirect(
         new URL('/auth/error?message=Invalid or expired state', req.url)
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     await deleteCached(stateKey);
 
     // Validate authorization code and get tokens
-    const tokens = await validateGoogleAuthCode(code);
+    const tokens = await validateGoogleAuthCode(code, storedState.codeVerifier);
     if (!tokens) {
       return NextResponse.redirect(
         new URL('/auth/error?message=Failed to validate authorization code', req.url)
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         if (existingUser) {
           // Update existing user
           const updatedUser = await repositories.userRepository.update(existingUser.id, {
-            name: userInfo.name || existingUser.name,
+            name: userInfo.name || existingUser.name || undefined,
           });
           userId = updatedUser.id;
           userRole = updatedUser.role;

@@ -462,11 +462,10 @@ export async function generateComplianceReport(institutionId?: string): Promise<
   };
   recommendations: string[];
 }> {
-  const where = institutionId ? { institutionId } : {};
-
-  const totalUsers = await prisma.user.count({ where });
+  // Note: User model doesn't have institutionId field, counting all users
+  const totalUsers = await prisma.user.count();
   const activeUsers = await prisma.user.count({
-    where: { ...where, status: 'ACTIVE' },
+    where: { status: 'ACTIVE' },
   });
 
   const auditLogsCount = await prisma.auditLog.count();

@@ -186,7 +186,7 @@ export async function DELETE(req: NextRequest) {
 
     // Get current branding to find logo
     const brandingKey = `branding.${institutionId}`
-    const branding = await adminSettingsRepository.get(brandingKey)
+    const branding = await adminSettingsRepository.get(brandingKey) as { logo?: string } | null
 
     if (!branding || !branding.logo) {
       return NextResponse.json(

@@ -55,35 +55,43 @@ export default function IntegrationsPage() {
     const error = searchParams.get('error');
 
     if (success) {
-      setSuccessMessage(`Successfully connected to ${success}`);
-      // Mark as connected
-      setIntegrations(prev =>
-        prev.map(int =>
-          int.id === success ? { ...int, connected: true } : int
-        )
-      );
+      // Use a microtask to defer state updates and avoid cascading renders
+      Promise.resolve().then(() => {
+        setSuccessMessage(`Successfully connected to ${success}`);
+        // Mark as connected
+        setIntegrations(prev =>
+          prev.map(int =>
+            int.id === success ? { ...int, connected: true } : int
+          )
+        );
 
-      // Clear message after 5 seconds
-      setTimeout(() => setSuccessMessage(null), 5000);
+        // Clear message after 5 seconds
+        setTimeout(() => setSuccessMessage(null), 5000);
+      });
     }
 
     if (error) {
-      const errorMessages: Record<string, string> = {
-        'zotero_auth_failed': 'Failed to authenticate with Zotero',
-        'zotero_connection_failed': 'Failed to connect to Zotero',
-        'mendeley_auth_failed': 'Failed to authenticate with Mendeley',
-        'mendeley_connection_failed': 'Failed to connect to Mendeley',
-      };
+      // Use a microtask to defer state updates and avoid cascading renders
+      Promise.resolve().then(() => {
+        const errorMessages: Record<string, string> = {
+          'zotero_auth_failed': 'Failed to authenticate with Zotero',
+          'zotero_connection_failed': 'Failed to connect to Zotero',
+          'mendeley_auth_failed': 'Failed to authenticate with Mendeley',
+          'mendeley_connection_failed': 'Failed to connect to Mendeley',
+        };
 
-      setErrorMessage(errorMessages[error] || 'Authentication failed');
-      setTimeout(() => setErrorMessage(null), 5000);
+        setErrorMessage(errorMessages[error] || 'Authentication failed');
+        setTimeout(() => setErrorMessage(null), 5000);
+      });
     }
   }, [searchParams]);
 
   const handleConnect = (integration: Integration) => {
     setConnecting(integration.id);
-    // Redirect to OAuth flow
-    window.location.href = integration.authUrl;
+    // Redirect to OAuth flow using useEffect to avoid modifying location during render
+    setTimeout(() => {
+      window.location.href = integration.authUrl;
+    }, 0);
   };
 
   const handleDisconnect = (integrationId: string) => {

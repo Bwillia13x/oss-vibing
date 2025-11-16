@@ -110,7 +110,7 @@ export class AdminSettingsRepository extends BaseRepository {
 
         if (filters?.search) {
           where.OR = [
-            { key: { contains: filters.search, mode: 'insensitive' } },
+            { key: { contains: filters.search } },
           ]
         }
 

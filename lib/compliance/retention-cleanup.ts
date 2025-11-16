@@ -153,39 +153,12 @@ async function cleanupInactiveAccounts(): Promise<{
   errors: string[];
 }> {
   const errors: string[] = [];
-  const inactivityThreshold = new Date();
-  inactivityThreshold.setDate(
-    inactivityThreshold.getDate() - RETENTION_POLICIES.INACTIVE_ACCOUNTS
-  );
-
-  try {
-    const result = await prisma.user.updateMany({
-      where: {
-        lastLoginAt: {
-          lte: inactivityThreshold,
-        },
-        status: {
-          not: 'INACTIVE',
-        },
-      },
-      data: {
-        status: 'INACTIVE',
-        updatedAt: new Date(),
-      },
-    });
-
-    console.log(
-      `Marked ${result.count} accounts as inactive after ${RETENTION_POLICIES.INACTIVE_ACCOUNTS} days of inactivity`
-    );
-
-    return { count: result.count, errors };
-  } catch (error) {
-    // This might fail if the user table doesn't have lastLoginAt or INACTIVE status
-    // That's okay - just log and continue
-    const errorMsg = `Failed to mark inactive accounts: ${error instanceof Error ? error.message : 'Unknown error'}`;
-    console.warn(errorMsg);
-    return { count: 0, errors: [errorMsg] };
-  }
+  
+  // NOTE: User model doesn't have lastLoginAt field yet.
+  // This functionality requires adding the field to the schema first.
+  console.log('Skipping inactive account cleanup - lastLoginAt field not implemented yet');
+  
+  return { count: 0, errors: [] };
 }
 
 /**

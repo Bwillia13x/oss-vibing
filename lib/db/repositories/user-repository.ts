@@ -142,8 +142,8 @@ export class UserRepository extends BaseRepository {
 
         if (filters?.search) {
           where.OR = [
-            { email: { contains: filters.search, mode: 'insensitive' } },
-            { name: { contains: filters.search, mode: 'insensitive' } },
+            { email: { contains: filters.search } },
+            { name: { contains: filters.search } },
           ]
         }
 
@@ -204,7 +204,6 @@ export class UserRepository extends BaseRepository {
             role: user.role ?? 'USER',
             status: user.status ?? 'ACTIVE',
           })),
-          skipDuplicates: true,
         })
         return result.count
       },

@@ -26,6 +26,7 @@ export function CursorOverlay({
   charWidth = 8,
 }: CursorOverlayProps) {
   const [cursors, setCursors] = useState<UserPresence[]>([]);
+  const [editorElement, setEditorElement] = useState<HTMLElement | null>(null);
   
   useEffect(() => {
     setCursors(
@@ -33,7 +34,11 @@ export function CursorOverlay({
     );
   }, [users]);
   
-  if (!editorRef.current) {
+  useEffect(() => {
+    setEditorElement(editorRef.current);
+  }, [editorRef]);
+  
+  if (!editorElement) {
     return null;
   }
 
@@ -44,7 +49,7 @@ export function CursorOverlay({
         
         const position = calculateCursorPosition(
           user.cursor,
-          editorRef.current!,
+          editorElement,
           lineHeight,
           charWidth
         );
@@ -76,7 +81,7 @@ export function CursorOverlay({
               <SelectionHighlight
                 selection={user.selection}
                 color={user.color}
-                editorRef={editorRef}
+                editorElement={editorElement}
                 lineHeight={lineHeight}
                 charWidth={charWidth}
               />
@@ -94,7 +99,7 @@ interface SelectionHighlightProps {
     end: { line: number; column: number };
   };
   color: string;
-  editorRef: React.RefObject<HTMLElement>;
+  editorElement: HTMLElement;
   lineHeight: number;
   charWidth: number;
 }
@@ -102,20 +107,20 @@ interface SelectionHighlightProps {
 function SelectionHighlight({
   selection,
   color,
-  editorRef,
+  editorElement,
   lineHeight,
   charWidth,
 }: SelectionHighlightProps) {
   const startPos = calculateCursorPosition(
     selection.start,
-    editorRef.current!,
+    editorElement,
     lineHeight,
     charWidth
   );
   
   const endPos = calculateCursorPosition(
     selection.end,
-    editorRef.current!,
+    editorElement,
     lineHeight,
     charWidth
   );

@@ -168,7 +168,7 @@ export class BlackboardClient {
       // Set expiry to 5 minutes before actual expiry
       this.tokenExpiry = Date.now() + (data.expires_in - 300) * 1000
 
-      return this.accessToken
+      return this.accessToken!
     } catch (error) {
       console.error('Blackboard authentication error:', error)
       monitoring.trackError(error as Error, {

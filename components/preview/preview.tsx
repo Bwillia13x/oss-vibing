@@ -126,13 +126,7 @@ export function Preview({ className, disabled, url }: Props) {
                   className="text-blue-500 hover:underline text-sm"
                   type="button"
                   onClick={() => {
-                    if (currentUrl) {
-                      setIsLoading(true)
-                      setError(null)
-                      const newUrl = new URL(currentUrl)
-                      newUrl.searchParams.set('t', Date.now().toString())
-                      setCurrentUrl(newUrl.toString())
-                    }
+                    refreshIframe()
                   }}
                 >
                   Try again

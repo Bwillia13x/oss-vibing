@@ -164,9 +164,9 @@ export class ReferenceRepository extends BaseRepository {
 
         if (filters?.search) {
           where.OR = [
-            { title: { contains: filters.search, mode: 'insensitive' } },
-            { journal: { contains: filters.search, mode: 'insensitive' } },
-            { publisher: { contains: filters.search, mode: 'insensitive' } },
+            { title: { contains: filters.search } },
+            { journal: { contains: filters.search } },
+            { publisher: { contains: filters.search } },
           ]
         }
 

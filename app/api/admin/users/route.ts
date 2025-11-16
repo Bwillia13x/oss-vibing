@@ -10,6 +10,7 @@ import type { BulkUserProvisionRequest, BulkUserProvisionResult } from '@/lib/ty
 import { requireInstitutionAccess } from '@/lib/auth'
 import { userRepository, auditLogRepository, licenseRepository } from '@/lib/db/repositories'
 import { createUserSchema } from '@/lib/db/validation/schemas'
+import { Role } from '@prisma/client'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -187,9 +188,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Query database for users
-    const filters: { role?: string } = {}
+    const filters: { role?: Role } = {}
     if (role) {
-      filters.role = role.toUpperCase()
+      filters.role = role.toUpperCase() as Role
     }
 
     const result = await userRepository.list(filters, { page, perPage })
