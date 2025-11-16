@@ -95,12 +95,10 @@ describe('FERPA Consent Management', () => {
       role: 'USER',
     });
     
-    // Record consent
-    await recordUserConsent(user.id, {
-      dataProcessing: true,
-      marketing: false,
-      thirdParty: false,
-    });
+    // Record consent (actual signature: userId, consentType, granted)
+    await recordUserConsent(user.id, 'dataProcessing', true);
+    await recordUserConsent(user.id, 'marketing', false);
+    await recordUserConsent(user.id, 'thirdParty', false);
     
     // Verify consent
     const hasConsent = await hasUserConsent(user.id);
@@ -160,29 +158,32 @@ describe('FERPA Access Logging', () => {
   test('should log data access', async () => {
     const { logDataAccess } = await import('@/lib/compliance/ferpa');
     
+    // Actual signature: userId, resource, action, resourceId?, details?
     await expect(
-      logDataAccess({
-        userId: 'test-student',
-        accessedBy: 'test-instructor',
-        action: 'view',
-        resource: 'student_record',
-        resourceId: 'test-record-id',
-        details: { fields: ['grades', 'profile'] },
-      })
+      logDataAccess(
+        'test-student',
+        'student_record',
+        'view',
+        'test-record-id',
+        { fields: ['grades', 'profile'], accessedBy: 'test-instructor' }
+      )
     ).resolves.not.toThrow();
   });
 
   test('should verify legitimate educational interest', async () => {
     const { verifyLegitimateEducationalInterest } = await import('@/lib/compliance/ferpa');
     
-    const isLegitimate = await verifyLegitimateEducationalInterest({
-      accessorId: 'instructor-id',
-      studentId: 'student-id',
-      purpose: 'Grading assignment',
-      institutionId: 'test-institution',
-    });
+    // Actual signature: requestorId, targetUserId, resource
+    const result = await verifyLegitimateEducationalInterest(
+      'instructor-id',
+      'student-id',
+      'student_record'
+    );
     
-    expect(typeof isLegitimate).toBe('boolean');
+    expect(result).toBeDefined();
+    expect(result).toHaveProperty('allowed');
+    expect(result).toHaveProperty('reason');
+    expect(typeof result.allowed).toBe('boolean');
   });
 
   test('should track access for compliance reporting', async () => {
@@ -191,15 +192,15 @@ describe('FERPA Access Logging', () => {
     const accessTypes = ['view', 'update', 'delete', 'export'];
     
     for (const action of accessTypes) {
+      // Actual signature: userId, resource, action, resourceId?, details?
       await expect(
-        logDataAccess({
-          userId: 'test-user',
-          accessedBy: 'test-admin',
+        logDataAccess(
+          'test-user',
+          'test_resource',
           action,
-          resource: 'test_resource',
-          resourceId: 'test-id',
-          details: {},
-        })
+          'test-id',
+          { accessedBy: 'test-admin' }
+        )
       ).resolves.not.toThrow();
     }
   });
@@ -207,11 +208,11 @@ describe('FERPA Access Logging', () => {
   test('should verify parent access to student records', async () => {
     const { verifyParentAccess } = await import('@/lib/compliance/ferpa');
     
-    const hasAccess = await verifyParentAccess({
-      parentId: 'parent-id',
-      studentId: 'student-id',
-      studentAge: 16, // Under 18
-    });
+    // Actual signature: parentEmail, studentId
+    const hasAccess = await verifyParentAccess(
+      'parent@example.com',
+      'student-id'
+    );
     
     expect(typeof hasAccess).toBe('boolean');
   });
@@ -235,9 +236,9 @@ describe('FERPA Data Retention', () => {
     
     expect(result).toBeDefined();
     expect(result).toHaveProperty('deletedUsers');
-    expect(result).toHaveProperty('archivedDocuments');
     expect(result).toHaveProperty('deletedAuditLogs');
-    expect(result).toHaveProperty('errors');
+    expect(typeof result.deletedUsers).toBe('number');
+    expect(typeof result.deletedAuditLogs).toBe('number');
   });
 
   test('should run retention cleanup', async () => {
@@ -264,8 +265,10 @@ describe('FERPA Data Retention', () => {
     const audit = await performDataMinimizationAudit(user.id);
     
     expect(audit).toBeDefined();
-    expect(audit).toHaveProperty('userId');
+    expect(audit).toHaveProperty('unnecessaryFields');
     expect(audit).toHaveProperty('recommendations');
+    expect(Array.isArray(audit.unnecessaryFields)).toBe(true);
+    expect(Array.isArray(audit.recommendations)).toBe(true);
     
     // Cleanup
     await userRepository.delete(user.id);
@@ -279,22 +282,35 @@ describe('FERPA Directory Disclosure', () => {
     const settings = await getDirectoryDisclosureSettings('test-institution');
     
     expect(settings).toBeDefined();
-    expect(settings).toHaveProperty('allowedFields');
-    expect(Array.isArray(settings.allowedFields)).toBe(true);
+    expect(settings).toHaveProperty('allowName');
+    expect(settings).toHaveProperty('allowEmail');
+    expect(settings).toHaveProperty('allowMajor');
+    expect(typeof settings.allowName).toBe('boolean');
   });
 
   test('should update directory disclosure settings', async () => {
     const { updateDirectoryDisclosureSettings } = await import('@/lib/compliance/ferpa');
+    const { userRepository } = await import('@/lib/repositories');
+    
+    // Create a user for the test
+    const user = await userRepository.create({
+      email: `disclosure-test${Date.now()}@example.com`,
+      name: 'Disclosure Test',
+      role: 'USER',
+    });
     
     const newSettings = {
-      allowedFields: ['name', 'email'],
-      requireOptIn: true,
-      notificationPeriod: 14,
+      allowName: true,
+      allowEmail: false,
+      allowMajor: true,
     };
     
     await expect(
-      updateDirectoryDisclosureSettings('test-institution', newSettings)
+      updateDirectoryDisclosureSettings(user.id, newSettings)
     ).resolves.not.toThrow();
+    
+    // Cleanup
+    await userRepository.delete(user.id);
   });
 });
 
@@ -312,11 +328,11 @@ describe('FERPA Compliance Validation', () => {
     const report = await generateComplianceReport('test-institution');
     
     expect(report).toBeDefined();
-    expect(report).toHaveProperty('institutionId');
-    expect(report).toHaveProperty('generatedAt');
-    expect(report).toHaveProperty('dataRetention');
-    expect(report).toHaveProperty('accessControls');
-    expect(report).toHaveProperty('auditTrail');
+    expect(report).toHaveProperty('totalUsers');
+    expect(report).toHaveProperty('activeConsents');
+    expect(report).toHaveProperty('compliance');
+    expect(report).toHaveProperty('recommendations');
+    expect(typeof report.totalUsers).toBe('number');
   });
 
   test('should validate institution compliance', async () => {
@@ -326,6 +342,8 @@ describe('FERPA Compliance Validation', () => {
     const report = await generateComplianceReport();
     
     expect(report).toBeDefined();
-    expect(report.generatedAt).toBeDefined();
+    expect(report).toHaveProperty('totalUsers');
+    expect(report).toHaveProperty('compliance');
+    expect(typeof report.totalUsers).toBe('number');
   });
 });

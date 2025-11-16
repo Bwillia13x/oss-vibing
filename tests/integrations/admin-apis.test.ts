@@ -257,12 +257,13 @@ describe('License Management', () => {
   test('should check available seats', async () => {
     const { licenseRepository } = await import('@/lib/repositories');
     
+    // Create test license with correct schema
     const testLicense = {
       institutionId: `seats-test-${Date.now()}`,
-      plan: 'ENTERPRISE' as const,
+      institution: 'Test Institution',
       seats: 50,
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      status: 'ACTIVE' as const,
     };
     
     const license = await licenseRepository.create(testLicense);
