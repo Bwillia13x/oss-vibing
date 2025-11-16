@@ -17,12 +17,12 @@ describe('OpenAlex API', () => {
       expect(citation.authorships).toBeDefined();
       expect(Array.isArray(citation.authorships)).toBe(true);
     }
-  }, { timeout: 10000 });
+  });
 
   test('should handle invalid DOI gracefully', { timeout: 10000 }, async () => {
     const citation = await getWorkByDOI('invalid-doi-xyz');
     expect(citation).toBeNull();
-  }, { timeout: 10000 });
+  });
 
   test('should search papers by query', { timeout: 10000 }, async () => {
     const results = await searchWorks('quantum computing', { perPage: 5 });
@@ -34,7 +34,7 @@ describe('OpenAlex API', () => {
       const firstResult = results[0];
       expect(firstResult.title).toBeTruthy();
     }
-  }, { timeout: 10000 });
+  });
 
   test('should return citation with proper metadata', { timeout: 10000 }, async () => {
     const doi = '10.1038/nature12373';
@@ -45,7 +45,7 @@ describe('OpenAlex API', () => {
       expect(citation).toHaveProperty('authorships');
       expect(citation).toHaveProperty('id');
     }
-  }, { timeout: 10000 });
+  });
 
   test('should respect search limit', { timeout: 10000 }, async () => {
     const limit = 2;
@@ -53,10 +53,10 @@ describe('OpenAlex API', () => {
     
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBeLessThanOrEqual(limit);
-  }, { timeout: 10000 });
+  });
 
   test('should handle empty search results', { timeout: 10000 }, async () => {
     const results = await searchWorks('xyzabcnonexistentterm12345', { perPage: 5 });
     expect(Array.isArray(results)).toBe(true);
-  }, { timeout: 10000 });
+  });
 });

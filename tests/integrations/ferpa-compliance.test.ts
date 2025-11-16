@@ -7,7 +7,7 @@ import { describe, test, expect } from 'vitest';
 
 describe('FERPA Encryption', () => {
   test('should encrypt data', async () => {
-    const { encryptData, decryptData } = await import('@/lib/compliance/encryption');
+    const { encryptData } = await import('@/lib/compliance/encryption');
     
     const sensitiveData = 'Test SSN: 123-45-6789';
     const encrypted = encryptData(sensitiveData);

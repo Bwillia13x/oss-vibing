@@ -3,7 +3,7 @@
  * Tests for Redis caching functionality and cache strategies
  */
 
-import { describe, test, expect, beforeAll } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import { getRedisClient, isRedisConnected, pingRedis } from '@/lib/cache/redis-client';
 
 describe('Redis Cache', () => {
@@ -38,32 +38,37 @@ describe('Cache Service Integration', () => {
     // Import cache service
     const { getCached, setCached } = await import('@/lib/cache/cache-service');
     
-    // These should not throw even if Redis is unavailable
-    await expect(getCached('test-key')).resolves.not.toThrow();
-    await expect(setCached('test-key', { data: 'test' }, 60)).resolves.not.toThrow();
+    // These should complete successfully even if Redis is unavailable
+    const cached = await getCached('test-key');
+    expect(cached === null || cached !== undefined).toBe(true);
+    
+    await setCached('test-key', { data: 'test' }, 60);
+    // Verify the operation completed without throwing
+    expect(true).toBe(true);
   });
 
   test('should support TTL parameter', async () => {
     const { setCached } = await import('@/lib/cache/cache-service');
     
-    // Test that TTL parameter is accepted
-    await expect(
-      setCached('test-ttl-key', { data: 'test' }, 3600)
-    ).resolves.not.toThrow();
+    // Test that TTL parameter is accepted and operation completes
+    await setCached('test-ttl-key', { data: 'test' }, 3600);
+    expect(true).toBe(true);
   });
 
   test('should support cache invalidation', async () => {
     const { deleteCached } = await import('@/lib/cache/cache-service');
     
-    // Test cache deletion
-    await expect(deleteCached('test-key')).resolves.not.toThrow();
+    // Test cache deletion completes successfully
+    await deleteCached('test-key');
+    expect(true).toBe(true);
   });
 
   test('should support pattern-based invalidation', async () => {
     const { deleteCachedPattern } = await import('@/lib/cache/cache-service');
     
-    // Test pattern-based deletion
-    await expect(deleteCachedPattern('test:*')).resolves.not.toThrow();
+    // Test pattern-based deletion completes successfully
+    await deleteCachedPattern('test:*');
+    expect(true).toBe(true);
   });
 
   test('should get cache statistics', async () => {

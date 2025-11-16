@@ -17,12 +17,12 @@ describe('Semantic Scholar API', () => {
       expect(citation.authors).toBeDefined();
       expect(Array.isArray(citation.authors)).toBe(true);
     }
-  }, { timeout: 10000 });
+  });
 
   test('should handle invalid DOI', { timeout: 10000 }, async () => {
     const citation = await getPaperByDOI('invalid-doi-test');
     expect(citation).toBeNull();
-  }, { timeout: 10000 });
+  });
 
   test('should search papers by query', { timeout: 10000 }, async () => {
     const results = await searchPapers('deep learning', { limit: 5 });
@@ -34,7 +34,7 @@ describe('Semantic Scholar API', () => {
       const firstResult = results[0];
       expect(firstResult.title).toBeTruthy();
     }
-  }, { timeout: 10000 });
+  });
 
   test('should include citation metadata', { timeout: 10000 }, async () => {
     const doi = '10.1038/nature12373';
@@ -45,7 +45,7 @@ describe('Semantic Scholar API', () => {
       expect(citation).toHaveProperty('authors');
       expect(citation).toHaveProperty('paperId');
     }
-  }, { timeout: 10000 });
+  });
 
   test('should limit search results', { timeout: 10000 }, async () => {
     const limit = 3;
@@ -53,11 +53,11 @@ describe('Semantic Scholar API', () => {
     
     expect(Array.isArray(results)).toBe(true);
     expect(results.length).toBeLessThanOrEqual(limit);
-  }, { timeout: 10000 });
+  });
 
   test('should handle network errors gracefully', { timeout: 10000 }, async () => {
-    // Test that the client handles errors without crashing
+    // If an exception is thrown, the test will fail. No assertion needed.
     const citation = await getPaperByDOI('10.1038/nature12373');
-    expect(citation === null || citation !== null).toBe(true);
-  }, { timeout: 10000 });
+    expect(citation).toBeDefined();
+  });
 });
