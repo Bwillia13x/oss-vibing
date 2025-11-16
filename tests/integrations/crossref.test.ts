@@ -26,28 +26,37 @@ describe('Crossref API', () => {
   });
 
   test('should search papers by query', { timeout: 10000 }, async () => {
-    const results = await searchWorks('machine learning', 5);
+    const result = await searchWorks('machine learning', { rows: 5 });
     
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(5);
-    
-    if (results.length > 0) {
-      const firstResult = results[0];
-      expect(firstResult.title).toBeTruthy();
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(5);
+      
+      if (result.items.length > 0) {
+        const firstResult = result.items[0];
+        expect(firstResult.title).toBeTruthy();
+      }
     }
   });
 
   test('should handle empty search query', { timeout: 10000 }, async () => {
-    const results = await searchWorks('', 5);
-    expect(Array.isArray(results)).toBe(true);
+    const result = await searchWorks('', { rows: 5 });
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.items)).toBe(true);
+    }
   });
 
   test('should respect search limit parameter', { timeout: 10000 }, async () => {
     const limit = 3;
-    const results = await searchWorks('artificial intelligence', limit);
+    const result = await searchWorks('artificial intelligence', { rows: limit });
     
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBeLessThanOrEqual(limit);
+    expect(result).toBeDefined();
+    if (result) {
+      expect(Array.isArray(result.items)).toBe(true);
+      expect(result.items.length).toBeLessThanOrEqual(limit);
+    }
   });
 
   test('should validate DOI format', { timeout: 10000 }, async () => {
