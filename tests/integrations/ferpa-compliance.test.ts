@@ -157,17 +157,28 @@ describe('FERPA Consent Management', () => {
 describe('FERPA Access Logging', () => {
   test('should log data access', async () => {
     const { logDataAccess } = await import('@/lib/compliance/ferpa');
+    const { userRepository } = await import('@/lib/repositories');
+    
+    // Create a user first to satisfy foreign key constraint
+    const user = await userRepository.create({
+      email: `log-test${Date.now()}@example.com`,
+      name: 'Log Test User',
+      role: 'USER',
+    });
     
     // Actual signature: userId, resource, action, resourceId?, details?
     await expect(
       logDataAccess(
-        'test-student',
+        user.id,  // Use real user ID
         'student_record',
         'view',
         'test-record-id',
         { fields: ['grades', 'profile'], accessedBy: 'test-instructor' }
       )
     ).resolves.not.toThrow();
+    
+    // Cleanup
+    await userRepository.delete(user.id);
   });
 
   test('should verify legitimate educational interest', async () => {
@@ -188,6 +199,14 @@ describe('FERPA Access Logging', () => {
 
   test('should track access for compliance reporting', async () => {
     const { logDataAccess } = await import('@/lib/compliance/ferpa');
+    const { userRepository } = await import('@/lib/repositories');
+    
+    // Create a user first to satisfy foreign key constraint
+    const user = await userRepository.create({
+      email: `tracking-test${Date.now()}@example.com`,
+      name: 'Tracking Test User',
+      role: 'USER',
+    });
     
     const accessTypes = ['view', 'update', 'delete', 'export'];
     
@@ -195,7 +214,7 @@ describe('FERPA Access Logging', () => {
       // Actual signature: userId, resource, action, resourceId?, details?
       await expect(
         logDataAccess(
-          'test-user',
+          user.id,  // Use real user ID
           'test_resource',
           action,
           'test-id',
@@ -203,18 +222,32 @@ describe('FERPA Access Logging', () => {
         )
       ).resolves.not.toThrow();
     }
+    
+    // Cleanup
+    await userRepository.delete(user.id);
   });
 
   test('should verify parent access to student records', async () => {
     const { verifyParentAccess } = await import('@/lib/compliance/ferpa');
+    const { userRepository } = await import('@/lib/repositories');
+    
+    // Create a student user first to satisfy foreign key constraint
+    const student = await userRepository.create({
+      email: `student-parent-test${Date.now()}@example.com`,
+      name: 'Student Test',
+      role: 'USER',
+    });
     
     // Actual signature: parentEmail, studentId
     const hasAccess = await verifyParentAccess(
       'parent@example.com',
-      'student-id'
+      student.id  // Use real student ID
     );
     
     expect(typeof hasAccess).toBe('boolean');
+    
+    // Cleanup
+    await userRepository.delete(student.id);
   });
 });
 
@@ -247,8 +280,11 @@ describe('FERPA Data Retention', () => {
     const result = await runRetentionCleanup();
     
     expect(result).toBeDefined();
-    expect(typeof result.deleted).toBe('number');
-    expect(result.deleted).toBeGreaterThanOrEqual(0);
+    expect(typeof result.deletedUsers).toBe('number');
+    expect(typeof result.deletedDocuments).toBe('number');
+    expect(typeof result.deletedAuditLogs).toBe('number');
+    expect(result.deletedUsers).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(result.errors)).toBe(true);
   });
 
   test('should perform data minimization audit', async () => {
