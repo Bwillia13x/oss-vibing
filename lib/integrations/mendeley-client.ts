@@ -293,7 +293,11 @@ export async function syncWithMendeley(
   updated: number;
   errors: string[];
 }> {
-  const result = {
+  const result: {
+    imported: number;
+    updated: number;
+    errors: string[];
+  } = {
     imported: 0,
     updated: 0,
     errors: [],

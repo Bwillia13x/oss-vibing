@@ -11,7 +11,7 @@ export * from './xlsx-generator';
 
 import { exportToPDF, type PDFExportOptions } from './pdf-generator';
 import { exportToDOCX, type DOCXExportOptions } from './docx-generator';
-import { exportToPPTX, type PPTXExportOptions, type PPTXSlide } from './pptx-generator';
+import { exportToPPTX, parseMarkdownToSlides, type PPTXExportOptions, type PPTXSlide } from './pptx-generator';
 import { exportToXLSX, type XLSXExportOptions, type XLSXSheet } from './xlsx-generator';
 
 export type ExportFormat = 'pdf' | 'docx' | 'pptx' | 'xlsx';

@@ -112,7 +112,7 @@ export class MoodleClient {
    */
   private async request<T>(
     functionName: string,
-    params: Record<string, string | number | boolean> = {}
+    params: Record<string, unknown> = {}
   ): Promise<T> {
     const url = new URL(`${this.config.baseUrl}/webservice/rest/server.php`)
     url.searchParams.append('wstoken', this.config.token)

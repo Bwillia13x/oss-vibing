@@ -329,7 +329,11 @@ export async function syncWithZotero(
   updated: number;
   errors: string[];
 }> {
-  const result = {
+  const result: {
+    imported: number;
+    updated: number;
+    errors: string[];
+  } = {
     imported: 0,
     updated: 0,
     errors: [],

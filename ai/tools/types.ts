@@ -246,3 +246,39 @@ export interface PluginResult {
   error?: string;
 }
 
+// Citation and Author types for integrations
+export interface Author {
+  given?: string;
+  family: string;
+  sequence?: string;
+  affiliation?: Array<{
+    name: string;
+  }>;
+}
+
+export interface CitationData {
+  title: string;
+  authors: Author[];
+  year: number;
+  doi?: string;
+  url?: string;
+  journal?: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  publisher?: string;
+  abstract?: string;
+}
+
+export interface PaperSource {
+  id: string;
+  title: string;
+  authors: Author[];
+  year: number;
+  abstract?: string;
+  doi?: string;
+  url?: string;
+  citationCount?: number;
+  source: 'crossref' | 'openalex' | 'semantic-scholar' | 'pubmed' | 'arxiv';
+}
+
