@@ -130,3 +130,59 @@ export const paginationSchema = z.object({
   page: z.number().int().min(1).optional(),
   perPage: z.number().int().min(1).max(100).optional(),
 })
+
+// Assignment validation schemas
+export const createAssignmentSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().optional(),
+  courseId: z.string().optional(),
+  instructorId: z.string().min(1),
+  dueDate: z.string().datetime(),
+  maxPoints: z.number().int().min(1).max(1000),
+  rubric: z.record(z.unknown()).optional(),
+  requirements: z.record(z.unknown()).optional(),
+  published: z.boolean().optional(),
+})
+
+export const updateAssignmentSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().optional(),
+  courseId: z.string().optional(),
+  dueDate: z.string().datetime().optional(),
+  maxPoints: z.number().int().min(1).max(1000).optional(),
+  rubric: z.record(z.unknown()).optional(),
+  requirements: z.record(z.unknown()).optional(),
+  published: z.boolean().optional(),
+})
+
+// Submission validation schemas
+export const createSubmissionSchema = z.object({
+  assignmentId: z.string().min(1),
+  studentId: z.string().min(1),
+  content: z.string().min(1),
+  status: z.enum(['SUBMITTED', 'GRADED', 'RETURNED', 'LATE']).optional(),
+  plagiarismCheck: z.record(z.unknown()).optional(),
+})
+
+export const updateSubmissionSchema = z.object({
+  content: z.string().min(1).optional(),
+  status: z.enum(['SUBMITTED', 'GRADED', 'RETURNED', 'LATE']).optional(),
+  plagiarismCheck: z.record(z.unknown()).optional(),
+})
+
+// Grade validation schemas
+export const createGradeSchema = z.object({
+  submissionId: z.string().min(1),
+  instructorId: z.string().min(1),
+  score: z.number().int().min(0),
+  maxPoints: z.number().int().min(1),
+  feedback: z.record(z.unknown()).optional(),
+  rubricScores: z.record(z.unknown()).optional(),
+})
+
+export const updateGradeSchema = z.object({
+  score: z.number().int().min(0).optional(),
+  maxPoints: z.number().int().min(1).optional(),
+  feedback: z.record(z.unknown()).optional(),
+  rubricScores: z.record(z.unknown()).optional(),
+})

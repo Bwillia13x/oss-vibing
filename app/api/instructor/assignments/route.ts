@@ -11,6 +11,8 @@ import {
   getAssignment,
   getAssignmentStatistics
 } from '@/lib/instructor-tools'
+import { Assignment, Rubric } from '@/lib/types/institutional'
+import { createAssignmentSchema } from '@/lib/db/validation/schemas'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
@@ -109,9 +111,14 @@ export async function POST(req: NextRequest) {
 
     const assignmentData = await req.json()
 
-    if (!assignmentData.courseId || !assignmentData.title) {
+    // Validate input with Zod
+    const validationResult = createAssignmentSchema.safeParse(assignmentData)
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'courseId and title are required' },
+        { 
+          error: 'Invalid input', 
+          details: validationResult.error.flatten().fieldErrors 
+        },
         { status: 400 }
       )
     }
@@ -122,7 +129,19 @@ export async function POST(req: NextRequest) {
       return authResult
     }
 
-    const assignment = await createAssignment(assignmentData)
+    const data = validationResult.data
+    const assignment = await createAssignment({
+      title: data.title,
+      description: data.description || '',
+      courseId: data.courseId || '',
+      instructorId: data.instructorId,
+      dueDate: new Date(data.dueDate),
+      points: data.maxPoints,
+      rubric: data.rubric as unknown as Rubric | undefined,
+      type: 'mixed',
+      requirements: data.requirements as unknown as Assignment['requirements'],
+      status: data.published ? 'published' : 'draft',
+    } as Assignment)
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/instructor/assignments',
@@ -133,7 +152,7 @@ export async function POST(req: NextRequest) {
       success: true,
       data: assignment,
       message: 'Assignment created successfully',
-    })
+    }, { status: 201 })
   } catch (error) {
     console.error('Error creating assignment:', error)
     
