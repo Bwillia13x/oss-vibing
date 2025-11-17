@@ -35,7 +35,7 @@ export async function GET() {
         hits: stats.memoryHits,
         misses: stats.memoryMisses,
         hitRate: `${hitRate}%`,
-        totalKeys: stats.size || 0,
+        totalKeys: stats.memory.size || 0,
       },
       performance: {
         target: {

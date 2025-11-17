@@ -10,6 +10,8 @@ import monitoring from '@/lib/monitoring'
 import { requireInstitutionAccess, requireAuth } from '@/lib/auth'
 import { usageMetricRepository } from '@/lib/db/repositories'
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
 

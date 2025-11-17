@@ -6,16 +6,21 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET environment variable is required in production');
+// Lazy evaluation to avoid build-time errors
+const getJWTSecret = () => {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  
+  if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable is required in production');
+    }
+    console.warn('JWT_SECRET not set, using development default (DO NOT USE IN PRODUCTION)');
   }
-  console.warn('JWT_SECRET not set, using development default (DO NOT USE IN PRODUCTION)');
-}
+  
+  return JWT_SECRET || 'development-secret-change-in-production';
+};
 
-const secret = new TextEncoder().encode(JWT_SECRET || 'development-secret-change-in-production');
+const getSecret = () => new TextEncoder().encode(getJWTSecret());
 const RECOVERY_TOKEN_EXPIRY = '1h'; // 1 hour
 
 export interface RecoveryTokenPayload {
@@ -32,7 +37,7 @@ export async function generateRecoveryToken(userId: string, email: string): Prom
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(RECOVERY_TOKEN_EXPIRY)
-    .sign(secret);
+    .sign(getSecret());
 
   return token;
 }
@@ -42,7 +47,7 @@ export async function generateRecoveryToken(userId: string, email: string): Prom
  */
 export async function verifyRecoveryToken(token: string): Promise<RecoveryTokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     const recoveryPayload = payload as unknown as RecoveryTokenPayload;
 
     if (recoveryPayload.type !== 'recovery') {
