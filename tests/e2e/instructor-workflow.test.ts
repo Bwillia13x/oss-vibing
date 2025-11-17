@@ -276,14 +276,6 @@ describe('Instructor Workflow E2E Tests', () => {
 
   describe('LMS Integration', () => {
     it('should sync grades to LMS', async () => {
-      const gradeData = {
-        courseId: 'COURSE-123',
-        assignmentId: 'ASSIGN-456',
-        studentId: studentId,
-        grade: 95,
-        submittedAt: new Date(),
-      }
-
       // Simulate LMS sync
       const syncResult = {
         success: true,

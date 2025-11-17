@@ -284,13 +284,13 @@ describe('Student Workflow E2E Tests', () => {
     })
 
     it('should allow student to export their own data', async () => {
-      const doc1 = await documentRepo.create({
+      await documentRepo.create({
         title: 'Doc 1',
         content: 'Content 1',
         userId: studentId,
       })
 
-      const doc2 = await documentRepo.create({
+      await documentRepo.create({
         title: 'Doc 2',
         content: 'Content 2',
         userId: studentId,
@@ -351,7 +351,7 @@ describe('Student Workflow E2E Tests', () => {
 
     it('should list recent documents', async () => {
       // Create docs with different timestamps
-      const doc1 = await documentRepo.create({
+      await documentRepo.create({
         title: 'Old Doc',
         content: 'Old',
         userId: studentId,
@@ -360,7 +360,7 @@ describe('Student Workflow E2E Tests', () => {
       // Wait a bit to ensure different timestamps
       await new Promise(resolve => setTimeout(resolve, 10))
 
-      const doc2 = await documentRepo.create({
+      await documentRepo.create({
         title: 'New Doc',
         content: 'New',
         userId: studentId,

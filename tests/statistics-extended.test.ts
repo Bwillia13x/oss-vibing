@@ -8,9 +8,7 @@ import { describe, it, expect } from 'vitest';
 import {
   mean,
   median,
-  mode,
   standardDeviation,
-  variance,
   pearsonCorrelation,
   spearmanCorrelation,
   linearRegression,
@@ -35,8 +33,6 @@ import {
   generateCorrelationReport,
   generateRegressionReport,
   generateTTestReport,
-  generateChiSquareReport,
-  generateANOVAReport,
 } from '@/lib/statistics/reports';
 
 describe('Extended Descriptive Statistics', () => {

@@ -8,7 +8,6 @@ import { describe, it, expect } from 'vitest';
 import { 
   authenticateWebSocket, 
   generateWebSocketToken,
-  isAuthenticated,
   hasPermission 
 } from '@/lib/collaboration/auth';
 import { 

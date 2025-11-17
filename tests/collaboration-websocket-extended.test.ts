@@ -5,7 +5,7 @@
  * Target: Increase collaboration coverage from 37% to 70%
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   checkConnectionRateLimit,
   checkMessageRateLimit,
@@ -237,7 +237,7 @@ describe('Collaboration - Rate Limiting Extended Tests', () => {
       // Use some limit
       await checkMessageRateLimit(userId);
       
-      const before = await getRateLimitStatus(userId);
+      await getRateLimitStatus(userId);
       
       // Wait a bit (in real scenarios, limits recover after duration)
       // For testing, we just verify the function works

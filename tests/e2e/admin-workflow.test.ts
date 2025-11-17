@@ -642,8 +642,6 @@ describe('Admin Workflow E2E', () => {
     });
 
     it('should identify inactive users', async () => {
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
       const oldUser = await prisma.user.create({
         data: {
           email: `inactive-${Date.now()}@test.edu`,
