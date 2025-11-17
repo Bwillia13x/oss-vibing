@@ -11,6 +11,13 @@ import { adminSettingsRepository, auditLogRepository } from '@/lib/db/repositori
 import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import { 
+  RateLimitError, 
+  BadRequestError, 
+  ValidationError,
+  NotFoundError,
+  formatErrorResponse 
+} from '@/lib/errors/api-errors'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'logos')
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -18,16 +25,17 @@ const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml', 
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] POST /api/admin/branding/logo - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     const formData = await req.formData()
@@ -35,17 +43,13 @@ export async function POST(req: NextRequest) {
     const file = formData.get('logo') as File | null
 
     if (!institutionId) {
-      return NextResponse.json(
-        { error: 'institutionId is required' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Missing institutionId`)
+      throw new BadRequestError('institutionId is required')
     }
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'logo file is required' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Missing logo file`)
+      throw new BadRequestError('logo file is required')
     }
 
     // Authentication and authorization - admins only
@@ -56,24 +60,18 @@ export async function POST(req: NextRequest) {
 
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid file type. Allowed types: PNG, JPEG, JPG, SVG, WebP',
-          allowedTypes: ALLOWED_TYPES 
-        },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Invalid file type: ${file.type}`)
+      throw new ValidationError('Invalid file type', {
+        fileType: [`Allowed types: PNG, JPEG, JPG, SVG, WebP`]
+      })
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { 
-          error: `File too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-          maxSize: MAX_FILE_SIZE 
-        },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] File too large: ${file.size} bytes`)
+      throw new ValidationError('File too large', {
+        fileSize: [`Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`]
+      })
     }
 
     // Create upload directory if it doesn't exist
@@ -121,9 +119,14 @@ export async function POST(req: NextRequest) {
       severity: 'INFO',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] POST /api/admin/branding/logo - Success (${duration}ms, ${file.size} bytes)`)
+    
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: '/api/admin/branding/logo',
       method: 'POST',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -137,45 +140,48 @@ export async function POST(req: NextRequest) {
       message: 'Logo uploaded successfully',
     })
   } catch (error) {
-    console.error('Error uploading logo:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] POST /api/admin/branding/logo - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: '/api/admin/branding/logo',
       method: 'POST',
+      requestId,
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to upload logo'
+        error: errorMessage,
+        ...(details && { details })
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
 
 export async function DELETE(req: NextRequest) {
   const startTime = Date.now()
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] DELETE /api/admin/branding/logo - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     const { searchParams } = new URL(req.url)
     const institutionId = searchParams.get('institutionId')
 
     if (!institutionId) {
-      return NextResponse.json(
-        { error: 'institutionId is required' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Missing institutionId`)
+      throw new BadRequestError('institutionId is required')
     }
 
     // Authentication and authorization - admins only
@@ -189,10 +195,8 @@ export async function DELETE(req: NextRequest) {
     const branding = await adminSettingsRepository.get(brandingKey) as { logo?: string } | null
 
     if (!branding || !branding.logo) {
-      return NextResponse.json(
-        { error: 'No logo found for this institution' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] No logo found for institution: ${institutionId}`)
+      throw new NotFoundError('Logo', institutionId)
     }
 
     // Remove logo from branding
@@ -214,9 +218,14 @@ export async function DELETE(req: NextRequest) {
       severity: 'INFO',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] DELETE /api/admin/branding/logo - Success (${duration}ms)`)
+    
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: '/api/admin/branding/logo',
       method: 'DELETE',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -224,19 +233,23 @@ export async function DELETE(req: NextRequest) {
       message: 'Logo deleted successfully',
     })
   } catch (error) {
-    console.error('Error deleting logo:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] DELETE /api/admin/branding/logo - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: '/api/admin/branding/logo',
       method: 'DELETE',
+      requestId,
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to delete logo'
+        error: errorMessage,
+        ...(details && { details })
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

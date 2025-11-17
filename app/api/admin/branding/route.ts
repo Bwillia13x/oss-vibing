@@ -9,29 +9,34 @@ import monitoring from '@/lib/monitoring'
 import type { InstitutionBranding } from '@/lib/types/institutional'
 import { requireInstitutionAccess } from '@/lib/auth'
 import { adminSettingsRepository, auditLogRepository } from '@/lib/db/repositories'
+import { 
+  RateLimitError, 
+  BadRequestError, 
+  ValidationError,
+  formatErrorResponse 
+} from '@/lib/errors/api-errors'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] GET /api/admin/branding - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     const { searchParams } = new URL(req.url)
     const institutionId = searchParams.get('institutionId')
 
     if (!institutionId) {
-      return NextResponse.json(
-        { error: 'institutionId is required' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Missing required parameter: institutionId`)
+      throw new BadRequestError('institutionId is required')
     }
 
     // Note: Branding retrieval can be public (no auth required)
@@ -48,9 +53,14 @@ export async function GET(req: NextRequest) {
         supportEmail: 'support@example.edu',
       }
 
-      monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+      const duration = Date.now() - startTime
+      console.log(`[${requestId}] GET /api/admin/branding - Success (${duration}ms, default branding)`)
+      
+      monitoring.trackMetric('api_response_time', duration, {
         endpoint: '/api/admin/branding',
         method: 'GET',
+        status: 'success',
+        requestId,
       })
 
       return NextResponse.json({
@@ -59,9 +69,14 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] GET /api/admin/branding - Success (${duration}ms)`)
+    
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: '/api/admin/branding',
       method: 'GET',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -69,53 +84,56 @@ export async function GET(req: NextRequest) {
       data: branding,
     })
   } catch (error) {
-    console.error('Error retrieving branding:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] GET /api/admin/branding - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: '/api/admin/branding',
       method: 'GET',
+      requestId,
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to retrieve branding'
+        error: errorMessage,
+        ...(details && { details })
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] POST /api/admin/branding - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     const branding: InstitutionBranding = await req.json()
 
     if (!branding.institutionId || !branding.primaryColor || !branding.secondaryColor) {
-      return NextResponse.json(
-        { error: 'institutionId, primaryColor, and secondaryColor are required' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Missing required fields`)
+      throw new BadRequestError('institutionId, primaryColor, and secondaryColor are required')
     }
 
     // Validate color format (basic hex validation)
     const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
     if (!hexColorRegex.test(branding.primaryColor) || !hexColorRegex.test(branding.secondaryColor)) {
-      return NextResponse.json(
-        { error: 'Colors must be valid hex format (e.g., #2563eb)' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Invalid color format`)
+      throw new ValidationError('Invalid color format', {
+        colors: ['Colors must be valid hex format (e.g., #2563eb)']
+      })
     }
 
     // Authentication and authorization - admins only
@@ -137,9 +155,14 @@ export async function POST(req: NextRequest) {
       severity: 'INFO',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] POST /api/admin/branding - Success (${duration}ms)`)
+    
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: '/api/admin/branding',
       method: 'POST',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -148,59 +171,62 @@ export async function POST(req: NextRequest) {
       message: 'Branding saved successfully',
     })
   } catch (error) {
-    console.error('Error saving branding:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] POST /api/admin/branding - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: '/api/admin/branding',
       method: 'POST',
+      requestId,
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to save branding'
+        error: errorMessage,
+        ...(details && { details })
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
 
 export async function PUT(req: NextRequest) {
   const startTime = Date.now()
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] PUT /api/admin/branding - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     const updates: Partial<InstitutionBranding> = await req.json()
 
     if (!updates.institutionId) {
-      return NextResponse.json(
-        { error: 'institutionId is required' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Missing required parameter: institutionId`)
+      throw new BadRequestError('institutionId is required')
     }
 
     // Validate colors if provided
     const hexColorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
     if (updates.primaryColor && !hexColorRegex.test(updates.primaryColor)) {
-      return NextResponse.json(
-        { error: 'primaryColor must be valid hex format' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Invalid primaryColor format`)
+      throw new ValidationError('Invalid color format', {
+        primaryColor: ['primaryColor must be valid hex format']
+      })
     }
     if (updates.secondaryColor && !hexColorRegex.test(updates.secondaryColor)) {
-      return NextResponse.json(
-        { error: 'secondaryColor must be valid hex format' },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Invalid secondaryColor format`)
+      throw new ValidationError('Invalid color format', {
+        secondaryColor: ['secondaryColor must be valid hex format']
+      })
     }
 
     // Authentication and authorization - admins only
@@ -229,9 +255,14 @@ export async function PUT(req: NextRequest) {
       severity: 'INFO',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] PUT /api/admin/branding - Success (${duration}ms)`)
+    
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: '/api/admin/branding',
       method: 'PUT',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -240,19 +271,23 @@ export async function PUT(req: NextRequest) {
       message: 'Branding updated successfully',
     })
   } catch (error) {
-    console.error('Error updating branding:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] PUT /api/admin/branding - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: '/api/admin/branding',
       method: 'PUT',
+      requestId,
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to update branding'
+        error: errorMessage,
+        ...(details && { details })
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
