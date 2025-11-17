@@ -9,45 +9,59 @@ import monitoring from '@/lib/monitoring'
 import { userRepository, auditLogRepository } from '@/lib/db/repositories'
 import { updateUserSchema } from '@/lib/db/validation/schemas'
 import { requireRole, requireInstitutionAccess } from '@/lib/auth'
+import { NotFoundError, ValidationError, RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function PUT(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now()
+  const params = await context.params
+  const userId = params.id
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] PUT /api/admin/users/${userId} - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
-    }
-
-    const params = await context.params
-    const userId = params.id
-    const updateData = await req.json()
-
-    // Validate update data
-    const validated = updateUserSchema.parse(updateData)
-
-    // Get user to verify it exists
-    const existingUser = await userRepository.findById(userId)
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - admins only
     const authResult = await requireRole(req, ['admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
+
+    const updateData = await req.json()
+
+    // Validate update data
+    const validationResult = updateUserSchema.safeParse(updateData)
+    if (!validationResult.success) {
+      console.warn(`[${requestId}] Validation failed`, validationResult.error.flatten().fieldErrors)
+      throw new ValidationError('Invalid input', validationResult.error.flatten().fieldErrors)
+    }
+
+    const validated = validationResult.data
+
+    console.log(`[${requestId}] Fetching user: ${userId}`)
+    
+    // Get user to verify it exists
+    const existingUser = await userRepository.findById(userId)
+    if (!existingUser) {
+      console.warn(`[${requestId}] User not found: ${userId}`)
+      throw new NotFoundError('User', userId)
+    }
+
+    console.log(`[${requestId}] Updating user`, {
+      userId,
+      updates: Object.keys(validated),
+    })
 
     // Update user
     const updatedUser = await userRepository.update(userId, validated)
@@ -64,9 +78,14 @@ export async function PUT(
       severity: 'INFO',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
-      endpoint: '/api/admin/users/[id]',
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] PUT /api/admin/users/${userId} - Success (${duration}ms)`)
+
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/admin/users/${userId}`,
       method: 'PUT',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -74,19 +93,30 @@ export async function PUT(
       data: updatedUser,
     })
   } catch (error) {
-    console.error('Error updating user:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] PUT /api/admin/users/${userId} - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
-      endpoint: '/api/admin/users/[id]',
+      endpoint: `/api/admin/users/${userId}`,
       method: 'PUT',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/admin/users/${userId}`,
+      method: 'PUT',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to update user'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
@@ -96,35 +126,38 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now()
+  const params = await context.params
+  const userId = params.id
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] DELETE /api/admin/users/${userId} - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
-    }
-
-    const params = await context.params
-    const userId = params.id
-
-    // Get user to verify it exists
-    const existingUser = await userRepository.findById(userId)
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - admins only
     const authResult = await requireRole(req, ['admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
+
+    console.log(`[${requestId}] Fetching user: ${userId}`)
+    
+    // Get user to verify it exists
+    const existingUser = await userRepository.findById(userId)
+    if (!existingUser) {
+      console.warn(`[${requestId}] User not found: ${userId}`)
+      throw new NotFoundError('User', userId)
+    }
+
+    console.log(`[${requestId}] Soft deleting user: ${userId}`)
 
     // Soft delete user
     const deletedUser = await userRepository.delete(userId)
@@ -138,9 +171,14 @@ export async function DELETE(
       severity: 'WARNING',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
-      endpoint: '/api/admin/users/[id]',
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] DELETE /api/admin/users/${userId} - Success (${duration}ms)`)
+
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/admin/users/${userId}`,
       method: 'DELETE',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -148,19 +186,30 @@ export async function DELETE(
       data: deletedUser,
     })
   } catch (error) {
-    console.error('Error deleting user:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] DELETE /api/admin/users/${userId} - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
-      endpoint: '/api/admin/users/[id]',
+      endpoint: `/api/admin/users/${userId}`,
       method: 'DELETE',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/admin/users/${userId}`,
+      method: 'DELETE',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to delete user'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
