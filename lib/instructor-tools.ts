@@ -13,16 +13,11 @@ import {
   ClassAnalytics,
   PlagiarismReport,
 } from './types/institutional'
-// File system utilities (for future use)
-// import { readdir, readFile, writeFile } from 'fs/promises'
-// import { join } from 'path'
-// import { existsSync } from 'fs'
-
-// Mock data storage directories (for future use)
-// const ASSIGNMENTS_DIR = join(process.cwd(), 'assignments')
-// const SUBMISSIONS_DIR = join(process.cwd(), 'submissions')
-// const COURSES_DIR = join(process.cwd(), 'courses')
-// const RUBRICS_DIR = join(process.cwd(), 'rubrics')
+import {
+  AssignmentRepository,
+  SubmissionRepository,
+  GradeRepository,
+} from './db/repositories'
 
 /**
  * Create a new assignment
@@ -30,17 +25,36 @@ import {
 export async function createAssignment(
   assignment: Omit<Assignment, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Assignment> {
-  const newAssignment: Assignment = {
-    ...assignment,
-    id: generateId(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }
-
-  // In production, save to database
-  console.log('Assignment created:', newAssignment.id)
+  const repo = new AssignmentRepository()
   
-  return newAssignment
+  const newAssignment = await repo.create({
+    title: assignment.title,
+    description: assignment.description,
+    courseId: assignment.courseId,
+    instructorId: assignment.instructorId,
+    dueDate: assignment.dueDate,
+    maxPoints: assignment.points, // Map points to maxPoints
+    rubric: assignment.rubric as Record<string, unknown> | undefined,
+    requirements: assignment.requirements as Record<string, unknown> | undefined,
+    published: assignment.status === 'published',
+  })
+
+  // Convert to Assignment type
+  return {
+    id: newAssignment.id,
+    title: newAssignment.title,
+    description: newAssignment.description || '',
+    courseId: newAssignment.courseId || '',
+    instructorId: newAssignment.instructorId,
+    dueDate: newAssignment.dueDate,
+    points: newAssignment.maxPoints, // Map maxPoints to points
+    rubric: newAssignment.rubric as unknown as Rubric | undefined,
+    type: 'mixed',
+    requirements: newAssignment.requirements as unknown as Assignment['requirements'],
+    status: newAssignment.published ? 'published' : 'draft',
+    createdAt: newAssignment.createdAt,
+    updatedAt: newAssignment.updatedAt,
+  } as Assignment
 }
 
 /**
@@ -50,36 +64,91 @@ export async function updateAssignment(
   assignmentId: string,
   updates: Partial<Assignment>
 ): Promise<Assignment> {
-  // In production, update database
-  const assignment: Assignment = {
-    id: assignmentId,
-    ...updates,
-    updatedAt: new Date(),
-  } as Assignment
-
-  console.log('Assignment updated:', assignmentId)
+  const repo = new AssignmentRepository()
   
-  return assignment
+  const updated = await repo.update(assignmentId, {
+    title: updates.title,
+    description: updates.description,
+    courseId: updates.courseId,
+    dueDate: updates.dueDate,
+    maxPoints: updates.points, // Map points to maxPoints
+    rubric: updates.rubric as Record<string, unknown> | undefined,
+    requirements: updates.requirements as Record<string, unknown> | undefined,
+    published: updates.status === 'published',
+  })
+
+  // Convert to Assignment type
+  return {
+    id: updated.id,
+    title: updated.title,
+    description: updated.description || '',
+    courseId: updated.courseId || '',
+    instructorId: updated.instructorId,
+    dueDate: updated.dueDate,
+    points: updated.maxPoints, // Map maxPoints to points
+    rubric: updated.rubric as unknown as Rubric | undefined,
+    type: 'mixed',
+    requirements: updated.requirements as unknown as Assignment['requirements'],
+    status: updated.published ? 'published' : 'draft',
+    createdAt: updated.createdAt,
+    updatedAt: updated.updatedAt,
+  } as Assignment
 }
 
 /**
  * Get assignment by ID
  */
 export async function getAssignment(
-  _assignmentId: string
+  assignmentId: string
 ): Promise<Assignment | null> {
-  // In production, query database
-  return null
+  const repo = new AssignmentRepository()
+  const assignment = await repo.findById(assignmentId)
+  
+  if (!assignment) return null
+
+  // Convert to Assignment type
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    description: assignment.description || '',
+    courseId: assignment.courseId || '',
+    instructorId: assignment.instructorId,
+    dueDate: assignment.dueDate,
+    points: assignment.maxPoints, // Map maxPoints to points
+    rubric: assignment.rubric as unknown as Rubric | undefined,
+    type: 'mixed',
+    requirements: assignment.requirements as unknown as Assignment['requirements'],
+    status: assignment.published ? 'published' : 'draft',
+    createdAt: assignment.createdAt,
+    updatedAt: assignment.updatedAt,
+  } as Assignment
 }
 
 /**
  * Get all assignments for a course
  */
 export async function getCourseAssignments(
-  _courseId: string
+  courseId: string
 ): Promise<Assignment[]> {
-  // In production, query database
-  return []
+  const repo = new AssignmentRepository()
+  const result = await repo.findByCourse(courseId, { page: 1, perPage: 100 })
+  
+  // Convert to Assignment array
+  return result.data.map(assignment => ({
+    id: assignment.id,
+    title: assignment.title,
+    description: assignment.description || '',
+    courseId: assignment.courseId || '',
+    instructorId: assignment.instructorId,
+    dueDate: assignment.dueDate,
+    points: assignment.maxPoints, // Map maxPoints to points
+    rubric: assignment.rubric as unknown as Rubric | undefined,
+    type: 'mixed' as const,
+    requirements: assignment.requirements as unknown as Assignment['requirements'],
+    status: assignment.published ? 'published' as const : 'draft' as const,
+    createdAt: assignment.createdAt,
+    updatedAt: assignment.updatedAt,
+  } as Assignment))
 }
 
 /**
@@ -124,42 +193,118 @@ export async function gradeSubmission(
   grade: number,
   rubricScores?: Record<string, number>,
   feedback?: string,
-  _instructorId?: string
+  instructorId?: string
 ): Promise<Submission> {
-  // In production, update database
-  const submission: Submission = {
-    id: submissionId,
-    status: 'graded',
+  const gradeRepo = new GradeRepository()
+  const submissionRepo = new SubmissionRepository()
+  
+  // Get the submission to find maxPoints
+  const submission = await submissionRepo.findById(submissionId)
+  if (!submission) {
+    throw new Error('Submission not found')
+  }
+
+  // Check if grade already exists
+  const existingGrade = await gradeRepo.findBySubmission(submissionId)
+  
+  if (existingGrade) {
+    // Update existing grade
+    await gradeRepo.update(existingGrade.id, {
+      score: grade,
+      feedback: feedback ? { text: feedback } : undefined,
+      rubricScores,
+    })
+  } else {
+    // Create new grade
+    if (!instructorId) {
+      throw new Error('Instructor ID is required for new grade')
+    }
+    
+    await gradeRepo.create({
+      submissionId,
+      instructorId,
+      score: grade,
+      maxPoints: 100, // Default, should be from assignment
+      feedback: feedback ? { text: feedback } : undefined,
+      rubricScores,
+    })
+  }
+
+  // Update submission status to graded
+  await submissionRepo.update(submissionId, {
+    status: 'GRADED',
+  })
+
+  // Return updated submission
+  const updatedSubmission = await submissionRepo.findById(submissionId)
+  
+  // Convert to Submission type
+  return {
+    id: updatedSubmission!.id,
+    assignmentId: updatedSubmission!.assignmentId,
+    studentId: updatedSubmission!.studentId,
+    content: updatedSubmission!.content,
+    submittedAt: updatedSubmission!.submittedAt,
+    status: updatedSubmission!.status as 'submitted' | 'graded' | 'returned' | 'late',
     grade,
     rubricScores,
     feedback,
   } as Submission
-
-  console.log('Submission graded:', submissionId)
-  
-  return submission
 }
 
 /**
  * Get submissions for an assignment
  */
 export async function getAssignmentSubmissions(
-  _assignmentId: string,
-  _status?: Submission['status']
+  assignmentId: string,
+  status?: Submission['status']
 ): Promise<Submission[]> {
-  // In production, query database with optional status filter
-  return []
+  const repo = new SubmissionRepository()
+  const result = await repo.findByAssignment(assignmentId, { page: 1, perPage: 100 })
+  
+  let submissions = result.data
+  
+  // Filter by status if provided
+  if (status) {
+    submissions = submissions.filter(s => s.status === status.toUpperCase())
+  }
+  
+  // Convert to Submission array
+  return submissions.map(submission => ({
+    id: submission.id,
+    assignmentId: submission.assignmentId,
+    studentId: submission.studentId,
+    content: submission.content,
+    submittedAt: submission.submittedAt,
+    status: submission.status.toLowerCase() as 'submitted' | 'graded' | 'returned' | 'late',
+    grade: undefined, // Would come from grade record
+    rubricScores: undefined,
+    feedback: undefined,
+  } as Submission))
 }
 
 /**
  * Get submissions by student
  */
 export async function getStudentSubmissions(
-  _studentId: string,
+  studentId: string,
   _courseId?: string
 ): Promise<Submission[]> {
-  // In production, query database
-  return []
+  const repo = new SubmissionRepository()
+  const result = await repo.findByStudent(studentId, { page: 1, perPage: 100 })
+  
+  // Convert to Submission array
+  return result.data.map(submission => ({
+    id: submission.id,
+    assignmentId: submission.assignmentId,
+    studentId: submission.studentId,
+    content: submission.content,
+    submittedAt: submission.submittedAt,
+    status: submission.status.toLowerCase() as 'submitted' | 'graded' | 'returned' | 'late',
+    grade: undefined, // Would come from grade record
+    rubricScores: undefined,
+    feedback: undefined,
+  } as Submission))
 }
 
 /**

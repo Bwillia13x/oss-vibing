@@ -10,6 +10,7 @@ import {
   getStudentSubmissions,
   exportGradesToLMS,
 } from '@/lib/instructor-tools'
+import { SubmissionRepository } from '@/lib/db/repositories'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
