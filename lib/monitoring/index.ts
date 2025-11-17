@@ -14,7 +14,15 @@
  * @module lib/monitoring
  */
 
-import * as Sentry from '@sentry/nextjs';
+// Sentry is optional - only loaded if installed
+let Sentry: any = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  Sentry = require('@sentry/nextjs');
+} catch (e) {
+  // Sentry not available - monitoring will use console fallback
+  console.warn('Sentry not available - error tracking will use console fallback');
+}
 
 /**
  * Error severity levels
@@ -119,30 +127,33 @@ export function logError(
   // Prepare error for Sentry
   const errorObj = typeof error === 'string' ? new Error(error) : error;
 
-  // Set error context
-  Sentry.withScope((scope) => {
-    scope.setLevel(severity);
-    scope.setTag('category', context.category);
-    
-    if (context.endpoint) {
-      scope.setTag('endpoint', context.endpoint);
-    }
-    
-    if (context.userId) {
-      scope.setUser({ id: context.userId });
-    }
-    
-    if (context.action) {
-      scope.setTag('action', context.action);
-    }
-    
-    if (context.metadata) {
-      scope.setContext('metadata', context.metadata);
-    }
+  // Set error context if Sentry is available
+  if (Sentry && Sentry.withScope) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Sentry.withScope((scope: any) => {
+      scope.setLevel(severity);
+      scope.setTag('category', context.category);
+      
+      if (context.endpoint) {
+        scope.setTag('endpoint', context.endpoint);
+      }
+      
+      if (context.userId) {
+        scope.setUser({ id: context.userId });
+      }
+      
+      if (context.action) {
+        scope.setTag('action', context.action);
+      }
+      
+      if (context.metadata) {
+        scope.setContext('metadata', context.metadata);
+      }
 
-    // Capture the error
-    Sentry.captureException(errorObj);
-  });
+      // Capture the error
+      Sentry.captureException(errorObj);
+    });
+  }
 
   // Also log to console in development
   if (process.env.NODE_ENV === 'development') {
@@ -180,36 +191,39 @@ export function trackMetric(metricType: MetricType, data: MetricData): void {
     return;
   }
 
-  // Use newer Sentry API for metrics
-  Sentry.withScope((scope) => {
-    // Add metric data as tags
-    if (data.duration !== undefined) {
-      scope.setTag('duration_ms', data.duration);
-    }
-    
-    if (data.success !== undefined) {
-      scope.setTag('success', String(data.success));
-    }
-    
-    if (data.provider) {
-      scope.setTag('provider', data.provider);
-    }
-    
-    if (data.cached !== undefined) {
-      scope.setTag('cached', String(data.cached));
-    }
+  // Use newer Sentry API for metrics if available
+  if (Sentry && Sentry.withScope && Sentry.addBreadcrumb) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Sentry.withScope((scope: any) => {
+      // Add metric data as tags
+      if (data.duration !== undefined) {
+        scope.setTag('duration_ms', data.duration);
+      }
+      
+      if (data.success !== undefined) {
+        scope.setTag('success', String(data.success));
+      }
+      
+      if (data.provider) {
+        scope.setTag('provider', data.provider);
+      }
+      
+      if (data.cached !== undefined) {
+        scope.setTag('cached', String(data.cached));
+      }
 
-    // Add all data as context
-    scope.setContext('metric_data', data);
+      // Add all data as context
+      scope.setContext('metric_data', data);
 
-    // Capture as breadcrumb for debugging
-    Sentry.addBreadcrumb({
-      category: 'metric',
-      message: metricType,
-      data,
-      level: 'info',
+      // Capture as breadcrumb for debugging
+      Sentry.addBreadcrumb({
+        category: 'metric',
+        message: metricType,
+        data,
+        level: 'info',
+      });
     });
-  });
+  }
 
   // Log in development
   if (process.env.NODE_ENV === 'development') {
@@ -285,6 +299,10 @@ export function setUserContext(user: UserContext | null): void {
     return;
   }
 
+  if (!Sentry || !Sentry.setUser) {
+    return;
+  }
+
   if (user) {
     Sentry.setUser({
       id: user.id,
@@ -292,7 +310,7 @@ export function setUserContext(user: UserContext | null): void {
       username: user.username,
     });
     
-    if (user.role) {
+    if (user.role && Sentry.setTag) {
       Sentry.setTag('user_role', user.role);
     }
   } else {
@@ -326,13 +344,15 @@ export function addBreadcrumb(
     return;
   }
 
-  Sentry.addBreadcrumb({
-    message,
-    category,
-    level,
-    data,
-    timestamp: Date.now() / 1000,
-  });
+  if (Sentry && Sentry.addBreadcrumb) {
+    Sentry.addBreadcrumb({
+      message,
+      category,
+      level,
+      data,
+      timestamp: Date.now() / 1000,
+    });
+  }
 }
 
 /**
@@ -359,15 +379,18 @@ export function captureMessage(
     return;
   }
 
-  Sentry.withScope((scope) => {
-    scope.setLevel(level);
-    
-    if (context) {
-      scope.setContext('message_context', context);
-    }
+  if (Sentry && Sentry.withScope && Sentry.captureMessage) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Sentry.withScope((scope: any) => {
+      scope.setLevel(level);
+      
+      if (context) {
+        scope.setContext('message_context', context);
+      }
 
-    Sentry.captureMessage(message);
-  });
+      Sentry.captureMessage(message);
+    });
+  }
 }
 
 /**
@@ -404,12 +427,14 @@ export function startSpan(name: string, op: string) {
   return {
     finish: () => {
       const duration = Date.now() - startTime;
-      Sentry.addBreadcrumb({
-        category: op,
-        message: name,
-        data: { duration_ms: duration },
-        level: 'info',
-      });
+      if (Sentry && Sentry.addBreadcrumb) {
+        Sentry.addBreadcrumb({
+          category: op,
+          message: name,
+          data: { duration_ms: duration },
+          level: 'info',
+        });
+      }
     },
     setTag: (_key: string, _value: string) => {
       // Tags are not supported on breadcrumbs
@@ -448,12 +473,14 @@ export async function monitorAsync<T>(
     span.finish();
     
     // Log success metric
-    Sentry.addBreadcrumb({
-      category: 'performance',
-      message: `${name} completed`,
-      data: { duration_ms: duration, success: true },
-      level: 'info',
-    });
+    if (Sentry && Sentry.addBreadcrumb) {
+      Sentry.addBreadcrumb({
+        category: 'performance',
+        message: `${name} completed`,
+        data: { duration_ms: duration, success: true },
+        level: 'info',
+      });
+    }
     
     return result;
   } catch (error) {
@@ -462,12 +489,14 @@ export async function monitorAsync<T>(
     span.finish();
     
     // Log failure metric
-    Sentry.addBreadcrumb({
-      category: 'performance',
-      message: `${name} failed`,
-      data: { duration_ms: duration, success: false },
-      level: 'error',
-    });
+    if (Sentry && Sentry.addBreadcrumb) {
+      Sentry.addBreadcrumb({
+        category: 'performance',
+        message: `${name} failed`,
+        data: { duration_ms: duration, success: false },
+        level: 'error',
+      });
+    }
     
     throw error;
   }
@@ -479,6 +508,10 @@ export async function monitorAsync<T>(
  */
 export function initMonitoring(): void {
   if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!Sentry || !Sentry.setTag) {
     return;
   }
 
