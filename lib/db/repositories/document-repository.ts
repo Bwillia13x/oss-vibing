@@ -39,7 +39,7 @@ export interface DocumentFilters {
 // Extended Document type with parsed JSON fields
 export type DocumentWithParsedFields = Omit<Document, 'tags' | 'metadata'> & {
   tags: string[] | null
-  metadata: Record<string, any> | null
+  metadata: Record<string, unknown> | null
 }
 
 export class DocumentRepository extends BaseRepository {
@@ -116,9 +116,10 @@ export class DocumentRepository extends BaseRepository {
           },
         })
         if (!doc) return null
+        const docWithCitations = doc as Document & { citations: unknown[] }
         return {
           ...this.parseDocument(doc),
-          citations: (doc as any).citations,
+          citations: docWithCitations.citations,
         }
       },
       'findDocumentByIdWithCitations'
