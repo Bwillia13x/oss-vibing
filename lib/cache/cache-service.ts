@@ -15,6 +15,15 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<unknown>>();
 
+// Cache statistics tracking
+// eslint-disable-next-line prefer-const
+let cacheStats = {
+  memoryHits: 0,
+  memoryMisses: 0,
+  redisHits: 0,
+  redisMisses: 0,
+};
+
 // Default TTL values (in seconds)
 export const DEFAULT_TTL = {
   SHORT: 60, // 1 minute
@@ -35,7 +44,10 @@ export async function getCached<T>(key: string): Promise<T | null> {
       if (redis) {
         const value = await redis.get(key);
         if (value) {
+          cacheStats.redisHits++;
           return JSON.parse(value) as T;
+        } else {
+          cacheStats.redisMisses++;
         }
       }
     }
@@ -44,16 +56,21 @@ export async function getCached<T>(key: string): Promise<T | null> {
     const entry = memoryCache.get(key);
     if (entry) {
       if (Date.now() < entry.expiresAt) {
+        cacheStats.memoryHits++;
         return entry.value as T;
       } else {
         // Expired, remove from cache
         memoryCache.delete(key);
+        cacheStats.memoryMisses++;
       }
+    } else {
+      cacheStats.memoryMisses++;
     }
 
     return null;
   } catch (error) {
     console.error(`Error getting cached value for key ${key}:`, error);
+    cacheStats.memoryMisses++;
     return null;
   }
 }
@@ -205,6 +222,10 @@ export async function getCacheStats(): Promise<{
   memory: {
     size: number;
   };
+  memoryHits: number;
+  memoryMisses: number;
+  redisHits: number;
+  redisMisses: number;
 }> {
   const stats = {
     redis: {
@@ -213,6 +234,10 @@ export async function getCacheStats(): Promise<{
     memory: {
       size: memoryCache.size,
     },
+    memoryHits: cacheStats.memoryHits,
+    memoryMisses: cacheStats.memoryMisses,
+    redisHits: cacheStats.redisHits,
+    redisMisses: cacheStats.redisMisses,
   };
 
   try {
