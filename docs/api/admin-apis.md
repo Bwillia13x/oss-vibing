@@ -348,7 +348,7 @@ Create a new institutional license.
 {
   "institutionId": "inst_xyz789",
   "institution": "University of Example",
-  "maxSeats": 500,
+  "seats": 500,
   "expiresAt": "2026-12-31T23:59:59Z"
 }
 ```
@@ -359,7 +359,7 @@ Create a new institutional license.
 |-------|------|----------|-------------|
 | institutionId | string | Yes | Unique institution identifier |
 | institution | string | Yes | Institution name |
-| maxSeats | number | Yes | Maximum number of seats (users) |
+| seats | number | Yes | Maximum number of seats (users) |
 | expiresAt | string (ISO 8601) | Yes | License expiration date |
 
 **Success Response:** `201 Created`
@@ -398,7 +398,7 @@ curl -X POST https://api.example.com/api/admin/licenses \
   -d '{
     "institutionId": "inst_xyz789",
     "institution": "University of Example",
-    "maxSeats": 500,
+    "seats": 500,
     "expiresAt": "2026-12-31T23:59:59Z"
   }'
 ```
@@ -820,7 +820,7 @@ All API endpoints use standardized error responses:
   "error": "Invalid input",
   "details": {
     "email": ["Email is required", "Email must be valid"],
-    "maxSeats": ["Seats must be a positive number"]
+    "seats": ["Seats must be a positive number"]
   }
 }
 ```
@@ -976,7 +976,7 @@ curl -X POST https://api.example.com/api/admin/licenses \
   -d '{
     "institutionId": "inst_new123",
     "institution": "New University",
-    "maxSeats": 300,
+    "seats": 300,
     "expiresAt": "2026-12-31T23:59:59Z"
   }'
 

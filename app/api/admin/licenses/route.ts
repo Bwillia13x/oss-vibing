@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     const validationResult = createLicenseSchema.safeParse({
       institutionId: licenseData.institutionId,
       institution: licenseData.institution,
-      seats: licenseData.maxSeats,
+      seats: licenseData.seats,
       expiresAt: new Date(licenseData.expiresAt),
     })
 
