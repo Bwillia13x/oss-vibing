@@ -8,21 +8,25 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-// Token configuration
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET environment variable is required in production');
+// Token configuration - lazy evaluation to avoid build-time errors
+const getJWTSecret = () => {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  
+  if (!JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable is required in production');
+    }
+    console.warn('JWT_SECRET not set, using development default (DO NOT USE IN PRODUCTION)');
   }
-  console.warn('JWT_SECRET not set, using development default (DO NOT USE IN PRODUCTION)');
-}
+  
+  return JWT_SECRET || 'development-secret-change-in-production';
+};
 
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 
-// Convert secret to Uint8Array for jose
-const secret = new TextEncoder().encode(JWT_SECRET || 'development-secret-change-in-production');
+// Convert secret to Uint8Array for jose - lazy to avoid build-time execution
+const getSecret = () => new TextEncoder().encode(getJWTSecret());
 
 export interface TokenPayload {
   userId: string;
@@ -39,7 +43,7 @@ export async function createAccessToken(payload: Omit<TokenPayload, 'type'>): Pr
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(ACCESS_TOKEN_EXPIRY)
-    .sign(secret);
+    .sign(getSecret());
 
   return token;
 }
@@ -52,7 +56,7 @@ export async function createRefreshToken(payload: Omit<TokenPayload, 'type'>): P
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(REFRESH_TOKEN_EXPIRY)
-    .sign(secret);
+    .sign(getSecret());
 
   return token;
 }
@@ -62,7 +66,7 @@ export async function createRefreshToken(payload: Omit<TokenPayload, 'type'>): P
  */
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as TokenPayload;
   } catch (error) {
     console.error('Token verification failed:', error);
