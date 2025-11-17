@@ -38,7 +38,7 @@ describe('Database Repositories - Extended Tests', () => {
 
       expect(user).toBeDefined();
       expect(user.email).toContain('@example.com');
-      expect(user.role).toBe('STUDENT');
+      expect(user.role).toBe('USER');
     });
 
     it('should find user by email', async () => {
