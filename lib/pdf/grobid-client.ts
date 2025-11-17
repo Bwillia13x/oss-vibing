@@ -118,7 +118,7 @@ export class GrobidClient {
    */
   async processFulltext(pdfBuffer: Buffer): Promise<GrobidMetadata | null> {
     const formData = new FormData()
-    formData.append('input', new Blob([pdfBuffer]), 'document.pdf')
+    formData.append('input', new Blob([new Uint8Array(pdfBuffer)]), 'document.pdf')
 
     try {
       const response = await fetch(`${this.baseUrl}/processFulltextDocument`, {
@@ -146,7 +146,7 @@ export class GrobidClient {
    */
   async processHeader(pdfBuffer: Buffer): Promise<Partial<GrobidMetadata> | null> {
     const formData = new FormData()
-    formData.append('input', new Blob([pdfBuffer]), 'document.pdf')
+    formData.append('input', new Blob([new Uint8Array(pdfBuffer)]), 'document.pdf')
 
     try {
       const response = await fetch(`${this.baseUrl}/processHeaderDocument`, {
@@ -174,7 +174,7 @@ export class GrobidClient {
    */
   async processCitations(pdfBuffer: Buffer): Promise<GrobidMetadata['citations']> {
     const formData = new FormData()
-    formData.append('input', new Blob([pdfBuffer]), 'document.pdf')
+    formData.append('input', new Blob([new Uint8Array(pdfBuffer)]), 'document.pdf')
 
     try {
       const response = await fetch(`${this.baseUrl}/processCitations`, {

@@ -199,7 +199,7 @@ export class LMSManager {
     return courses.map((course: CanvasCourse) => ({
       id: course.id.toString(),
       name: course.name,
-      code: course.course_code,
+      code: course.course_code || course.courseCode || '',
       description: course.public_description,
       startDate: course.start_at,
       endDate: course.end_at,
@@ -213,7 +213,7 @@ export class LMSManager {
     return {
       id: course.id.toString(),
       name: course.name,
-      code: course.course_code,
+      code: course.course_code || course.courseCode || '',
       description: course.public_description,
       startDate: course.start_at,
       endDate: course.end_at,
@@ -223,14 +223,14 @@ export class LMSManager {
   }
 
   private async getCanvasAssignments(courseId: string): Promise<UnifiedAssignment[]> {
-    const assignments = await this.canvasClient!.getAssignments(parseInt(courseId))
+    const assignments = await this.canvasClient!.getAssignments(courseId)
     return assignments.map((assignment: CanvasAssignment) => ({
       id: assignment.id.toString(),
       courseId: courseId,
       name: assignment.name,
       description: assignment.description,
-      dueDate: assignment.due_at,
-      pointsPossible: assignment.points_possible,
+      dueDate: assignment.dueAt || undefined,
+      pointsPossible: assignment.pointsPossible,
       provider: 'canvas' as const,
     }))
   }

@@ -87,7 +87,7 @@ export async function isGROBIDAvailable(): Promise<boolean> {
  */
 async function processHeader(pdfData: Buffer): Promise<PDFMetadata> {
   const formData = new FormData()
-  const blob = new Blob([pdfData], { type: 'application/pdf' })
+  const blob = new Blob([new Uint8Array(pdfData)], { type: 'application/pdf' })
   formData.append('input', blob, 'document.pdf')
 
   const response = await fetch(`${GROBID_URL}/api/processHeaderDocument`, {
@@ -109,7 +109,7 @@ async function processHeader(pdfData: Buffer): Promise<PDFMetadata> {
  */
 async function processReferences(pdfData: Buffer): Promise<PDFCitation[]> {
   const formData = new FormData()
-  const blob = new Blob([pdfData], { type: 'application/pdf' })
+  const blob = new Blob([new Uint8Array(pdfData)], { type: 'application/pdf' })
   formData.append('input', blob, 'document.pdf')
 
   const response = await fetch(`${GROBID_URL}/api/processReferences`, {
@@ -136,7 +136,7 @@ async function processFullText(pdfData: Buffer): Promise<{
   sections: PDFSection[]
 }> {
   const formData = new FormData()
-  const blob = new Blob([pdfData], { type: 'application/pdf' })
+  const blob = new Blob([new Uint8Array(pdfData)], { type: 'application/pdf' })
   formData.append('input', blob, 'document.pdf')
 
   const response = await fetch(`${GROBID_URL}/api/processFulltextDocument`, {
@@ -161,7 +161,7 @@ function parseTEIMetadata(teiXml: string): PDFMetadata {
   const metadata: PDFMetadata = {}
 
   // Extract title
-  const titleMatch = teiXml.match(/<title[^>]*level="a"[^>]*>(.*?)<\/title>/s)
+  const titleMatch = teiXml.match(/<title[^>]*level="a"[^>]*>([\s\S]*?)<\/title>/)
   if (titleMatch) {
     metadata.title = cleanXMLText(titleMatch[1])
   }
@@ -173,14 +173,14 @@ function parseTEIMetadata(teiXml: string): PDFMetadata {
   }
 
   // Extract abstract
-  const abstractMatch = teiXml.match(/<abstract[^>]*>(.*?)<\/abstract>/s)
+  const abstractMatch = teiXml.match(/<abstract[^>]*>([\s\S]*?)<\/abstract>/)
   if (abstractMatch) {
     metadata.abstract = cleanXMLText(abstractMatch[1])
   }
 
   // Extract authors
   metadata.authors = []
-  const authorMatches = teiXml.matchAll(/<author>(.*?)<\/author>/gs)
+  const authorMatches = teiXml.matchAll(/<author>([\s\S]*?)<\/author>/g)
   for (const match of authorMatches) {
     const authorXML = match[1]
     const firstNameMatch = authorXML.match(/<forename[^>]*>(.*?)<\/forename>/)
@@ -215,7 +215,7 @@ function parseTEICitations(teiXml: string): PDFCitation[] {
   const citations: PDFCitation[] = []
 
   // Extract bibliographic references
-  const biblMatches = teiXml.matchAll(/<biblStruct[^>]*xml:id="([^"]*)"[^>]*>(.*?)<\/biblStruct>/gs)
+  const biblMatches = teiXml.matchAll(/<biblStruct[^>]*xml:id="([^"]*)"[^>]*>([\s\S]*?)<\/biblStruct>/g)
 
   for (const match of biblMatches) {
     const id = match[1]
@@ -231,7 +231,7 @@ function parseTEICitations(teiXml: string): PDFCitation[] {
 
     // Extract authors
     citation.authors = []
-    const authorMatches = biblXML.matchAll(/<author>(.*?)<\/author>/gs)
+    const authorMatches = biblXML.matchAll(/<author>([\s\S]*?)<\/author>/g)
     for (const authorMatch of authorMatches) {
       const authorXML = authorMatch[1]
       const surnameMatch = authorXML.match(/<surname[^>]*>(.*?)<\/surname>/)
@@ -277,13 +277,13 @@ function parseTEIFullText(teiXml: string): {
   const citations = parseTEICitations(teiXml)
 
   // Extract body text
-  const bodyMatch = teiXml.match(/<body>(.*?)<\/body>/s)
+  const bodyMatch = teiXml.match(/<body>([\s\S]*?)<\/body>/)
   const fullText = bodyMatch ? cleanXMLText(bodyMatch[1]) : ''
 
   // Extract sections
   const sections: PDFSection[] = []
   if (bodyMatch) {
-    const divMatches = bodyMatch[1].matchAll(/<div[^>]*>(.*?)<\/div>/gs)
+    const divMatches = bodyMatch[1].matchAll(/<div[^>]*>([\s\S]*?)<\/div>/g)
     for (const divMatch of divMatches) {
       const divXML = divMatch[1]
       const headMatch = divXML.match(/<head[^>]*>(.*?)<\/head>/)

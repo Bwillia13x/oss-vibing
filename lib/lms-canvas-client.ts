@@ -44,8 +44,14 @@ export interface Submission {
 export interface Course {
   id: string
   name: string
-  courseCode: string
-  enrollmentTermId: string
+  courseCode?: string
+  course_code?: string
+  enrollmentTermId?: string
+  enrollment_term_id?: string
+  public_description?: string
+  start_at?: string
+  end_at?: string
+  total_students?: number
 }
 
 // Internal Canvas API response types
@@ -121,6 +127,13 @@ export class CanvasClient {
    */
   async getCourses(): Promise<Course[]> {
     return this.request<Course[]>('/courses?enrollment_state=active')
+  }
+
+  /**
+   * Get a specific course
+   */
+  async getCourse(courseId: number | string): Promise<Course> {
+    return this.request<Course>(`/courses/${courseId}`)
   }
 
   /**
@@ -254,6 +267,46 @@ export class CanvasClient {
       body: result.body,
       url: result.url,
     }
+  }
+
+  /**
+   * Submit a grade for an assignment
+   * 
+   * @param courseId - Canvas course ID
+   * @param assignmentId - Canvas assignment ID
+   * @param userId - Canvas user ID
+   * @param grade - Grade data including score and optional comment
+   */
+  async submitGrade(
+    courseId: string,
+    assignmentId: string,
+    userId: string,
+    grade: {
+      posted_grade: number
+      comment?: string
+    }
+  ): Promise<void> {
+    const url = `/courses/${courseId}/assignments/${assignmentId}/submissions/${userId}`
+    
+    const data: {
+      submission: { posted_grade: number }
+      comment?: { text_comment: string }
+    } = {
+      submission: {
+        posted_grade: grade.posted_grade,
+      },
+    }
+
+    if (grade.comment) {
+      data.comment = {
+        text_comment: grade.comment,
+      }
+    }
+
+    await this.request(url, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
   }
 
   /**
