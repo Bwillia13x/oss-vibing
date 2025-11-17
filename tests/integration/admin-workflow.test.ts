@@ -8,12 +8,12 @@ import { factories, cleanup } from './helpers'
 import { userRepository, licenseRepository, auditLogRepository } from '@/lib/db/repositories'
 
 describe('Admin Workflow Integration Tests', () => {
-  let createdUserIds: string[] = []
+  let createdUserEmails: string[] = []
   let createdLicenseIds: string[] = []
 
   beforeEach(async () => {
     // Reset tracking arrays
-    createdUserIds = []
+    createdUserEmails = []
     createdLicenseIds = []
   })
 
@@ -22,12 +22,8 @@ describe('Admin Workflow Integration Tests', () => {
     if (createdLicenseIds.length > 0) {
       await cleanup.deleteTestLicenses(createdLicenseIds)
     }
-    if (createdUserIds.length > 0) {
-      const users = await Promise.all(
-        createdUserIds.map((id) => userRepository.findById(id))
-      )
-      const emails = users.filter((u) => u !== null).map((u) => u!.email)
-      await cleanup.deleteTestUsers(emails)
+    if (createdUserEmails.length > 0) {
+      await cleanup.deleteTestUsers(createdUserEmails)
     }
   })
 
@@ -63,7 +59,7 @@ describe('Admin Workflow Integration Tests', () => {
         name: 'Student One',
         role: 'USER',
       })
-      createdUserIds.push(user2.id)
+      createdUserEmails.push(user2.email)
 
       // Step 3: Increment license usage
       await licenseRepository.incrementUsedSeats(license.id)
@@ -107,7 +103,7 @@ describe('Admin Workflow Integration Tests', () => {
         email: 'user2@small.edu',
         role: 'USER',
       })
-      createdUserIds.push(user2.id)
+      createdUserEmails.push(user2.email)
       await licenseRepository.incrementUsedSeats(license.id)
 
       // Verify seats are full
@@ -202,7 +198,7 @@ describe('Admin Workflow Integration Tests', () => {
         email: 'target@test.edu',
         role: 'USER',
       })
-      createdUserIds.push(targetUser.id)
+      createdUserEmails.push(targetUser.email)
 
       // Track user creation
       await auditLogRepository.create({
@@ -307,7 +303,7 @@ describe('Admin Workflow Integration Tests', () => {
       )
 
       const users = await Promise.all(userPromises)
-      createdUserIds.push(...users.map((u) => u.id))
+      createdUserEmails.push(...users.map((u) => u.email))
 
       // Increment license for each user
       for (const _user of users) {

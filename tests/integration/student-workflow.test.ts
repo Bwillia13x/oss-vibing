@@ -344,7 +344,9 @@ describe('Student Workflow Integration Tests', () => {
       const validGrades = allGrades.filter((g) => g !== null)
       expect(validGrades.length).toBe(5)
 
-      const gradeScores = validGrades.map((g) => g?.score || 0)
+      const gradeScores = validGrades
+        .filter((g) => g?.score !== null && g?.score !== undefined)
+        .map((g) => g!.score)
       const average = gradeScores.reduce((a, b) => a + b, 0) / gradeScores.length
       const highest = Math.max(...gradeScores)
       const lowest = Math.min(...gradeScores)

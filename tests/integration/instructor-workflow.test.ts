@@ -310,7 +310,9 @@ describe('Instructor Workflow Integration Tests', () => {
       expect(allGrades.length).toBe(5)
 
       // Calculate basic stats manually to verify
-      const gradeScores = allGrades.map((g) => g?.score || 0)
+      const gradeScores = allGrades
+        .filter((g) => g && g.score != null)
+        .map((g) => g.score as number)
       const average = gradeScores.reduce((a, b) => a + b, 0) / gradeScores.length
       expect(average).toBeCloseTo(87.6, 1)
     })

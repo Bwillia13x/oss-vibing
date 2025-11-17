@@ -113,62 +113,107 @@ export const factories = {
  */
 export const cleanup = {
   async deleteTestUsers(emails: string[]) {
-    await prisma.user.deleteMany({
-      where: {
-        email: {
-          in: emails,
+    try {
+      await prisma.user.deleteMany({
+        where: {
+          email: {
+            in: emails,
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Failed to delete test users:', emails, error)
+    }
   },
 
   async deleteTestLicenses(ids: string[]) {
-    await prisma.license.deleteMany({
-      where: {
-        id: {
-          in: ids,
+    try {
+      await prisma.license.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Failed to delete test licenses:', ids, error)
+    }
   },
 
   async deleteTestAssignments(ids: string[]) {
-    await prisma.assignment.deleteMany({
-      where: {
-        id: {
-          in: ids,
+    try {
+      await prisma.assignment.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Failed to delete test assignments:', ids, error)
+    }
   },
 
   async deleteTestSubmissions(ids: string[]) {
-    await prisma.submission.deleteMany({
-      where: {
-        id: {
-          in: ids,
+    try {
+      await prisma.submission.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Failed to delete test submissions:', ids, error)
+    }
   },
 
   async deleteTestGrades(ids: string[]) {
-    await prisma.grade.deleteMany({
-      where: {
-        id: {
-          in: ids,
+    try {
+      await prisma.grade.deleteMany({
+        where: {
+          id: {
+            in: ids,
+          },
         },
-      },
-    })
+      })
+    } catch (error) {
+      console.error('Failed to delete test grades:', ids, error)
+    }
   },
 
   async cleanupAll() {
+    // Prevent accidental execution in non-test environments
+    if (process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true') {
+      throw new Error('cleanupAll() can only be called in test environment')
+    }
+
     // Delete in order of dependencies
-    await prisma.grade.deleteMany({})
-    await prisma.submission.deleteMany({})
-    await prisma.assignment.deleteMany({})
-    await prisma.license.deleteMany({})
-    await prisma.user.deleteMany({})
+    try {
+      await prisma.grade.deleteMany({})
+    } catch (error) {
+      console.error('Failed to delete all grades:', error)
+    }
+    try {
+      await prisma.submission.deleteMany({})
+    } catch (error) {
+      console.error('Failed to delete all submissions:', error)
+    }
+    try {
+      await prisma.assignment.deleteMany({})
+    } catch (error) {
+      console.error('Failed to delete all assignments:', error)
+    }
+    try {
+      await prisma.license.deleteMany({})
+    } catch (error) {
+      console.error('Failed to delete all licenses:', error)
+    }
+    try {
+      await prisma.user.deleteMany({})
+    } catch (error) {
+      console.error('Failed to delete all users:', error)
+    }
   },
 }
 
@@ -201,47 +246,6 @@ export const wait = {
     return new Promise((resolve) => setTimeout(resolve, ms))
   },
 }
-
-/**
- * Mock API client for making requests
- */
-export class MockAPIClient {
-  private baseUrl = 'http://localhost:3000'
-
-  async get(path: string, headers?: Record<string, string>) {
-    // Mock implementation - in real tests, this would make actual HTTP requests
-    return {
-      status: 200,
-      data: {},
-    }
-  }
-
-  async post(path: string, data: unknown, headers?: Record<string, string>) {
-    // Mock implementation
-    return {
-      status: 201,
-      data: {},
-    }
-  }
-
-  async put(path: string, data: unknown, headers?: Record<string, string>) {
-    // Mock implementation
-    return {
-      status: 200,
-      data: {},
-    }
-  }
-
-  async delete(path: string, headers?: Record<string, string>) {
-    // Mock implementation
-    return {
-      status: 204,
-      data: {},
-    }
-  }
-}
-
-export const apiClient = new MockAPIClient()
 
 /**
  * Database helpers

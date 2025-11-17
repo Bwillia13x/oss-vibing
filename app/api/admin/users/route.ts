@@ -16,7 +16,6 @@ import {
   ValidationError, 
   NotFoundError,
   BadRequestError,
-  ConflictError,
   formatErrorResponse 
 } from '@/lib/errors/api-errors'
 
@@ -43,11 +42,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate users array
-    for (const user of provisionRequest.users) {
+    for (let i = 0; i < provisionRequest.users.length; i++) {
+      const user = provisionRequest.users[i]
       if (!user.email || !user.name || !user.role) {
-        console.warn(`[${requestId}] Invalid user data in bulk provision`)
+        console.warn(`[${requestId}] Invalid user data in bulk provision at index ${i}`)
         throw new ValidationError('Invalid user data', {
-          user: ['Each user must have email, name, and role']
+          [`user_${i}`]: ['Each user must have email, name, and role']
         })
       }
     }
