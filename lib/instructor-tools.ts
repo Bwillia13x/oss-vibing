@@ -44,7 +44,7 @@ export async function createAssignment(
     id: newAssignment.id,
     title: newAssignment.title,
     description: newAssignment.description || '',
-    courseId: newAssignment.courseId || '',
+    courseId: newAssignment.courseId ?? '',
     instructorId: newAssignment.instructorId,
     dueDate: newAssignment.dueDate,
     points: newAssignment.maxPoints, // Map maxPoints to points
@@ -82,7 +82,7 @@ export async function updateAssignment(
     id: updated.id,
     title: updated.title,
     description: updated.description || '',
-    courseId: updated.courseId || '',
+    courseId: updated.courseId ?? '',
     instructorId: updated.instructorId,
     dueDate: updated.dueDate,
     points: updated.maxPoints, // Map maxPoints to points
@@ -111,7 +111,7 @@ export async function getAssignment(
     id: assignment.id,
     title: assignment.title,
     description: assignment.description || '',
-    courseId: assignment.courseId || '',
+    courseId: assignment.courseId ?? '',
     instructorId: assignment.instructorId,
     dueDate: assignment.dueDate,
     points: assignment.maxPoints, // Map maxPoints to points
@@ -138,7 +138,7 @@ export async function getCourseAssignments(
     id: assignment.id,
     title: assignment.title,
     description: assignment.description || '',
-    courseId: assignment.courseId || '',
+    courseId: assignment.courseId ?? '',
     instructorId: assignment.instructorId,
     dueDate: assignment.dueDate,
     points: assignment.maxPoints, // Map maxPoints to points
@@ -197,11 +197,18 @@ export async function gradeSubmission(
 ): Promise<Submission> {
   const gradeRepo = new GradeRepository()
   const submissionRepo = new SubmissionRepository()
+  const assignmentRepo = new AssignmentRepository()
   
-  // Get the submission to find maxPoints
+  // Get the submission
   const submission = await submissionRepo.findById(submissionId)
   if (!submission) {
     throw new Error('Submission not found')
+  }
+
+  // Fetch assignment to get maxPoints
+  const assignment = await assignmentRepo.findById(submission.assignmentId)
+  if (!assignment) {
+    throw new Error('Assignment not found for submission')
   }
 
   // Check if grade already exists
@@ -224,7 +231,7 @@ export async function gradeSubmission(
       submissionId,
       instructorId,
       score: grade,
-      maxPoints: 100, // Default, should be from assignment
+      maxPoints: assignment.maxPoints,
       feedback: feedback ? { text: feedback } : undefined,
       rubricScores,
     })
@@ -243,6 +250,7 @@ export async function gradeSubmission(
     id: updatedSubmission!.id,
     assignmentId: updatedSubmission!.assignmentId,
     studentId: updatedSubmission!.studentId,
+    documentId: '', // Not in database schema, placeholder for interface compatibility
     content: updatedSubmission!.content,
     submittedAt: updatedSubmission!.submittedAt,
     status: updatedSubmission!.status as 'submitted' | 'graded' | 'returned' | 'late',
@@ -260,27 +268,38 @@ export async function getAssignmentSubmissions(
   status?: Submission['status']
 ): Promise<Submission[]> {
   const repo = new SubmissionRepository()
+  const gradeRepo = new GradeRepository()
   const result = await repo.findByAssignment(assignmentId, { page: 1, perPage: 100 })
   
   let submissions = result.data
   
   // Filter by status if provided
   if (status) {
-    submissions = submissions.filter(s => s.status === status.toUpperCase())
+    submissions = submissions.filter(s => s.status.toUpperCase() === status.toUpperCase())
   }
   
-  // Convert to Submission array
-  return submissions.map(submission => ({
-    id: submission.id,
-    assignmentId: submission.assignmentId,
-    studentId: submission.studentId,
-    content: submission.content,
-    submittedAt: submission.submittedAt,
-    status: submission.status.toLowerCase() as 'submitted' | 'graded' | 'returned' | 'late',
-    grade: undefined, // Would come from grade record
-    rubricScores: undefined,
-    feedback: undefined,
-  } as Submission))
+  // Convert to Submission array and fetch grades
+  const submissionsWithGrades = await Promise.all(
+    submissions.map(async (submission) => {
+      // Fetch grade for each submission
+      const gradeRecord = await gradeRepo.findBySubmission(submission.id)
+      
+      return {
+        id: submission.id,
+        assignmentId: submission.assignmentId,
+        studentId: submission.studentId,
+        documentId: '', // Not in database schema, placeholder for interface compatibility
+        content: submission.content,
+        submittedAt: submission.submittedAt,
+        status: submission.status.toLowerCase() as 'submitted' | 'graded' | 'returned' | 'late',
+        grade: gradeRecord?.score,
+        rubricScores: gradeRecord?.rubricScores as Record<string, number> | undefined,
+        feedback: gradeRecord?.feedback ? (gradeRecord.feedback as any).text : undefined,
+      } as Submission
+    })
+  )
+  
+  return submissionsWithGrades
 }
 
 /**
@@ -298,6 +317,7 @@ export async function getStudentSubmissions(
     id: submission.id,
     assignmentId: submission.assignmentId,
     studentId: submission.studentId,
+    documentId: '', // Not in database schema, placeholder for interface compatibility
     content: submission.content,
     submittedAt: submission.submittedAt,
     status: submission.status.toLowerCase() as 'submitted' | 'graded' | 'returned' | 'late',

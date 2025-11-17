@@ -11,7 +11,7 @@ import {
   getAssignment,
   getAssignmentStatistics
 } from '@/lib/instructor-tools'
-import { AssignmentRepository } from '@/lib/db/repositories'
+import { Assignment, Rubric } from '@/lib/types/institutional'
 import { createAssignmentSchema } from '@/lib/db/validation/schemas'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
@@ -136,11 +136,12 @@ export async function POST(req: NextRequest) {
       courseId: data.courseId || '',
       instructorId: data.instructorId,
       dueDate: new Date(data.dueDate),
-      maxPoints: data.maxPoints,
-      rubric: data.rubric,
-      requirements: data.requirements,
-      published: data.published,
-    } as any)
+      points: data.maxPoints,
+      rubric: data.rubric as unknown as Rubric | undefined,
+      type: 'mixed',
+      requirements: data.requirements as unknown as Assignment['requirements'],
+      status: data.published ? 'published' : 'draft',
+    } as Assignment)
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
       endpoint: '/api/instructor/assignments',
