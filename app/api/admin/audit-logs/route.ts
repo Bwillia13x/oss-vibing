@@ -9,24 +9,27 @@ import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
 import { auditLogRepository } from '@/lib/db/repositories'
 import { AuditLog, AuditSeverity } from '@prisma/client'
+import { RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function GET(req: NextRequest) {
   const startTime = Date.now()
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] GET /api/admin/audit-logs - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication check - admins only
     const authResult = await requireRole(req, ['admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
 
@@ -57,12 +60,24 @@ export async function GET(req: NextRequest) {
     if (startDate) filters.startDate = new Date(startDate)
     if (endDate) filters.endDate = new Date(endDate)
 
+    console.log(`[${requestId}] Fetching audit logs`, {
+      filters: Object.keys(filters),
+      page,
+      perPage,
+      format,
+    })
+
     // Get audit logs
     const result = await auditLogRepository.list(filters, { page, perPage })
 
     // Export to CSV if requested
     if (format === 'csv') {
+      console.log(`[${requestId}] Exporting audit logs to CSV`)
+      
       const csv = convertToCSV(result.data)
+      
+      const duration = Date.now() - startTime
+      console.log(`[${requestId}] GET /api/admin/audit-logs - CSV Export Success (${duration}ms)`)
       
       return new NextResponse(csv, {
         headers: {
@@ -72,10 +87,15 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] GET /api/admin/audit-logs - Success (${duration}ms, returned: ${result.data.length})`)
+
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: '/api/admin/audit-logs',
       method: 'GET',
+      status: 'success',
       logs_returned: result.data.length.toString(),
+      requestId,
     })
 
     return NextResponse.json({
@@ -89,19 +109,30 @@ export async function GET(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error retrieving audit logs:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] GET /api/admin/audit-logs - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: '/api/admin/audit-logs',
       method: 'GET',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: '/api/admin/audit-logs',
+      method: 'GET',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to retrieve audit logs'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
