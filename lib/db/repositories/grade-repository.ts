@@ -28,14 +28,49 @@ export interface GradeFilters {
   submissionId?: string
 }
 
+// Extended Grade type with parsed JSON fields
+export type GradeWithParsedFields = Omit<Grade, 'feedback' | 'rubricScores'> & {
+  feedback: Record<string, unknown> | null
+  rubricScores: Record<string, unknown> | null
+}
+
 export class GradeRepository extends BaseRepository {
+  /**
+   * Safely parse a JSON string, returning null on failure
+   */
+  private safeJsonParse<T = unknown>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Parse JSON fields in a grade
+   */
+  private parseGrade(grade: Grade): GradeWithParsedFields {
+    return {
+      ...grade,
+      feedback: this.safeJsonParse<Record<string, unknown>>(grade.feedback),
+      rubricScores: this.safeJsonParse<Record<string, unknown>>(grade.rubricScores),
+    }
+  }
+
+  /**
+   * Parse JSON fields in multiple grades
+   */
+  private parseGrades(grades: Grade[]): GradeWithParsedFields[] {
+    return grades.map(grade => this.parseGrade(grade))
+  }
   /**
    * Create a new grade
    */
-  async create(data: CreateGradeData): Promise<Grade> {
+  async create(data: CreateGradeData): Promise<GradeWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.grade.create({
+        const grade = await this.prisma.grade.create({
           data: {
             submissionId: data.submissionId,
             instructorId: data.instructorId,
@@ -45,6 +80,7 @@ export class GradeRepository extends BaseRepository {
             rubricScores: data.rubricScores ? JSON.stringify(data.rubricScores) : null,
           },
         })
+        return this.parseGrade(grade)
       },
       'createGrade'
     )
@@ -53,12 +89,13 @@ export class GradeRepository extends BaseRepository {
   /**
    * Find grade by ID
    */
-  async findById(id: string): Promise<Grade | null> {
+  async findById(id: string): Promise<GradeWithParsedFields | null> {
     return this.withRetry(
       async () => {
-        return await this.prisma.grade.findUnique({
+        const grade = await this.prisma.grade.findUnique({
           where: { id },
         })
+        return grade ? this.parseGrade(grade) : null
       },
       'findGradeById'
     )
@@ -67,12 +104,13 @@ export class GradeRepository extends BaseRepository {
   /**
    * Find grade by submission ID
    */
-  async findBySubmission(submissionId: string): Promise<Grade | null> {
+  async findBySubmission(submissionId: string): Promise<GradeWithParsedFields | null> {
     return this.withRetry(
       async () => {
-        return await this.prisma.grade.findUnique({
+        const grade = await this.prisma.grade.findUnique({
           where: { submissionId },
         })
+        return grade ? this.parseGrade(grade) : null
       },
       'findGradeBySubmission'
     )
@@ -105,7 +143,7 @@ export class GradeRepository extends BaseRepository {
   async findByInstructor(
     instructorId: string,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Grade>> {
+  ): Promise<PaginationResult<GradeWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -125,7 +163,7 @@ export class GradeRepository extends BaseRepository {
           }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseGrades(data), total, page, perPage)
       },
       'findGradesByInstructor'
     )
@@ -137,7 +175,7 @@ export class GradeRepository extends BaseRepository {
   async findMany(
     filters?: GradeFilters,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Grade>> {
+  ): Promise<PaginationResult<GradeWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -156,7 +194,7 @@ export class GradeRepository extends BaseRepository {
           this.prisma.grade.count({ where }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseGrades(data), total, page, perPage)
       },
       'findManyGrades'
     )
@@ -165,7 +203,7 @@ export class GradeRepository extends BaseRepository {
   /**
    * Update a grade
    */
-  async update(id: string, data: UpdateGradeData): Promise<Grade> {
+  async update(id: string, data: UpdateGradeData): Promise<GradeWithParsedFields> {
     return this.withRetry(
       async () => {
         const updateData: Prisma.GradeUpdateInput = {}
@@ -174,10 +212,11 @@ export class GradeRepository extends BaseRepository {
         if (data.feedback !== undefined) updateData.feedback = JSON.stringify(data.feedback)
         if (data.rubricScores !== undefined) updateData.rubricScores = JSON.stringify(data.rubricScores)
 
-        return await this.prisma.grade.update({
+        const grade = await this.prisma.grade.update({
           where: { id },
           data: updateData,
         })
+        return this.parseGrade(grade)
       },
       'updateGrade'
     )
@@ -186,13 +225,14 @@ export class GradeRepository extends BaseRepository {
   /**
    * Update feedback for a grade
    */
-  async updateFeedback(gradeId: string, feedback: Record<string, unknown>): Promise<Grade> {
+  async updateFeedback(gradeId: string, feedback: Record<string, unknown>): Promise<GradeWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.grade.update({
+        const grade = await this.prisma.grade.update({
           where: { id: gradeId },
           data: { feedback: JSON.stringify(feedback) },
         })
+        return this.parseGrade(grade)
       },
       'updateGradeFeedback'
     )

@@ -27,14 +27,47 @@ export interface SubmissionFilters {
   status?: SubmissionStatus
 }
 
+// Extended Submission type with parsed JSON fields
+export type SubmissionWithParsedFields = Omit<Submission, 'plagiarismCheck'> & {
+  plagiarismCheck: Record<string, unknown> | null
+}
+
 export class SubmissionRepository extends BaseRepository {
+  /**
+   * Safely parse a JSON string, returning null on failure
+   */
+  private safeJsonParse<T = unknown>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Parse JSON fields in a submission
+   */
+  private parseSubmission(submission: Submission): SubmissionWithParsedFields {
+    return {
+      ...submission,
+      plagiarismCheck: this.safeJsonParse<Record<string, unknown>>(submission.plagiarismCheck),
+    }
+  }
+
+  /**
+   * Parse JSON fields in multiple submissions
+   */
+  private parseSubmissions(submissions: Submission[]): SubmissionWithParsedFields[] {
+    return submissions.map(submission => this.parseSubmission(submission))
+  }
   /**
    * Create a new submission
    */
-  async create(data: CreateSubmissionData): Promise<Submission> {
+  async create(data: CreateSubmissionData): Promise<SubmissionWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.submission.create({
+        const submission = await this.prisma.submission.create({
           data: {
             assignmentId: data.assignmentId,
             studentId: data.studentId,
@@ -43,6 +76,7 @@ export class SubmissionRepository extends BaseRepository {
             plagiarismCheck: data.plagiarismCheck ? JSON.stringify(data.plagiarismCheck) : null,
           },
         })
+        return this.parseSubmission(submission)
       },
       'createSubmission'
     )
@@ -51,12 +85,13 @@ export class SubmissionRepository extends BaseRepository {
   /**
    * Find submission by ID
    */
-  async findById(id: string): Promise<Submission | null> {
+  async findById(id: string): Promise<SubmissionWithParsedFields | null> {
     return this.withRetry(
       async () => {
-        return await this.prisma.submission.findUnique({
+        const submission = await this.prisma.submission.findUnique({
           where: { id },
         })
+        return submission ? this.parseSubmission(submission) : null
       },
       'findSubmissionById'
     )
@@ -85,7 +120,7 @@ export class SubmissionRepository extends BaseRepository {
   async findByAssignment(
     assignmentId: string,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Submission>> {
+  ): Promise<PaginationResult<SubmissionWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -105,7 +140,7 @@ export class SubmissionRepository extends BaseRepository {
           }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseSubmissions(data), total, page, perPage)
       },
       'findSubmissionsByAssignment'
     )
@@ -117,7 +152,7 @@ export class SubmissionRepository extends BaseRepository {
   async findByStudent(
     studentId: string,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Submission>> {
+  ): Promise<PaginationResult<SubmissionWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -138,7 +173,7 @@ export class SubmissionRepository extends BaseRepository {
           }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseSubmissions(data), total, page, perPage)
       },
       'findSubmissionsByStudent'
     )
@@ -150,7 +185,7 @@ export class SubmissionRepository extends BaseRepository {
   async findLateSubmissions(
     assignmentId: string,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Submission>> {
+  ): Promise<PaginationResult<SubmissionWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -182,7 +217,7 @@ export class SubmissionRepository extends BaseRepository {
           this.prisma.submission.count({ where }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseSubmissions(data), total, page, perPage)
       },
       'findLateSubmissions'
     )
@@ -194,7 +229,7 @@ export class SubmissionRepository extends BaseRepository {
   async findMany(
     filters?: SubmissionFilters,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Submission>> {
+  ): Promise<PaginationResult<SubmissionWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -214,7 +249,7 @@ export class SubmissionRepository extends BaseRepository {
           this.prisma.submission.count({ where }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseSubmissions(data), total, page, perPage)
       },
       'findManySubmissions'
     )
@@ -223,7 +258,7 @@ export class SubmissionRepository extends BaseRepository {
   /**
    * Update a submission
    */
-  async update(id: string, data: UpdateSubmissionData): Promise<Submission> {
+  async update(id: string, data: UpdateSubmissionData): Promise<SubmissionWithParsedFields> {
     return this.withRetry(
       async () => {
         const updateData: Prisma.SubmissionUpdateInput = {}
@@ -233,10 +268,11 @@ export class SubmissionRepository extends BaseRepository {
           updateData.plagiarismCheck = JSON.stringify(data.plagiarismCheck)
         }
 
-        return await this.prisma.submission.update({
+        const submission = await this.prisma.submission.update({
           where: { id },
           data: updateData,
         })
+        return this.parseSubmission(submission)
       },
       'updateSubmission'
     )

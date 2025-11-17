@@ -36,14 +36,49 @@ export interface AssignmentFilters {
   published?: boolean
 }
 
+// Extended Assignment type with parsed JSON fields
+export type AssignmentWithParsedFields = Omit<Assignment, 'rubric' | 'requirements'> & {
+  rubric: Record<string, unknown> | null
+  requirements: Record<string, unknown> | null
+}
+
 export class AssignmentRepository extends BaseRepository {
+  /**
+   * Safely parse a JSON string, returning null on failure
+   */
+  private safeJsonParse<T = unknown>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Parse JSON fields in an assignment
+   */
+  private parseAssignment(assignment: Assignment): AssignmentWithParsedFields {
+    return {
+      ...assignment,
+      rubric: this.safeJsonParse<Record<string, unknown>>(assignment.rubric),
+      requirements: this.safeJsonParse<Record<string, unknown>>(assignment.requirements),
+    }
+  }
+
+  /**
+   * Parse JSON fields in multiple assignments
+   */
+  private parseAssignments(assignments: Assignment[]): AssignmentWithParsedFields[] {
+    return assignments.map(assignment => this.parseAssignment(assignment))
+  }
   /**
    * Create a new assignment
    */
-  async create(data: CreateAssignmentData): Promise<Assignment> {
+  async create(data: CreateAssignmentData): Promise<AssignmentWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.assignment.create({
+        const assignment = await this.prisma.assignment.create({
           data: {
             title: data.title,
             description: data.description,
@@ -56,6 +91,7 @@ export class AssignmentRepository extends BaseRepository {
             published: data.published ?? false,
           },
         })
+        return this.parseAssignment(assignment)
       },
       'createAssignment'
     )
@@ -64,12 +100,13 @@ export class AssignmentRepository extends BaseRepository {
   /**
    * Find assignment by ID
    */
-  async findById(id: string): Promise<Assignment | null> {
+  async findById(id: string): Promise<AssignmentWithParsedFields | null> {
     return this.withRetry(
       async () => {
-        return await this.prisma.assignment.findUnique({
+        const assignment = await this.prisma.assignment.findUnique({
           where: { id },
         })
+        return assignment ? this.parseAssignment(assignment) : null
       },
       'findAssignmentById'
     )
@@ -102,7 +139,7 @@ export class AssignmentRepository extends BaseRepository {
   async findByCourse(
     courseId: string,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Assignment>> {
+  ): Promise<PaginationResult<AssignmentWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -119,7 +156,7 @@ export class AssignmentRepository extends BaseRepository {
           }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseAssignments(data), total, page, perPage)
       },
       'findAssignmentsByCourse'
     )
@@ -131,7 +168,7 @@ export class AssignmentRepository extends BaseRepository {
   async findByInstructor(
     instructorId: string,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Assignment>> {
+  ): Promise<PaginationResult<AssignmentWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -148,7 +185,7 @@ export class AssignmentRepository extends BaseRepository {
           }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseAssignments(data), total, page, perPage)
       },
       'findAssignmentsByInstructor'
     )
@@ -160,7 +197,7 @@ export class AssignmentRepository extends BaseRepository {
   async findMany(
     filters?: AssignmentFilters,
     options?: PaginationOptions
-  ): Promise<PaginationResult<Assignment>> {
+  ): Promise<PaginationResult<AssignmentWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(options)
@@ -180,7 +217,7 @@ export class AssignmentRepository extends BaseRepository {
           this.prisma.assignment.count({ where }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseAssignments(data), total, page, perPage)
       },
       'findManyAssignments'
     )
@@ -189,7 +226,7 @@ export class AssignmentRepository extends BaseRepository {
   /**
    * Update an assignment
    */
-  async update(id: string, data: UpdateAssignmentData): Promise<Assignment> {
+  async update(id: string, data: UpdateAssignmentData): Promise<AssignmentWithParsedFields> {
     return this.withRetry(
       async () => {
         const updateData: Prisma.AssignmentUpdateInput = {}
@@ -202,10 +239,11 @@ export class AssignmentRepository extends BaseRepository {
         if (data.requirements !== undefined) updateData.requirements = JSON.stringify(data.requirements)
         if (data.published !== undefined) updateData.published = data.published
 
-        return await this.prisma.assignment.update({
+        const assignment = await this.prisma.assignment.update({
           where: { id },
           data: updateData,
         })
+        return this.parseAssignment(assignment)
       },
       'updateAssignment'
     )
@@ -214,13 +252,14 @@ export class AssignmentRepository extends BaseRepository {
   /**
    * Publish an assignment
    */
-  async publish(id: string): Promise<Assignment> {
+  async publish(id: string): Promise<AssignmentWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.assignment.update({
+        const assignment = await this.prisma.assignment.update({
           where: { id },
           data: { published: true },
         })
+        return this.parseAssignment(assignment)
       },
       'publishAssignment'
     )

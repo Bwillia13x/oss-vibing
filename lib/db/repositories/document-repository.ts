@@ -44,13 +44,25 @@ export type DocumentWithParsedFields = Omit<Document, 'tags' | 'metadata'> & {
 
 export class DocumentRepository extends BaseRepository {
   /**
+   * Safely parse a JSON string, returning null on failure
+   */
+  private safeJsonParse<T = unknown>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
+  /**
    * Parse JSON fields in a document
    */
   private parseDocument(doc: Document): DocumentWithParsedFields {
     return {
       ...doc,
-      tags: doc.tags ? JSON.parse(doc.tags) : null,
-      metadata: doc.metadata ? JSON.parse(doc.metadata) : null,
+      tags: this.safeJsonParse<string[]>(doc.tags),
+      metadata: this.safeJsonParse<Record<string, unknown>>(doc.metadata),
     }
   }
 
