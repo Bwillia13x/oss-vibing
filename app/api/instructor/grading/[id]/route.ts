@@ -9,6 +9,7 @@ import { createGradeSchema, updateGradeSchema } from '@/lib/db/validation/schema
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
+import { NotFoundError, ValidationError, ConflictError, RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function GET(
   req: NextRequest,
@@ -16,39 +17,46 @@ export async function GET(
 ) {
   const startTime = Date.now()
   const params = await context.params
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] GET /api/instructor/grading/${params.id} - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
     const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
 
     const gradeRepo = new GradeRepository()
     
+    console.log(`[${requestId}] Fetching grade for submission: ${params.id}`)
+    
     // Treat id as submission ID first
     const grade = await gradeRepo.findBySubmission(params.id)
     
     if (!grade) {
-      return NextResponse.json(
-        { error: 'Grade not found' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] Grade not found for submission: ${params.id}`)
+      throw new NotFoundError('Grade', params.id)
     }
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] GET /api/instructor/grading/${params.id} - Success (${duration}ms)`)
+
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: `/api/instructor/grading/${params.id}`,
       method: 'GET',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -56,19 +64,30 @@ export async function GET(
       data: grade,
     })
   } catch (error) {
-    console.error('Error retrieving grade:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] GET /api/instructor/grading/${params.id} - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: `/api/instructor/grading/${params.id}`,
       method: 'GET',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/instructor/grading/${params.id}`,
+      method: 'GET',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to retrieve grade'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
@@ -79,21 +98,23 @@ export async function POST(
 ) {
   const startTime = Date.now()
   const params = await context.params
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] POST /api/instructor/grading/${params.id} - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
     const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
 
@@ -106,13 +127,8 @@ export async function POST(
     })
     
     if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid input', 
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Validation failed`, validationResult.error.flatten().fieldErrors)
+      throw new ValidationError('Invalid input', validationResult.error.flatten().fieldErrors)
     }
 
     const gradeRepo = new GradeRepository()
@@ -121,20 +137,22 @@ export async function POST(
     // Check if submission exists
     const submission = await submissionRepo.findById(params.id)
     if (!submission) {
-      return NextResponse.json(
-        { error: 'Submission not found' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] Submission not found: ${params.id}`)
+      throw new NotFoundError('Submission', params.id)
     }
 
     // Check if grade already exists
     const existingGrade = await gradeRepo.findBySubmission(params.id)
     if (existingGrade) {
-      return NextResponse.json(
-        { error: 'Grade already exists for this submission. Use PATCH to update.' },
-        { status: 409 }
-      )
+      console.warn(`[${requestId}] Grade already exists for submission: ${params.id}`)
+      throw new ConflictError('Grade already exists for this submission. Use PATCH to update.')
     }
+
+    console.log(`[${requestId}] Creating grade for submission`, {
+      submissionId: params.id,
+      score: body.score,
+      maxPoints: body.maxPoints,
+    })
 
     const data = validationResult.data
     const grade = await gradeRepo.create({
@@ -151,9 +169,14 @@ export async function POST(
       status: 'GRADED',
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] POST /api/instructor/grading/${params.id} - Success (${duration}ms)`)
+
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: `/api/instructor/grading/${params.id}`,
       method: 'POST',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -162,22 +185,34 @@ export async function POST(
       message: 'Submission graded successfully',
     }, { status: 201 })
   } catch (error) {
-    console.error('Error grading submission:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] POST /api/instructor/grading/${params.id} - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: `/api/instructor/grading/${params.id}`,
       method: 'POST',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/instructor/grading/${params.id}`,
+      method: 'POST',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to grade submission'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
+
 
 export async function PATCH(
   req: NextRequest,
@@ -185,21 +220,23 @@ export async function PATCH(
 ) {
   const startTime = Date.now()
   const params = await context.params
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] PATCH /api/instructor/grading/${params.id} - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
     const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
 
@@ -208,13 +245,8 @@ export async function PATCH(
     // Validate input
     const validationResult = updateGradeSchema.safeParse(body)
     if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid input', 
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      )
+      console.warn(`[${requestId}] Validation failed`, validationResult.error.flatten().fieldErrors)
+      throw new ValidationError('Invalid input', validationResult.error.flatten().fieldErrors)
     }
 
     const gradeRepo = new GradeRepository()
@@ -222,11 +254,15 @@ export async function PATCH(
     // Find grade by submission ID
     const existingGrade = await gradeRepo.findBySubmission(params.id)
     if (!existingGrade) {
-      return NextResponse.json(
-        { error: 'Grade not found for this submission' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] Grade not found for submission: ${params.id}`)
+      throw new NotFoundError('Grade', params.id)
     }
+
+    console.log(`[${requestId}] Updating grade for submission`, {
+      submissionId: params.id,
+      gradeId: existingGrade.id,
+      updates: Object.keys(body),
+    })
 
     const data = validationResult.data
     const updated = await gradeRepo.update(existingGrade.id, {
@@ -236,9 +272,14 @@ export async function PATCH(
       rubricScores: data.rubricScores,
     })
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] PATCH /api/instructor/grading/${params.id} - Success (${duration}ms)`)
+
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: `/api/instructor/grading/${params.id}`,
       method: 'PATCH',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -247,19 +288,30 @@ export async function PATCH(
       message: 'Grade updated successfully',
     })
   } catch (error) {
-    console.error('Error updating grade:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] PATCH /api/instructor/grading/${params.id} - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: `/api/instructor/grading/${params.id}`,
       method: 'PATCH',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/instructor/grading/${params.id}`,
+      method: 'PATCH',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to update grade'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

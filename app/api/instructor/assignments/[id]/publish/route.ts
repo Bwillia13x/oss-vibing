@@ -8,6 +8,7 @@ import { AssignmentRepository } from '@/lib/db/repositories'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
+import { NotFoundError, RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function POST(
   req: NextRequest,
@@ -15,21 +16,23 @@ export async function POST(
 ) {
   const startTime = Date.now()
   const params = await context.params
+  const requestId = crypto.randomUUID()
 
   try {
+    console.log(`[${requestId}] POST /api/instructor/assignments/${params.id}/publish - Request started`)
+    
     const forwardedFor = req.headers.get('x-forwarded-for')
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      console.warn(`[${requestId}] Rate limit exceeded for IP: ${ip}`)
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
     const authResult = await requireRole(req, ['instructor', 'admin', 'institution-admin'])
     if (authResult instanceof NextResponse) {
+      console.log(`[${requestId}] Authentication failed`)
       return authResult
     }
 
@@ -38,17 +41,22 @@ export async function POST(
     // Check if assignment exists
     const existing = await assignmentRepo.findById(params.id)
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Assignment not found' },
-        { status: 404 }
-      )
+      console.warn(`[${requestId}] Assignment not found: ${params.id}`)
+      throw new NotFoundError('Assignment', params.id)
     }
+
+    console.log(`[${requestId}] Publishing assignment: ${params.id}`)
 
     const published = await assignmentRepo.publish(params.id)
 
-    monitoring.trackMetric('api_response_time', Date.now() - startTime, {
+    const duration = Date.now() - startTime
+    console.log(`[${requestId}] POST /api/instructor/assignments/${params.id}/publish - Success (${duration}ms)`)
+
+    monitoring.trackMetric('api_response_time', duration, {
       endpoint: `/api/instructor/assignments/${params.id}/publish`,
       method: 'POST',
+      status: 'success',
+      requestId,
     })
 
     return NextResponse.json({
@@ -57,19 +65,30 @@ export async function POST(
       message: 'Assignment published successfully',
     })
   } catch (error) {
-    console.error('Error publishing assignment:', error)
+    const duration = Date.now() - startTime
+    console.error(`[${requestId}] POST /api/instructor/assignments/${params.id}/publish - Error (${duration}ms)`, error)
     
     monitoring.trackError(error as Error, {
       endpoint: `/api/instructor/assignments/${params.id}/publish`,
       method: 'POST',
+      requestId,
     })
 
+    monitoring.trackMetric('api_response_time', duration, {
+      endpoint: `/api/instructor/assignments/${params.id}/publish`,
+      method: 'POST',
+      status: 'error',
+      requestId,
+    })
+
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
-      { 
+      {
         success: false,
-        error: 'Failed to publish assignment'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
