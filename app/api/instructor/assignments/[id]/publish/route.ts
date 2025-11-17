@@ -8,6 +8,7 @@ import { AssignmentRepository } from '@/lib/db/repositories'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
+import { NotFoundError, RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function POST(
   req: NextRequest,
@@ -21,10 +22,7 @@ export async function POST(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -38,10 +36,7 @@ export async function POST(
     // Check if assignment exists
     const existing = await assignmentRepo.findById(params.id)
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Assignment not found' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Assignment', params.id)
     }
 
     const published = await assignmentRepo.publish(params.id)
@@ -64,12 +59,14 @@ export async function POST(
       method: 'POST',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to publish assignment'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

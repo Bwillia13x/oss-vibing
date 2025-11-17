@@ -9,6 +9,7 @@ import { updateAssignmentSchema } from '@/lib/db/validation/schemas'
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
+import { NotFoundError, ValidationError, RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function GET(
   req: NextRequest,
@@ -22,10 +23,7 @@ export async function GET(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -47,10 +45,7 @@ export async function GET(
     }
     
     if (!assignment) {
-      return NextResponse.json(
-        { error: 'Assignment not found' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Assignment', params.id)
     }
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
@@ -70,12 +65,14 @@ export async function GET(
       method: 'GET',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to retrieve assignment'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
@@ -92,10 +89,7 @@ export async function PATCH(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -109,13 +103,7 @@ export async function PATCH(
     // Validate input
     const validationResult = updateAssignmentSchema.safeParse(body)
     if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid input', 
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      )
+      throw new ValidationError('Invalid input', validationResult.error.flatten().fieldErrors)
     }
 
     const assignmentRepo = new AssignmentRepository()
@@ -123,10 +111,7 @@ export async function PATCH(
     // Check if assignment exists
     const existing = await assignmentRepo.findById(params.id)
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Assignment not found' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Assignment', params.id)
     }
 
     const data = validationResult.data
@@ -159,12 +144,14 @@ export async function PATCH(
       method: 'PATCH',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to update assignment'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
@@ -181,10 +168,7 @@ export async function DELETE(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -198,10 +182,7 @@ export async function DELETE(
     // Check if assignment exists
     const existing = await assignmentRepo.findById(params.id)
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Assignment not found' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Assignment', params.id)
     }
 
     await assignmentRepo.delete(params.id)
@@ -223,12 +204,14 @@ export async function DELETE(
       method: 'DELETE',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to delete assignment'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }

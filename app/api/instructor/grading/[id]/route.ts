@@ -9,6 +9,7 @@ import { createGradeSchema, updateGradeSchema } from '@/lib/db/validation/schema
 import { apiRateLimiter } from '@/lib/cache'
 import monitoring from '@/lib/monitoring'
 import { requireRole } from '@/lib/auth'
+import { NotFoundError, ValidationError, ConflictError, RateLimitError, formatErrorResponse } from '@/lib/errors/api-errors'
 
 export async function GET(
   req: NextRequest,
@@ -22,10 +23,7 @@ export async function GET(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -40,10 +38,7 @@ export async function GET(
     const grade = await gradeRepo.findBySubmission(params.id)
     
     if (!grade) {
-      return NextResponse.json(
-        { error: 'Grade not found' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Grade', params.id)
     }
 
     monitoring.trackMetric('api_response_time', Date.now() - startTime, {
@@ -63,12 +58,14 @@ export async function GET(
       method: 'GET',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to retrieve grade'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
@@ -85,10 +82,7 @@ export async function POST(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -106,13 +100,7 @@ export async function POST(
     })
     
     if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid input', 
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      )
+      throw new ValidationError('Invalid input', validationResult.error.flatten().fieldErrors)
     }
 
     const gradeRepo = new GradeRepository()
@@ -121,19 +109,13 @@ export async function POST(
     // Check if submission exists
     const submission = await submissionRepo.findById(params.id)
     if (!submission) {
-      return NextResponse.json(
-        { error: 'Submission not found' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Submission', params.id)
     }
 
     // Check if grade already exists
     const existingGrade = await gradeRepo.findBySubmission(params.id)
     if (existingGrade) {
-      return NextResponse.json(
-        { error: 'Grade already exists for this submission. Use PATCH to update.' },
-        { status: 409 }
-      )
+      throw new ConflictError('Grade already exists for this submission. Use PATCH to update.')
     }
 
     const data = validationResult.data
@@ -169,12 +151,14 @@ export async function POST(
       method: 'POST',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to grade submission'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
@@ -191,10 +175,7 @@ export async function PATCH(
     const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
     
     if (!apiRateLimiter.isAllowed(ip)) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded' },
-        { status: 429 }
-      )
+      throw new RateLimitError()
     }
 
     // Authentication and authorization - instructors and admins only
@@ -208,13 +189,7 @@ export async function PATCH(
     // Validate input
     const validationResult = updateGradeSchema.safeParse(body)
     if (!validationResult.success) {
-      return NextResponse.json(
-        { 
-          error: 'Invalid input', 
-          details: validationResult.error.flatten().fieldErrors 
-        },
-        { status: 400 }
-      )
+      throw new ValidationError('Invalid input', validationResult.error.flatten().fieldErrors)
     }
 
     const gradeRepo = new GradeRepository()
@@ -222,10 +197,7 @@ export async function PATCH(
     // Find grade by submission ID
     const existingGrade = await gradeRepo.findBySubmission(params.id)
     if (!existingGrade) {
-      return NextResponse.json(
-        { error: 'Grade not found for this submission' },
-        { status: 404 }
-      )
+      throw new NotFoundError('Grade', params.id)
     }
 
     const data = validationResult.data
@@ -254,12 +226,14 @@ export async function PATCH(
       method: 'PATCH',
     })
 
+    const { error: errorMessage, details, statusCode } = formatErrorResponse(error)
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to update grade'
+        error: errorMessage,
+        ...(details && { details }),
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
