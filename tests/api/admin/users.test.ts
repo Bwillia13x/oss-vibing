@@ -61,6 +61,9 @@ describe('Admin User API Tests', () => {
         name: 'First User',
       })
 
+      // Small delay to ensure database commit
+      await new Promise(resolve => setTimeout(resolve, 10))
+
       // Attempting to create another user with same email should fail
       await expect(
         userRepo.create({
