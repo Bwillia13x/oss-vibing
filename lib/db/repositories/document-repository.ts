@@ -36,14 +36,49 @@ export interface DocumentFilters {
   search?: string
 }
 
+// Extended Document type with parsed JSON fields
+export type DocumentWithParsedFields = Omit<Document, 'tags' | 'metadata'> & {
+  tags: string[] | null
+  metadata: Record<string, unknown> | null
+}
+
 export class DocumentRepository extends BaseRepository {
+  /**
+   * Safely parse a JSON string, returning null on failure
+   */
+  private safeJsonParse<T = unknown>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Parse JSON fields in a document
+   */
+  private parseDocument(doc: Document): DocumentWithParsedFields {
+    return {
+      ...doc,
+      tags: this.safeJsonParse<string[]>(doc.tags),
+      metadata: this.safeJsonParse<Record<string, unknown>>(doc.metadata),
+    }
+  }
+
+  /**
+   * Parse JSON fields in multiple documents
+   */
+  private parseDocuments(docs: Document[]): DocumentWithParsedFields[] {
+    return docs.map(doc => this.parseDocument(doc))
+  }
   /**
    * Create a new document
    */
-  async create(data: CreateDocumentData): Promise<Document> {
+  async create(data: CreateDocumentData): Promise<DocumentWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.document.create({
+        const doc = await this.prisma.document.create({
           data: {
             userId: data.userId,
             title: data.title,
@@ -55,6 +90,7 @@ export class DocumentRepository extends BaseRepository {
             metadata: data.metadata ? JSON.stringify(data.metadata) : null,
           },
         })
+        return this.parseDocument(doc)
       },
       'createDocument'
     )
@@ -63,12 +99,13 @@ export class DocumentRepository extends BaseRepository {
   /**
    * Find document by ID
    */
-  async findById(id: string): Promise<Document | null> {
+  async findById(id: string): Promise<DocumentWithParsedFields | null> {
     return this.withRetry(
       async () => {
-        return await this.prisma.document.findUnique({
+        const doc = await this.prisma.document.findUnique({
           where: { id },
         })
+        return doc ? this.parseDocument(doc) : null
       },
       'findDocumentById'
     )
@@ -77,10 +114,10 @@ export class DocumentRepository extends BaseRepository {
   /**
    * Find document by ID with citations
    */
-  async findByIdWithCitations(id: string): Promise<Document & { citations: unknown[] } | null> {
+  async findByIdWithCitations(id: string): Promise<(DocumentWithParsedFields & { citations: unknown[] }) | null> {
     return this.withRetry(
       async () => {
-        return await this.prisma.document.findUnique({
+        const doc = await this.prisma.document.findUnique({
           where: { id },
           include: {
             citations: {
@@ -89,7 +126,13 @@ export class DocumentRepository extends BaseRepository {
               },
             },
           },
-        }) as Document & { citations: unknown[] } | null
+        })
+        if (!doc) return null
+        const docWithCitations = doc as Document & { citations: unknown[] }
+        return {
+          ...this.parseDocument(doc),
+          citations: docWithCitations.citations,
+        }
       },
       'findDocumentByIdWithCitations'
     )
@@ -98,7 +141,7 @@ export class DocumentRepository extends BaseRepository {
   /**
    * Update document
    */
-  async update(id: string, data: UpdateDocumentData): Promise<Document> {
+  async update(id: string, data: UpdateDocumentData): Promise<DocumentWithParsedFields> {
     return this.withRetry(
       async () => {
         const updateData: Prisma.DocumentUpdateInput = {}
@@ -111,10 +154,11 @@ export class DocumentRepository extends BaseRepository {
         if (data.tags !== undefined) updateData.tags = JSON.stringify(data.tags)
         if (data.metadata !== undefined) updateData.metadata = JSON.stringify(data.metadata)
 
-        return await this.prisma.document.update({
+        const doc = await this.prisma.document.update({
           where: { id },
           data: updateData,
         })
+        return this.parseDocument(doc)
       },
       'updateDocument'
     )
@@ -123,12 +167,13 @@ export class DocumentRepository extends BaseRepository {
   /**
    * Delete document
    */
-  async delete(id: string): Promise<Document> {
+  async delete(id: string): Promise<DocumentWithParsedFields> {
     return this.withRetry(
       async () => {
-        return await this.prisma.document.delete({
+        const doc = await this.prisma.document.delete({
           where: { id },
         })
+        return this.parseDocument(doc)
       },
       'deleteDocument'
     )
@@ -140,7 +185,7 @@ export class DocumentRepository extends BaseRepository {
   async list(
     filters?: DocumentFilters,
     pagination?: PaginationOptions
-  ): Promise<PaginationResult<Document>> {
+  ): Promise<PaginationResult<DocumentWithParsedFields>> {
     return this.withRetry(
       async () => {
         const { skip, take, page, perPage } = this.buildPagination(pagination)
@@ -180,7 +225,7 @@ export class DocumentRepository extends BaseRepository {
           this.prisma.document.count({ where }),
         ])
 
-        return this.buildPaginationResult(data, total, page, perPage)
+        return this.buildPaginationResult(this.parseDocuments(data), total, page, perPage)
       },
       'listDocuments'
     )
@@ -197,6 +242,22 @@ export class DocumentRepository extends BaseRepository {
         })
       },
       'countDocumentsByUser'
+    )
+  }
+
+  /**
+   * Find documents by user ID
+   */
+  async findByUserId(userId: string): Promise<DocumentWithParsedFields[]> {
+    return this.withRetry(
+      async () => {
+        const docs = await this.prisma.document.findMany({
+          where: { userId },
+          orderBy: { updatedAt: 'desc' },
+        })
+        return this.parseDocuments(docs)
+      },
+      'findDocumentsByUserId'
     )
   }
 
@@ -220,7 +281,7 @@ export class DocumentRepository extends BaseRepository {
   /**
    * Archive document
    */
-  async archive(id: string): Promise<Document> {
+  async archive(id: string): Promise<DocumentWithParsedFields> {
     return this.update(id, { status: 'ARCHIVED' })
   }
 }

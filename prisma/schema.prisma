@@ -187,6 +187,76 @@ enum LicenseStatus {
 }
 
 // ============================================================================
+// Instructor & Assignment Management
+// ============================================================================
+
+model Assignment {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  courseId        String?
+  instructorId    String
+  dueDate         DateTime
+  maxPoints       Int
+  rubric          String?  // JSON rubric definition
+  requirements    String?  // JSON requirements
+  published       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  submissions     Submission[]
+  
+  @@index([instructorId])
+  @@index([courseId])
+  @@index([dueDate])
+  @@index([published])
+}
+
+model Submission {
+  id              String   @id @default(cuid())
+  assignmentId    String
+  studentId       String
+  content         String
+  submittedAt     DateTime @default(now())
+  status          SubmissionStatus @default(SUBMITTED)
+  plagiarismCheck String?  // JSON plagiarism check results
+  
+  // Relations
+  assignment      Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  grade           Grade?
+  
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  GRADED
+  RETURNED
+}
+
+model Grade {
+  id              String   @id @default(cuid())
+  submissionId    String   @unique
+  instructorId    String
+  score           Int
+  maxPoints       Int
+  feedback        String?  // JSON feedback
+  rubricScores    String?  // JSON rubric scores
+  gradedAt        DateTime @default(now())
+  
+  // Relations
+  submission      Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@index([instructorId])
+  @@index([gradedAt])
+}
+
+// ============================================================================
 // Audit & Monitoring
 // ============================================================================
 
