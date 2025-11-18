@@ -50,9 +50,24 @@ export async function checkRoomAccess(
       return true;
     }
 
-    // TODO: Check ACL table when implemented
-    // For now, only owner has access
-    return false;
+    // Check ACL table for granted permissions
+    const acl = await prisma.roomACL.findUnique({
+      where: {
+        documentId_userId: {
+          documentId: roomId,
+          userId: userId,
+        },
+      },
+      select: { permission: true },
+    });
+
+    if (!acl) {
+      return false;
+    }
+
+    // Check if user's permission level is sufficient
+    const userPermission = acl.permission as RoomPermission;
+    return hasPermissionLevel(userPermission, requiredPermission);
   } catch (error) {
     console.error('Error checking room access:', error);
     return false;
@@ -76,14 +91,57 @@ export async function grantRoomAccess(
       throw new Error('Only room owner can grant access');
     }
 
-    // TODO: Implement ACL table creation
-    // For now, log the grant
+    // Verify the room/document exists
+    const document = await prisma.document.findUnique({
+      where: { id: roomId },
+      select: { id: true, userId: true },
+    });
+
+    if (!document) {
+      throw new Error('Room not found');
+    }
+
+    // Don't allow granting access to the owner
+    if (document.userId === userId) {
+      throw new Error('Owner already has full access');
+    }
+
+    // Upsert ACL entry (create if missing, update permission if exists)
+    await prisma.roomACL.upsert({
+      where: {
+        documentId_userId: {
+          documentId: roomId,
+          userId: userId,
+        },
+      },
+      create: {
+        documentId: roomId,
+        userId: userId,
+        permission: permission,
+        invitedById: grantedBy,
+      },
+      update: {
+        permission: permission,
+        updatedAt: new Date(),
+      },
+    });
+
+    // Log the grant for audit purposes
+    await prisma.auditLog.create({
+      data: {
+        userId: grantedBy,
+        action: 'GRANT_ROOM_ACCESS',
+        resource: 'room',
+        resourceId: roomId,
+        severity: 'INFO',
+        details: JSON.stringify({
+          targetUserId: userId,
+          permission: permission,
+        }),
+      },
+    });
+
     console.log(`Access granted: Room ${roomId}, User ${userId}, Permission ${permission}`);
-    
-    // Future implementation will use:
-    // await prisma.roomACL.create({
-    //   data: { roomId, userId, permission },
-    // });
   } catch (error) {
     console.error('Error granting room access:', error);
     throw error;
@@ -106,13 +164,44 @@ export async function revokeRoomAccess(
       throw new Error('Only room owner can revoke access');
     }
 
-    // TODO: Implement ACL table deletion
+    // Verify the room/document exists
+    const document = await prisma.document.findUnique({
+      where: { id: roomId },
+      select: { userId: true },
+    });
+
+    if (!document) {
+      throw new Error('Room not found');
+    }
+
+    // Don't allow revoking owner's access
+    if (document.userId === userId) {
+      throw new Error('Cannot revoke owner access');
+    }
+
+    // Delete ACL entry
+    await prisma.roomACL.deleteMany({
+      where: {
+        documentId: roomId,
+        userId: userId,
+      },
+    });
+
+    // Log the revocation for audit purposes
+    await prisma.auditLog.create({
+      data: {
+        userId: revokedBy,
+        action: 'REVOKE_ROOM_ACCESS',
+        resource: 'room',
+        resourceId: roomId,
+        severity: 'INFO',
+        details: JSON.stringify({
+          targetUserId: userId,
+        }),
+      },
+    });
+
     console.log(`Access revoked: Room ${roomId}, User ${userId}`);
-    
-    // Future implementation will use:
-    // await prisma.roomACL.deleteMany({
-    //   where: { roomId, userId },
-    // });
   } catch (error) {
     console.error('Error revoking room access:', error);
     throw error;
@@ -125,32 +214,69 @@ export async function revokeRoomAccess(
 export async function getRoomUsers(roomId: string): Promise<Array<{
   userId: string;
   permission: RoomPermission;
+  name?: string;
+  email?: string;
 }>> {
   try {
     // Get room owner
     const document = await prisma.document.findUnique({
       where: { id: roomId },
-      select: { userId: true },
+      select: { 
+        userId: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     if (!document) {
       return [];
     }
 
-    // Return owner as the only user for now
-    return [
+    const users: Array<{
+      userId: string;
+      permission: RoomPermission;
+      name?: string;
+      email?: string;
+    }> = [
       {
         userId: document.userId,
         permission: RoomPermission.OWNER,
+        name: document.user.name || undefined,
+        email: document.user.email,
       },
     ];
 
-    // TODO: Fetch from ACL table when implemented
-    // const acls = await prisma.roomACL.findMany({
-    //   where: { roomId },
-    //   select: { userId: true, permission: true },
-    // });
-    // return acls;
+    // Fetch ACL entries with user details
+    const acls = await prisma.roomACL.findMany({
+      where: { documentId: roomId },
+      select: { 
+        userId: true, 
+        permission: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    // Add ACL users to the list
+    for (const acl of acls) {
+      users.push({
+        userId: acl.userId,
+        permission: acl.permission as RoomPermission,
+        name: acl.user.name || undefined,
+        email: acl.user.email,
+      });
+    }
+
+    return users;
   } catch (error) {
     console.error('Error getting room users:', error);
     return [];
@@ -202,8 +328,22 @@ export async function getUserPermission(
       return RoomPermission.OWNER;
     }
 
-    // TODO: Check ACL table when implemented
-    return null;
+    // Check ACL table for granted permission
+    const acl = await prisma.roomACL.findUnique({
+      where: {
+        documentId_userId: {
+          documentId: roomId,
+          userId: userId,
+        },
+      },
+      select: { permission: true },
+    });
+
+    if (!acl) {
+      return null;
+    }
+
+    return acl.permission as RoomPermission;
   } catch (error) {
     console.error('Error getting user permission:', error);
     return null;
