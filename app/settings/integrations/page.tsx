@@ -94,13 +94,57 @@ export default function IntegrationsPage() {
     }, 0);
   };
 
-  const handleDisconnect = (integrationId: string) => {
-    // TODO: Implement disconnect API call
-    setIntegrations(prev =>
-      prev.map(int =>
-        int.id === integrationId ? { ...int, connected: false } : int
-      )
-    );
+  const handleDisconnect = async (integrationId: string) => {
+    try {
+      const response = await fetch(`/api/integrations/${integrationId}/disconnect`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIntegrations(prev =>
+          prev.map(int =>
+            int.id === integrationId ? { ...int, connected: false } : int
+          )
+        );
+        setSuccessMessage(`Successfully disconnected from ${integrationId}`);
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } else {
+        setErrorMessage(data.error || 'Failed to disconnect');
+        setTimeout(() => setErrorMessage(null), 5000);
+      }
+    } catch (error) {
+      console.error('Error disconnecting:', error);
+      setErrorMessage('Failed to disconnect integration');
+      setTimeout(() => setErrorMessage(null), 5000);
+    }
+  };
+
+  const handleSync = async (integrationId: string) => {
+    try {
+      setConnecting(integrationId);
+      
+      const response = await fetch(`/api/integrations/${integrationId}/sync`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSuccessMessage(`Synced ${data.itemsSynced} items from ${integrationId}`);
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } else {
+        setErrorMessage(data.error || 'Failed to sync');
+        setTimeout(() => setErrorMessage(null), 5000);
+      }
+    } catch (error) {
+      console.error('Error syncing:', error);
+      setErrorMessage('Failed to sync integration');
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setConnecting(null);
+    }
   };
 
   return (
@@ -162,12 +206,27 @@ export default function IntegrationsPage() {
                       <Button
                         variant="outline"
                         onClick={() => handleDisconnect(integration.id)}
+                        disabled={connecting === integration.id}
                       >
                         Disconnect
                       </Button>
-                      <Button variant="outline" className="gap-2">
-                        <ExternalLink className="w-4 h-4" />
-                        Sync Now
+                      <Button 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => handleSync(integration.id)}
+                        disabled={connecting === integration.id}
+                      >
+                        {connecting === integration.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Syncing...
+                          </>
+                        ) : (
+                          <>
+                            <ExternalLink className="w-4 h-4" />
+                            Sync Now
+                          </>
+                        )}
                       </Button>
                     </>
                   ) : (

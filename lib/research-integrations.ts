@@ -311,6 +311,7 @@ export async function searchArXiv(
 /**
  * Search IEEE Xplore
  * Requires API key from IEEE (https://developer.ieee.org/)
+ * API Documentation: https://developer.ieee.org/docs
  */
 export async function searchIEEE(
   query: string,
@@ -322,7 +323,13 @@ export async function searchIEEE(
     const apiKey = process.env.IEEE_API_KEY
     
     if (!apiKey) {
-      console.warn('IEEE API key not configured')
+      console.warn('IEEE API key not configured - search unavailable')
+      monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+        source: 'ieee',
+        query,
+        results: '0',
+        status: 'no_api_key',
+      })
       return []
     }
     
@@ -334,35 +341,81 @@ export async function searchIEEE(
       apikey: apiKey,
     })
     
-    const response = await fetch(`${apiUrl}?${params}`)
+    const response = await fetch(`${apiUrl}?${params}`, {
+      signal: AbortSignal.timeout(15000), // 15 second timeout
+    })
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.warn('IEEE API authentication failed - check API key')
+        monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+          source: 'ieee',
+          query,
+          results: '0',
+          status: 'auth_failed',
+        })
+        return []
+      }
+      throw new Error(`IEEE API error: ${response.status} ${response.statusText}`)
+    }
+    
     const data = await response.json()
     
-    if (!data.articles) {
+    if (!data.articles || !Array.isArray(data.articles)) {
+      monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+        source: 'ieee',
+        query,
+        results: '0',
+      })
       return []
     }
     
-    const papers: ResearchPaper[] = data.articles.map((article: any) => ({
-      id: `ieee-${article.article_number}`,
-      title: article.title,
-      authors: article.authors?.authors?.map((a: any) => a.full_name) || [],
-      abstract: article.abstract,
-      year: article.publication_year,
-      venue: article.publication_title,
-      doi: article.doi,
-      source: 'ieee' as const,
-      url: article.pdf_url || article.html_url,
-      citationCount: article.citing_paper_count,
-      metadata: {
-        articleNumber: article.article_number,
-        isbn: article.isbn,
-        issn: article.issn,
-      },
-    }))
+    // Enhanced field mapping with fallbacks and normalization
+    const papers: ResearchPaper[] = data.articles.map((article: any) => {
+      // Normalize authors - handle different formats
+      let authors: string[] = []
+      if (article.authors?.authors && Array.isArray(article.authors.authors)) {
+        authors = article.authors.authors
+          .map((a: any) => a.full_name || `${a.fname || ''} ${a.lname || ''}`.trim())
+          .filter((name: string) => name.length > 0)
+      }
+      
+      // Parse publication year with fallbacks
+      const year = article.publication_year || 
+                   (article.publication_date ? parseInt(article.publication_date.substring(0, 4)) : undefined)
+      
+      // Construct DOI URL if DOI exists
+      const doiUrl = article.doi ? `https://doi.org/${article.doi}` : undefined
+      
+      return {
+        id: `ieee-${article.article_number || article.arnumber}`,
+        title: article.title || 'Untitled',
+        authors,
+        abstract: article.abstract || article.summary,
+        year,
+        venue: article.publication_title || article.pubtitle,
+        doi: article.doi,
+        source: 'ieee' as const,
+        url: doiUrl || article.pdf_url || article.html_url || article.content_url,
+        pdfUrl: article.pdf_url,
+        citationCount: article.citing_paper_count || article.reference_count,
+        metadata: {
+          articleNumber: article.article_number || article.arnumber,
+          isbn: article.isbn,
+          issn: article.issn,
+          startPage: article.start_page,
+          endPage: article.end_page,
+          publisher: article.publisher,
+          documentType: article.content_type,
+        },
+      }
+    })
     
     monitoring.trackMetric('research_search_time', Date.now() - startTime, {
       source: 'ieee',
       query,
       results: papers.length.toString(),
+      status: 'success',
     })
     
     return papers
@@ -372,6 +425,12 @@ export async function searchIEEE(
       source: 'ieee',
       query,
     })
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'ieee',
+      query,
+      results: '0',
+      status: 'error',
+    })
     return []
   }
 }
@@ -379,10 +438,11 @@ export async function searchIEEE(
 /**
  * Search JSTOR
  * Requires API access (institutional subscription typically required)
+ * API Documentation: https://about.jstor.org/whats-in-jstor/text-mining-support/
  */
 export async function searchJSTOR(
   query: string,
-  _maxResults: number = 10
+  maxResults: number = 10
 ): Promise<ResearchPaper[]> {
   const startTime = Date.now()
   
@@ -390,20 +450,85 @@ export async function searchJSTOR(
     const apiKey = process.env.JSTOR_API_KEY
     
     if (!apiKey) {
-      console.warn('JSTOR API key not configured')
+      console.warn('JSTOR API key not configured - search unavailable')
+      monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+        source: 'jstor',
+        query,
+        results: '0',
+        status: 'no_api_key',
+      })
       return []
     }
     
-    // JSTOR API endpoint (placeholder - actual endpoint depends on subscription)
-    // This would typically require institutional access
-    console.log(`[JSTOR] Search not fully implemented - requires institutional access`)
+    // JSTOR Data for Research API endpoint
+    // Note: Actual implementation requires institutional access and approved API key
+    const apiUrl = 'https://www.jstor.org/api/search'
     
-    const papers: ResearchPaper[] = []
+    const params = new URLSearchParams({
+      q: query,
+      rows: maxResults.toString(),
+      sort: 'score desc',
+    })
+    
+    const response = await fetch(`${apiUrl}?${params}`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json',
+      },
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+    })
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.warn('JSTOR API authentication failed - check API key')
+        monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+          source: 'jstor',
+          query,
+          results: '0',
+          status: 'auth_failed',
+        })
+        return []
+      }
+      throw new Error(`JSTOR API error: ${response.status} ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    
+    if (!data.response?.docs) {
+      monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+        source: 'jstor',
+        query,
+        results: '0',
+      })
+      return []
+    }
+    
+    const papers: ResearchPaper[] = data.response.docs.map((doc: any) => ({
+      id: `jstor-${doc.id || doc.item_id}`,
+      title: doc.title || doc.item_title,
+      authors: Array.isArray(doc.author) 
+        ? doc.author 
+        : doc.author 
+          ? [doc.author] 
+          : [],
+      abstract: doc.abstract || doc.snippet,
+      year: doc.publication_year || parseInt(doc.publicationDate?.substring(0, 4) || '0'),
+      venue: doc.journal_title || doc.publication_title,
+      doi: doc.doi,
+      source: 'jstor' as const,
+      url: doc.url || `https://www.jstor.org/stable/${doc.id}`,
+      metadata: {
+        itemId: doc.item_id,
+        itemType: doc.item_type,
+        publisher: doc.publisher,
+      },
+    }))
     
     monitoring.trackMetric('research_search_time', Date.now() - startTime, {
       source: 'jstor',
       query,
       results: papers.length.toString(),
+      status: 'success',
     })
     
     return papers
@@ -412,6 +537,12 @@ export async function searchJSTOR(
     monitoring.trackError(error as Error, {
       source: 'jstor',
       query,
+    })
+    monitoring.trackMetric('research_search_time', Date.now() - startTime, {
+      source: 'jstor',
+      query,
+      results: '0',
+      status: 'error',
     })
     return []
   }
