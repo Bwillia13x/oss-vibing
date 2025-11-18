@@ -5,8 +5,8 @@
  * Includes database integration tests for permission management
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
+import { prisma } from '@/lib/db/client';
 import { 
   RoomPermission,
   checkRoomAccess,
@@ -17,8 +17,6 @@ import {
   getPermissionLevel,
   hasPermissionLevel,
 } from '@/lib/collaboration/acl';
-
-const prisma = new PrismaClient();
 
 describe('Collaboration ACL', () => {
   let ownerId: string;
@@ -304,5 +302,9 @@ describe('Collaboration ACL', () => {
       const permission = await getUserPermission(userId1, 'non-existent');
       expect(permission).toBeNull();
     });
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 });

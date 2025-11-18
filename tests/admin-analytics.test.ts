@@ -4,8 +4,8 @@
  * Tests for database-backed admin analytics functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
+import { prisma } from '@/lib/db/client';
 import {
   getInstitutionAnalytics,
   getStudentProgress,
@@ -13,8 +13,6 @@ import {
   trackUserActivity,
   updateStudentProgress,
 } from '@/lib/admin-analytics';
-
-const prisma = new PrismaClient();
 
 describe('Admin Analytics', () => {
   let userId1: string;
@@ -331,5 +329,9 @@ describe('Admin Analytics', () => {
       const integrityMetric = metrics.find((m) => m.metric === 'integrity_score');
       expect(integrityMetric?.value).toBe(85);
     });
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 });

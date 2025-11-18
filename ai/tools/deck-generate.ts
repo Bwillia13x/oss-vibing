@@ -9,6 +9,9 @@ import { readFile, writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
+// Constants
+const MAX_SOURCE_CONTENT_LENGTH = 4000; // Limit source content to fit in LLM context window
+
 interface Params {
   writer: UIMessageStreamWriter<UIMessage<never, DataPart>>
 }
@@ -70,7 +73,7 @@ async function generateDeckContent(
 Theme: ${theme}
 
 Content:
-${sourceContent.slice(0, 4000)} ${sourceContent.length > 4000 ? '...' : ''}
+${sourceContent.slice(0, MAX_SOURCE_CONTENT_LENGTH)} ${sourceContent.length > MAX_SOURCE_CONTENT_LENGTH ? '...' : ''}
 
 Please generate exactly ${slideCount} slides in the following JSON format:
 {

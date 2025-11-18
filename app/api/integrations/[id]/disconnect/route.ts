@@ -6,9 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db/client';
+import { getUserFromRequest } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,6 +20,15 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Authenticate user
+    const user = await getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const integrationId = params.id;
 
     // Validate integration ID
@@ -31,10 +39,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    // TODO: Get user ID from auth session
-    // For now, we'll use a placeholder
-    // const userId = await getCurrentUserId(request);
     
     // In a production implementation, you would:
     // 1. Delete OAuth tokens from secure storage
@@ -45,6 +49,7 @@ export async function POST(
     // For now, we'll just log the action
     await prisma.auditLog.create({
       data: {
+        userId: user.id,
         action: 'DISCONNECT_INTEGRATION',
         resource: 'integration',
         resourceId: integrationId,

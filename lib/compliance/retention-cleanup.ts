@@ -201,7 +201,7 @@ async function cleanupInactiveAccounts(): Promise<{
               email: user.email,
               lastLoginAt: user.lastLoginAt,
               inactiveDays: Math.floor(
-                (new Date().getTime() - (user.lastLoginAt?.getTime() || 0)) /
+                (new Date().getTime() - user.lastLoginAt!.getTime()) /
                   (1000 * 60 * 60 * 24)
               ),
             }),

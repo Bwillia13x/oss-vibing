@@ -122,7 +122,6 @@ export async function grantRoomAccess(
       },
       update: {
         permission: permission,
-        updatedAt: new Date(),
       },
     });
 

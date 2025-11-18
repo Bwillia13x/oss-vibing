@@ -503,14 +503,21 @@ export async function searchJSTOR(
       return []
     }
     
+    // Helper to normalize the authors field from JSTOR docs
+    function normalizeAuthors(authorField: any): string[] {
+      if (Array.isArray(authorField)) {
+        return authorField;
+      } else if (authorField) {
+        return [authorField];
+      } else {
+        return [];
+      }
+    }
+    
     const papers: ResearchPaper[] = data.response.docs.map((doc: any) => ({
       id: `jstor-${doc.id || doc.item_id}`,
       title: doc.title || doc.item_title,
-      authors: Array.isArray(doc.author) 
-        ? doc.author 
-        : doc.author 
-          ? [doc.author] 
-          : [],
+      authors: normalizeAuthors(doc.author),
       abstract: doc.abstract || doc.snippet,
       year: doc.publication_year || parseInt(doc.publicationDate?.substring(0, 4) || '0'),
       venue: doc.journal_title || doc.publication_title,

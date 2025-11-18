@@ -15,6 +15,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, ExternalLink, Loader2 } from 'lucide-react';
 
+// Constants
+const MESSAGE_DISMISS_TIMEOUT = 5000; // 5 seconds
+
 interface Integration {
   id: string;
   name: string;
@@ -66,7 +69,7 @@ export default function IntegrationsPage() {
         );
 
         // Clear message after 5 seconds
-        setTimeout(() => setSuccessMessage(null), 5000);
+        setTimeout(() => setSuccessMessage(null), MESSAGE_DISMISS_TIMEOUT);
       });
     }
 
@@ -81,7 +84,7 @@ export default function IntegrationsPage() {
         };
 
         setErrorMessage(errorMessages[error] || 'Authentication failed');
-        setTimeout(() => setErrorMessage(null), 5000);
+        setTimeout(() => setErrorMessage(null), MESSAGE_DISMISS_TIMEOUT);
       });
     }
   }, [searchParams]);
@@ -109,15 +112,15 @@ export default function IntegrationsPage() {
           )
         );
         setSuccessMessage(`Successfully disconnected from ${integrationId}`);
-        setTimeout(() => setSuccessMessage(null), 5000);
+        setTimeout(() => setSuccessMessage(null), MESSAGE_DISMISS_TIMEOUT);
       } else {
         setErrorMessage(data.error || 'Failed to disconnect');
-        setTimeout(() => setErrorMessage(null), 5000);
+        setTimeout(() => setErrorMessage(null), MESSAGE_DISMISS_TIMEOUT);
       }
     } catch (error) {
       console.error('Error disconnecting:', error);
       setErrorMessage('Failed to disconnect integration');
-      setTimeout(() => setErrorMessage(null), 5000);
+      setTimeout(() => setErrorMessage(null), MESSAGE_DISMISS_TIMEOUT);
     }
   };
 
@@ -133,15 +136,15 @@ export default function IntegrationsPage() {
 
       if (data.success) {
         setSuccessMessage(`Synced ${data.itemsSynced} items from ${integrationId}`);
-        setTimeout(() => setSuccessMessage(null), 5000);
+        setTimeout(() => setSuccessMessage(null), MESSAGE_DISMISS_TIMEOUT);
       } else {
         setErrorMessage(data.error || 'Failed to sync');
-        setTimeout(() => setErrorMessage(null), 5000);
+        setTimeout(() => setErrorMessage(null), MESSAGE_DISMISS_TIMEOUT);
       }
     } catch (error) {
       console.error('Error syncing:', error);
       setErrorMessage('Failed to sync integration');
-      setTimeout(() => setErrorMessage(null), 5000);
+      setTimeout(() => setErrorMessage(null), MESSAGE_DISMISS_TIMEOUT);
     } finally {
       setConnecting(null);
     }

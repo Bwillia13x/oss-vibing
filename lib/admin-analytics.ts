@@ -10,9 +10,7 @@ import {
   UsageAnalytics,
   PlagiarismReport,
 } from './types/institutional'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from './db/client'
 
 /**
  * Get aggregated analytics for an institution

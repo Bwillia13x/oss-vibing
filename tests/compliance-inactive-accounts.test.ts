@@ -4,11 +4,9 @@
  * Tests for inactive account cleanup functionality
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
+import { prisma } from '@/lib/db/client';
 import { RETENTION_POLICIES } from '@/lib/compliance/ferpa';
-
-const prisma = new PrismaClient();
 
 // Import the function directly for testing
 // We'll need to export it from retention-cleanup.ts for testing
@@ -274,5 +272,9 @@ describe('Compliance - Inactive Account Cleanup', () => {
 
       expect(user?.lastLoginAt).toBeNull();
     });
+  });
+
+  afterAll(async () => {
+    await prisma.$disconnect();
   });
 });
