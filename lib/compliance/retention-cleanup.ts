@@ -146,19 +146,85 @@ async function cleanupOldAuditLogs(): Promise<{
 
 /**
  * Clean up inactive user accounts
- * Marks accounts as inactive but doesn't delete them
+ * Marks accounts as DELETED if they haven't logged in for the threshold period
  */
 async function cleanupInactiveAccounts(): Promise<{
   count: number;
   errors: string[];
 }> {
   const errors: string[] = [];
-  
-  // NOTE: User model doesn't have lastLoginAt field yet.
-  // This functionality requires adding the field to the schema first.
-  console.log('Skipping inactive account cleanup - lastLoginAt field not implemented yet');
-  
-  return { count: 0, errors: [] };
+  const inactiveThreshold = new Date();
+  inactiveThreshold.setDate(
+    inactiveThreshold.getDate() - RETENTION_POLICIES.INACTIVE_ACCOUNTS
+  );
+
+  try {
+    // Find users who haven't logged in within the threshold period
+    // Users without lastLoginAt are considered active (legacy users)
+    const inactiveUsers = await prisma.user.findMany({
+      where: {
+        status: 'ACTIVE',
+        lastLoginAt: {
+          not: null,
+          lte: inactiveThreshold,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        lastLoginAt: true,
+      },
+    });
+
+    console.log(
+      `Found ${inactiveUsers.length} inactive users (no login for ${RETENTION_POLICIES.INACTIVE_ACCOUNTS} days)`
+    );
+
+    let markedCount = 0;
+
+    for (const user of inactiveUsers) {
+      try {
+        // Mark user as DELETED (soft delete)
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { status: 'DELETED' },
+        });
+
+        // Create audit log for the action
+        await prisma.auditLog.create({
+          data: {
+            action: 'MARK_INACTIVE_USER_DELETED',
+            resource: 'user',
+            resourceId: user.id,
+            severity: 'INFO',
+            details: JSON.stringify({
+              email: user.email,
+              lastLoginAt: user.lastLoginAt,
+              inactiveDays: Math.floor(
+                (new Date().getTime() - user.lastLoginAt!.getTime()) /
+                  (1000 * 60 * 60 * 24)
+              ),
+            }),
+          },
+        });
+
+        markedCount++;
+        console.log(
+          `Marked inactive user ${user.id} as deleted (last login: ${user.lastLoginAt})`
+        );
+      } catch (error) {
+        const errorMsg = `Failed to mark user ${user.id} as deleted: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        console.error(errorMsg);
+        errors.push(errorMsg);
+      }
+    }
+
+    return { count: markedCount, errors };
+  } catch (error) {
+    const errorMsg = `Failed to query inactive users: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    console.error(errorMsg);
+    return { count: 0, errors: [errorMsg] };
+  }
 }
 
 /**

@@ -86,18 +86,20 @@ export async function GET(req: NextRequest) {
         const existingUser = await repositories.userRepository.findByEmail(userInfo.email);
         
         if (existingUser) {
-          // Update existing user
+          // Update existing user with lastLoginAt
           const updatedUser = await repositories.userRepository.update(existingUser.id, {
             name: userInfo.name || existingUser.name || undefined,
+            lastLoginAt: new Date(),
           });
           userId = updatedUser.id;
           userRole = updatedUser.role;
         } else {
-          // Create new user
+          // Create new user with lastLoginAt
           const newUser = await repositories.userRepository.create({
             email: userInfo.email,
             name: userInfo.name || userInfo.email.split('@')[0],
             role: 'USER',
+            lastLoginAt: new Date(),
           });
           userId = newUser.id;
           userRole = newUser.role;

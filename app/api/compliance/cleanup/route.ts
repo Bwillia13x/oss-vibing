@@ -9,6 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { runRetentionCleanup } from '@/lib/compliance/retention-cleanup';
+import { requireInstitutionAccess } from '@/lib/auth';
+import { UnauthorizedError, formatErrorResponse } from '@/lib/errors/api-errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,14 +18,18 @@ export const dynamic = 'force-dynamic';
 /**
  * Manually trigger retention cleanup
  * 
- * @requires Admin authentication (should be implemented)
+ * @requires Admin authentication
  */
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // TODO: Add admin authentication check
-    // For now, this is an open endpoint - should be restricted in production
+    // Require admin authentication
+    // Note: Using a system-level institution check, or we could check user role directly
+    const authResult = await requireInstitutionAccess(request, 'system', ['admin']);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
     
-    console.log('Manual retention cleanup triggered');
+    console.log('Manual retention cleanup triggered by admin');
     
     const result = await runRetentionCleanup();
     
@@ -39,6 +45,10 @@ export async function POST(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Retention cleanup failed:', error);
+    
+    if (error instanceof UnauthorizedError) {
+      return formatErrorResponse(error);
+    }
     
     return NextResponse.json(
       {

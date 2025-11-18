@@ -16,23 +16,26 @@ datasource db {
 // ============================================================================
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      Role     @default(USER)
-  status    UserStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  role        Role     @default(USER)
+  status      UserStatus @default(ACTIVE)
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   
   // Relations
   documents      Document[]
   references     Reference[]
   citations      Citation[]
   auditLogs      AuditLog[]
+  roomACLs       RoomACL[]
   
   @@index([email])
   @@index([role])
   @@index([createdAt])
+  @@index([lastLoginAt])
 }
 
 enum Role {
@@ -68,6 +71,7 @@ model Document {
   // Relations
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   citations   Citation[]
+  roomACLs    RoomACL[]
   
   @@index([userId])
   @@index([type])
@@ -91,6 +95,28 @@ enum DocumentStatus {
   IN_PROGRESS
   COMPLETED
   ARCHIVED
+}
+
+// ============================================================================
+// Collaboration & Access Control
+// ============================================================================
+
+model RoomACL {
+  id          String   @id @default(cuid())
+  documentId  String
+  userId      String
+  permission  String   // 'viewer' | 'editor' | 'owner'
+  invitedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, userId])
+  @@index([documentId])
+  @@index([userId])
+  @@index([permission])
 }
 
 // ============================================================================
