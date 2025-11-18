@@ -28,6 +28,7 @@ describe('Admin Analytics', () => {
         email: 'student1@test.com',
         name: 'Student One',
         role: 'USER',
+        institutionId: 'inst-1',
         lastLoginAt: new Date(),
       },
     });
@@ -38,6 +39,7 @@ describe('Admin Analytics', () => {
         email: 'student2@test.com',
         name: 'Student Two',
         role: 'USER',
+        institutionId: 'inst-1',
         lastLoginAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
       },
     });

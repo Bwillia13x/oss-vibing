@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { randomBytes } from 'crypto';
+import { IntegrationProvider } from '@prisma/client';
+import { prisma } from '@/lib/db/client';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -86,6 +88,13 @@ export async function GET(request: NextRequest) {
 
     const tokenData = await tokenResponse.json();
     const { userID, username } = tokenData;
+    const accessToken = tokenData.access_token || tokenData.accessToken;
+    const refreshToken = tokenData.refresh_token || tokenData.refreshToken;
+    const expiresIn = tokenData.expires_in || tokenData.expiresIn;
+
+    if (!accessToken) {
+      throw new Error('Zotero access token missing in response');
+    }
 
     // Get current user from session
     const user = await getUserFromRequest(request);
@@ -96,36 +105,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Store integration in database
-    // Note: This requires an Integration model in Prisma schema
-    // For now, we'll log it
-    console.log('Zotero integration successful:', {
-      userId: user.id,
-      zoteroUserId: userID,
-      zoteroUsername: username,
+    // Store or update integration connection
+    await prisma.integrationConnection.upsert({
+      where: {
+        userId_provider: {
+          userId: user.id,
+          provider: IntegrationProvider.ZOTERO,
+        },
+      },
+      create: {
+        userId: user.id,
+        provider: IntegrationProvider.ZOTERO,
+        accessToken,
+        refreshToken,
+        expiresAt: expiresIn ? new Date(Date.now() + Number(expiresIn) * 1000) : null,
+        externalUserId: userID ? String(userID) : null,
+        metadata: JSON.stringify({ username, scope: tokenData.scope }),
+      },
+      update: {
+        accessToken,
+        refreshToken,
+        expiresAt: expiresIn ? new Date(Date.now() + Number(expiresIn) * 1000) : null,
+        externalUserId: userID ? String(userID) : null,
+        metadata: JSON.stringify({ username, scope: tokenData.scope }),
+      },
     });
-
-    // In production, save to database:
-    // await prisma.integration.upsert({
-    //   where: {
-    //     userId_provider: {
-    //       userId: user.id,
-    //       provider: 'zotero',
-    //     },
-    //   },
-    //   create: {
-    //     userId: user.id,
-    //     provider: 'zotero',
-    //     accessToken: access_token,
-    //     externalUserId: userID,
-    //     metadata: { username },
-    //   },
-    //   update: {
-    //     accessToken: access_token,
-    //     externalUserId: userID,
-    //     metadata: { username },
-    //   },
-    // });
 
     // Redirect to settings page with success message
     return NextResponse.redirect(

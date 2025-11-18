@@ -41,14 +41,16 @@ export const factories = {
 
   createTestLicense: async (overrides?: {
     institutionId?: string
+    institution?: string
     seats?: number
     usedSeats?: number
   }) => {
     const timestamp = Date.now()
+    const institutionId = overrides?.institutionId || `inst-${timestamp}`
     return await prisma.license.create({
       data: {
-        institutionId: overrides?.institutionId || `inst-${timestamp}`,
-        tier: 'ENTERPRISE',
+        institutionId,
+        institution: overrides?.institution || `Test Institution ${timestamp}`,
         seats: overrides?.seats || 100,
         usedSeats: overrides?.usedSeats || 0,
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
@@ -61,6 +63,7 @@ export const factories = {
     instructorId?: string
     title?: string
     courseId?: string
+    maxPoints?: number
   }) => {
     const timestamp = Date.now()
     return await prisma.assignment.create({
@@ -70,8 +73,7 @@ export const factories = {
         title: overrides?.title || `Test Assignment ${timestamp}`,
         description: 'Test assignment description',
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        maxPoints: 100,
-        status: 'DRAFT',
+        maxPoints: overrides?.maxPoints ?? 100,
       },
     })
   },

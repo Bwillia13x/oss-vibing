@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { IntegrationProvider } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { getUserFromRequest } from '@/lib/auth';
 
@@ -40,13 +41,32 @@ export async function POST(
       );
     }
     
-    // In a production implementation, you would:
-    // 1. Delete OAuth tokens from secure storage
-    // 2. Revoke access tokens with the provider
-    // 3. Clear any cached data
-    // 4. Log the disconnection
-    
-    // For now, we'll just log the action
+    const provider =
+      integrationId === 'zotero'
+        ? IntegrationProvider.ZOTERO
+        : IntegrationProvider.MENDELEY;
+
+    // Delete integration connection if it exists
+    const existing = await prisma.integrationConnection.findUnique({
+      where: {
+        userId_provider: {
+          userId: user.id,
+          provider,
+        },
+      },
+    });
+
+    if (existing) {
+      await prisma.integrationConnection.delete({
+        where: {
+          userId_provider: {
+            userId: user.id,
+            provider,
+          },
+        },
+      });
+    }
+
     await prisma.auditLog.create({
       data: {
         userId: user.id,
@@ -56,6 +76,7 @@ export async function POST(
         severity: 'INFO',
         details: JSON.stringify({
           integration: integrationId,
+          hadConnection: Boolean(existing),
           timestamp: new Date().toISOString(),
         }),
       },

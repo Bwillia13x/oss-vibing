@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { randomBytes } from 'crypto';
+import { IntegrationProvider } from '@prisma/client';
+import { prisma } from '@/lib/db/client';
 import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -86,12 +88,18 @@ export async function GET(request: NextRequest) {
     }
 
     const tokenData = await tokenResponse.json();
-    const { access_token } = tokenData;
+    const accessToken = tokenData.access_token as string | undefined;
+    const refreshToken = tokenData.refresh_token as string | undefined;
+    const expiresIn = tokenData.expires_in as number | undefined;
+
+    if (!accessToken) {
+      throw new Error('Mendeley access token missing in response');
+    }
 
     // Get user profile from Mendeley
     const profileResponse = await fetch('https://api.mendeley.com/profiles/me', {
       headers: {
-        'Authorization': `Bearer ${access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
     });
 
@@ -111,38 +119,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Store integration in database
-    console.log('Mendeley integration successful:', {
-      userId: user.id,
-      mendeleyUserId,
-      displayName: display_name,
+    // Store or update integration connection
+    await prisma.integrationConnection.upsert({
+      where: {
+        userId_provider: {
+          userId: user.id,
+          provider: IntegrationProvider.MENDELEY,
+        },
+      },
+      create: {
+        userId: user.id,
+        provider: IntegrationProvider.MENDELEY,
+        accessToken,
+        refreshToken,
+        expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+        externalUserId: mendeleyUserId ? String(mendeleyUserId) : null,
+        metadata: JSON.stringify({ displayName: display_name }),
+      },
+      update: {
+        accessToken,
+        refreshToken,
+        expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+        externalUserId: mendeleyUserId ? String(mendeleyUserId) : null,
+        metadata: JSON.stringify({ displayName: display_name }),
+      },
     });
-
-    // In production, save to database:
-    // await prisma.integration.upsert({
-    //   where: {
-    //     userId_provider: {
-    //       userId: user.id,
-    //       provider: 'mendeley',
-    //     },
-    //   },
-    //   create: {
-    //     userId: user.id,
-    //     provider: 'mendeley',
-    //     accessToken: access_token,
-    //     refreshToken: refresh_token,
-    //     externalUserId: mendeleyUserId,
-    //     expiresAt: new Date(Date.now() + expires_in * 1000),
-    //     metadata: { display_name },
-    //   },
-    //   update: {
-    //     accessToken: access_token,
-    //     refreshToken: refresh_token,
-    //     externalUserId: mendeleyUserId,
-    //     expiresAt: new Date(Date.now() + expires_in * 1000),
-    //     metadata: { display_name },
-    //   },
-    // });
 
     // Redirect to settings page with success message
     return NextResponse.redirect(

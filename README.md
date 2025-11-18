@@ -10,11 +10,12 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 - **[VIBE-UNIVERSITY.md](./VIBE-UNIVERSITY.md)** - Complete transformation summary and current features
 - **[ROADMAP.md](./ROADMAP.md)** - Detailed 18-24 month development roadmap
 - **[BLUEPRINT.md](./BLUEPRINT.md)** - Strategic overview and technical architecture
+ - **[docs/INTEGRATIONS-AND-ANALYTICS.md](./docs/INTEGRATIONS-AND-ANALYTICS.md)** - Integrations (Zotero/Mendeley) & admin analytics overview
 
 ### Phase 3 Documentation (Platform Optimization)
-- **[docs/PHASE3-BACKEND-PERFORMANCE.md](./docs/PHASE3-BACKEND-PERFORMANCE.md)** - Backend performance guide
+- **[docs/archive/PHASE3-BACKEND-PERFORMANCE.md](./docs/archive/PHASE3-BACKEND-PERFORMANCE.md)** - Backend performance guide
 - **[docs/KEYBOARD-SHORTCUTS.md](./docs/KEYBOARD-SHORTCUTS.md)** - Keyboard shortcuts reference
-- **[PHASE3-SESSION-COMPLETION.md](./PHASE3-SESSION-COMPLETION.md)** - Latest session completion summary
+- **[archive/PHASE3-SESSION-COMPLETION.md](./archive/PHASE3-SESSION-COMPLETION.md)** - Latest session completion summary
 
 ## 🚀 Features
 

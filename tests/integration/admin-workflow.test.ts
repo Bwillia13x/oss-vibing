@@ -52,7 +52,7 @@ describe('Admin Workflow Integration Tests', () => {
         name: 'Professor One',
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(user1.id)
+      createdUserEmails.push(user1.email)
 
       const user2 = await factories.createTestUser({
         email: 'student1@test-u.edu',
@@ -96,7 +96,7 @@ describe('Admin Workflow Integration Tests', () => {
         email: 'user1@small.edu',
         role: 'USER',
       })
-      createdUserIds.push(user1.id)
+      createdUserEmails.push(user1.email)
       await licenseRepository.incrementUsedSeats(license.id)
 
       const user2 = await factories.createTestUser({
@@ -126,7 +126,7 @@ describe('Admin Workflow Integration Tests', () => {
         name: 'Lifecycle Test',
         role: 'USER',
       })
-      createdUserIds.push(user.id)
+      createdUserEmails.push(user.email)
 
       expect(user.email).toBe('lifecycle@test.edu')
       expect(user.status).toBe('ACTIVE')
@@ -162,7 +162,7 @@ describe('Admin Workflow Integration Tests', () => {
         email: 'role-transition@test.edu',
         role: 'USER',
       })
-      createdUserIds.push(user.id)
+      createdUserEmails.push(user.email)
 
       expect(user.role).toBe('USER')
 
@@ -191,7 +191,7 @@ describe('Admin Workflow Integration Tests', () => {
         email: 'admin@test.edu',
         role: 'ADMIN',
       })
-      createdUserIds.push(admin.id)
+      createdUserEmails.push(admin.email)
 
       // Create target user
       const targetUser = await factories.createTestUser({

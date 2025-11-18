@@ -429,20 +429,21 @@ export function twoSampleTTest(sample1: number[], sample2: number[], alpha: numb
     const tStatistic = (mean1 - mean2) / (pooledSD * Math.sqrt(1/n1 + 1/n2))
     const degreesOfFreedom = n1 + n2 - 2
     
-    // Approximate p-value using t-distribution
-    // For simplicity, using a threshold approach
-    const tCritical = getCriticalT(degreesOfFreedom, alpha)
-    const significant = Math.abs(tStatistic) > tCritical
+    // Approximate p-value using normal distribution (two-tailed)
+    const absT = Math.abs(tStatistic)
+    const tailProb = 1 - ss.cumulativeStdNormalProbability(absT)
+    const pValue = 2 * tailProb
+    const significant = pValue < alpha
     
     const result: TTestResult = {
       tStatistic,
-      pValue: significant ? alpha / 2 : alpha, // Approximate
+      pValue,
       degreesOfFreedom,
       significant,
       confidenceLevel: 1 - alpha,
       // Aliases for compatibility
       t: tStatistic,
-      p: significant ? alpha / 2 : alpha,
+      p: pValue,
       df: degreesOfFreedom
     }
     
@@ -459,13 +460,15 @@ export function twoSampleTTest(sample1: number[], sample2: number[], alpha: numb
  */
 function getCriticalT(df: number, alpha: number): number {
   // Simplified t-critical values for two-tailed test
-  if (alpha === 0.05) {
+  const roundedAlpha = Math.round(alpha * 100) / 100
+
+  if (roundedAlpha === 0.05) {
     if (df <= 10) return 2.228
     if (df <= 20) return 2.086
     if (df <= 30) return 2.042
     return 1.96 // Approximate as z for large df
   }
-  if (alpha === 0.01) {
+  if (roundedAlpha === 0.01) {
     if (df <= 10) return 3.169
     if (df <= 20) return 2.845
     if (df <= 30) return 2.750
@@ -687,10 +690,18 @@ export function confidenceInterval(data: number[], confidence: number = 0.95): [
     const sampleStdDev = standardDeviation(data)
     const n = data.length
     
-    // Z-score for confidence level (approximation)
-    const zScore = getZScore(confidence)
-    
-    const marginOfError = zScore * (sampleStdDev / Math.sqrt(n))
+    // Use t-critical for small samples, z-score for larger samples
+    const alpha = 1 - confidence
+    let criticalValue: number
+
+    if (n < 30) {
+      const df = n - 1
+      criticalValue = getCriticalT(df, alpha)
+    } else {
+      criticalValue = getZScore(confidence)
+    }
+
+    const marginOfError = criticalValue * (sampleStdDev / Math.sqrt(n))
     
     const result: [number, number] = [
       sampleMean - marginOfError,

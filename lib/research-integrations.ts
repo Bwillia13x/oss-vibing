@@ -17,7 +17,7 @@ export interface ResearchPaper {
   url?: string
   citationCount?: number
   pdfUrl?: string
-  source: 'google-scholar' | 'pubmed' | 'arxiv' | 'ieee' | 'jstor'
+  source: 'google-scholar' | 'pubmed' | 'arxiv' | 'ieee' | 'jstor' | 'crossref'
   metadata?: Record<string, any>
 }
 
@@ -671,7 +671,7 @@ export async function getPaperByDOI(doi: string): Promise<ResearchPaper | null> 
       doi,
       url: work.URL,
       citationCount: work['is-referenced-by-count'],
-      source: 'arxiv', // Generic source for DOI lookups
+      source: 'crossref',
       metadata: {
         type: work.type,
         publisher: work.publisher,

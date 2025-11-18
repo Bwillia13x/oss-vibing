@@ -6,8 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { IntegrationProvider } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { getUserFromRequest } from '@/lib/auth';
+import { syncIntegrationReferences } from '@/lib/integrations/reference-sync';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,18 +44,34 @@ export async function POST(
     
     const syncStartTime = new Date();
     
-    // In a production implementation, you would:
-    // 1. Fetch user's OAuth tokens
-    // 2. Call the provider's API to get latest data
-    // 3. Process and transform the data
-    // 4. Upsert references into the database
-    // 5. Return sync summary
-    
-    // Simulate sync delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock sync results
-    const mockItemsSynced = Math.floor(Math.random() * 20) + 5;
+    // Look up integration connection for this user and provider
+    const provider =
+      integrationId === 'zotero'
+        ? IntegrationProvider.ZOTERO
+        : IntegrationProvider.MENDELEY;
+
+    const connection = await prisma.integrationConnection.findUnique({
+      where: {
+        userId_provider: {
+          userId: user.id,
+          provider,
+        },
+      },
+    });
+
+    if (!connection) {
+      return NextResponse.json(
+        {
+          error: 'Integration not connected',
+          code: 'integration_not_connected',
+        },
+        { status: 409 }
+      );
+    }
+
+    // Perform reference sync
+    const syncResult = await syncIntegrationReferences(connection);
+    const itemsSynced = syncResult.created + syncResult.updated;
     
     // Log the sync
     await prisma.auditLog.create({
@@ -65,7 +83,9 @@ export async function POST(
         severity: 'INFO',
         details: JSON.stringify({
           integration: integrationId,
-          itemsSynced: mockItemsSynced,
+          itemsSynced,
+          created: syncResult.created,
+          updated: syncResult.updated,
           timestamp: syncStartTime.toISOString(),
           duration: Date.now() - syncStartTime.getTime(),
         }),
@@ -75,9 +95,9 @@ export async function POST(
     return NextResponse.json({
       success: true,
       integration: integrationId,
-      itemsSynced: mockItemsSynced,
+      itemsSynced,
       lastSyncAt: syncStartTime.toISOString(),
-      message: `Successfully synced ${mockItemsSynced} items from ${integrationId}`,
+      message: `Successfully synced ${itemsSynced} items from ${integrationId}`,
     });
   } catch (error) {
     console.error('Error syncing integration:', error);

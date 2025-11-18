@@ -15,14 +15,14 @@ describe('Instructor Workflow Integration Tests', () => {
   let createdAssignmentIds: string[] = []
   let createdSubmissionIds: string[] = []
   let createdGradeIds: string[] = []
-  let createdUserIds: string[] = []
+  let createdUserEmails: string[] = []
 
   beforeEach(async () => {
     // Reset tracking arrays
     createdAssignmentIds = []
     createdSubmissionIds = []
     createdGradeIds = []
-    createdUserIds = []
+    createdUserEmails = []
   })
 
   afterEach(async () => {
@@ -36,16 +36,21 @@ describe('Instructor Workflow Integration Tests', () => {
     if (createdAssignmentIds.length > 0) {
       await cleanup.deleteTestAssignments(createdAssignmentIds)
     }
+    if (createdUserEmails.length > 0) {
+      await cleanup.deleteTestUsers(createdUserEmails)
+    }
   })
 
   describe('Complete Assignment Lifecycle', () => {
     it('should create draft → publish → receive submissions → grade', async () => {
+      const testId = Date.now()
+
       // Step 1: Instructor creates assignment as draft
       const instructor = await factories.createTestUser({
-        email: 'instructor@test.edu',
+        email: `instructor-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       const assignment = await factories.createTestAssignment({
         instructorId: instructor.id,
@@ -54,22 +59,22 @@ describe('Instructor Workflow Integration Tests', () => {
       })
       createdAssignmentIds.push(assignment.id)
 
-      expect(assignment.status).toBe('DRAFT')
+      expect(assignment.published).toBe(false)
       expect(assignment.title).toBe('Research Paper')
       expect(assignment.maxPoints).toBe(100)
 
       // Step 2: Instructor publishes assignment
       const published = await assignmentRepository.update(assignment.id, {
-        status: 'PUBLISHED',
+        published: true,
       })
-      expect(published.status).toBe('PUBLISHED')
+      expect(published.published).toBe(true)
 
       // Step 3: Student submits work
       const student = await factories.createTestUser({
-        email: 'student@test.edu',
+        email: `student-${testId}@test.edu`,
         role: 'USER',
       })
-      createdUserIds.push(student.id)
+      createdUserEmails.push(student.email)
 
       const submission = await factories.createTestSubmission({
         assignmentId: assignment.id,
@@ -100,19 +105,20 @@ describe('Instructor Workflow Integration Tests', () => {
       // Verify complete workflow
       const finalAssignment = await assignmentRepository.findById(assignment.id)
       const finalSubmission = await submissionRepository.findById(submission.id)
-      const finalGrade = await gradeRepository.findBySubmissionId(submission.id)
+      const finalGrade = await gradeRepository.findBySubmission(submission.id)
 
-      expect(finalAssignment?.status).toBe('PUBLISHED')
+      expect(finalAssignment?.published).toBe(true)
       expect(finalSubmission?.status).toBe('GRADED')
       expect(finalGrade?.score).toBe(92)
     })
 
     it('should handle multiple student submissions for same assignment', async () => {
+      const testId = Date.now()
       const instructor = await factories.createTestUser({
-        email: 'prof@test.edu',
+        email: `prof-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       const assignment = await factories.createTestAssignment({
         instructorId: instructor.id,
@@ -122,11 +128,11 @@ describe('Instructor Workflow Integration Tests', () => {
 
       // Create multiple students and submissions
       const students = await Promise.all([
-        factories.createTestUser({ email: 's1@test.edu', role: 'USER' }),
-        factories.createTestUser({ email: 's2@test.edu', role: 'USER' }),
-        factories.createTestUser({ email: 's3@test.edu', role: 'USER' }),
+        factories.createTestUser({ email: `s1-${testId}@test.edu`, role: 'USER' }),
+        factories.createTestUser({ email: `s2-${testId}@test.edu`, role: 'USER' }),
+        factories.createTestUser({ email: `s3-${testId}@test.edu`, role: 'USER' }),
       ])
-      createdUserIds.push(...students.map((s) => s.id))
+      createdUserEmails.push(...students.map((s) => s.email))
 
       const submissions = await Promise.all(
         students.map((student) =>
@@ -159,7 +165,7 @@ describe('Instructor Workflow Integration Tests', () => {
 
       // Verify each submission has a grade
       for (const submission of submissions) {
-        const grade = await gradeRepository.findBySubmissionId(submission.id)
+        const grade = await gradeRepository.findBySubmission(submission.id)
         expect(grade).not.toBeNull()
         expect(grade?.instructorId).toBe(instructor.id)
       }
@@ -168,11 +174,12 @@ describe('Instructor Workflow Integration Tests', () => {
 
   describe('Assignment Updates and Versioning', () => {
     it('should update assignment while preserving existing submissions', async () => {
+      const testId = Date.now()
       const instructor = await factories.createTestUser({
-        email: 'teacher@test.edu',
+        email: `teacher-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       // Create and publish assignment
       const assignment = await factories.createTestAssignment({
@@ -182,15 +189,15 @@ describe('Instructor Workflow Integration Tests', () => {
       createdAssignmentIds.push(assignment.id)
 
       await assignmentRepository.update(assignment.id, {
-        status: 'PUBLISHED',
+        published: true,
       })
 
       // Student submits before update
       const student = await factories.createTestUser({
-        email: 'early-bird@test.edu',
+        email: `early-bird-${testId}@test.edu`,
         role: 'USER',
       })
-      createdUserIds.push(student.id)
+      createdUserEmails.push(student.email)
 
       const submission = await factories.createTestSubmission({
         assignmentId: assignment.id,
@@ -216,17 +223,18 @@ describe('Instructor Workflow Integration Tests', () => {
 
   describe('Grade Management Workflow', () => {
     it('should update existing grade (regrade scenario)', async () => {
+      const testId = Date.now()
       const instructor = await factories.createTestUser({
-        email: 'grader@test.edu',
+        email: `grader-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       const student = await factories.createTestUser({
-        email: 'gradee@test.edu',
+        email: `gradee-${testId}@test.edu`,
         role: 'USER',
       })
-      createdUserIds.push(student.id)
+      createdUserEmails.push(student.email)
 
       const assignment = await factories.createTestAssignment({
         instructorId: instructor.id,
@@ -252,24 +260,25 @@ describe('Instructor Workflow Integration Tests', () => {
       // Regrade with higher score
       const updatedGrade = await gradeRepository.update(initialGrade.id, {
         score: 85,
-        feedback: 'Updated after review',
+        feedback: { text: 'Updated after review' },
       })
 
       expect(updatedGrade.score).toBe(85)
-      expect(updatedGrade.feedback).toBe('Updated after review')
+      expect(updatedGrade.feedback?.text).toBe('Updated after review')
 
       // Verify only one grade exists for submission
-      const grade = await gradeRepository.findBySubmissionId(submission.id)
+      const grade = await gradeRepository.findBySubmission(submission.id)
       expect(grade?.id).toBe(initialGrade.id)
       expect(grade?.score).toBe(85)
     })
 
     it('should calculate grade statistics for assignment', async () => {
+      const testId = Date.now()
       const instructor = await factories.createTestUser({
-        email: 'stats-prof@test.edu',
+        email: `stats-prof-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       const assignment = await factories.createTestAssignment({
         instructorId: instructor.id,
@@ -281,10 +290,10 @@ describe('Instructor Workflow Integration Tests', () => {
       const scores = [95, 88, 92, 78, 85]
       for (let i = 0; i < scores.length; i++) {
         const student = await factories.createTestUser({
-          email: `student${i}@test.edu`,
+          email: `student-${i}-${testId}@test.edu`,
           role: 'USER',
         })
-        createdUserIds.push(student.id)
+        createdUserEmails.push(student.email)
 
         const submission = await factories.createTestSubmission({
           assignmentId: assignment.id,
@@ -306,13 +315,14 @@ describe('Instructor Workflow Integration Tests', () => {
         createdGradeIds.map((id) => gradeRepository.findById(id))
       )
 
-      expect(allGrades.every((g) => g !== null)).toBe(true)
-      expect(allGrades.length).toBe(5)
+      const validGrades = allGrades.filter(
+        (g): g is NonNullable<typeof g> => g !== null && g.score != null
+      )
+
+      expect(validGrades.length).toBe(5)
 
       // Calculate basic stats manually to verify
-      const gradeScores = allGrades
-        .filter((g) => g && g.score != null)
-        .map((g) => g.score as number)
+      const gradeScores = validGrades.map((g) => g.score as number)
       const average = gradeScores.reduce((a, b) => a + b, 0) / gradeScores.length
       expect(average).toBeCloseTo(87.6, 1)
     })
@@ -320,17 +330,18 @@ describe('Instructor Workflow Integration Tests', () => {
 
   describe('Assignment Workflow with Rubrics', () => {
     it('should grade submission with rubric criteria', async () => {
+      const testId = Date.now()
       const instructor = await factories.createTestUser({
-        email: 'rubric-prof@test.edu',
+        email: `rubric-prof-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       const student = await factories.createTestUser({
-        email: 'rubric-student@test.edu',
+        email: `rubric-student-${testId}@test.edu`,
         role: 'USER',
       })
-      createdUserIds.push(student.id)
+      createdUserEmails.push(student.email)
 
       const assignment = await factories.createTestAssignment({
         instructorId: instructor.id,
@@ -369,17 +380,18 @@ describe('Instructor Workflow Integration Tests', () => {
 
   describe('Late Submission Handling', () => {
     it('should track late submissions and apply penalties', async () => {
+      const testId = Date.now()
       const instructor = await factories.createTestUser({
-        email: 'deadline-prof@test.edu',
+        email: `deadline-prof-${testId}@test.edu`,
         role: 'INSTRUCTOR',
       })
-      createdUserIds.push(instructor.id)
+      createdUserEmails.push(instructor.email)
 
       const student = await factories.createTestUser({
-        email: 'late-student@test.edu',
+        email: `late-student-${testId}@test.edu`,
         role: 'USER',
       })
-      createdUserIds.push(student.id)
+      createdUserEmails.push(student.email)
 
       // Create assignment with past due date
       const pastDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago

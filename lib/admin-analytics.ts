@@ -25,10 +25,10 @@ export async function getInstitutionAnalytics(
   const end = endDate || new Date()
   const start = startDate || calculateStartDate(period, end)
 
-  // Get all users for the institution (for now, all users)
-  // In a real implementation, you'd filter by institutionId
+  // Get all users for the institution
   const users = await prisma.user.findMany({
     where: {
+      institutionId,
       createdAt: {
         lte: end,
       },
@@ -45,12 +45,17 @@ export async function getInstitutionAnalytics(
     (u) => u.lastLoginAt && u.lastLoginAt >= start && u.lastLoginAt <= end
   ).length
 
+  const userIds = users.map((u) => u.id)
+
   // Get documents created in the period
   const documents = await prisma.document.findMany({
     where: {
       createdAt: {
         gte: start,
         lte: end,
+      },
+      userId: {
+        in: userIds,
       },
     },
     select: {
@@ -66,6 +71,9 @@ export async function getInstitutionAnalytics(
         gte: start,
         lte: end,
       },
+      userId: {
+        in: userIds,
+      },
     },
     select: {
       id: true,
@@ -75,6 +83,9 @@ export async function getInstitutionAnalytics(
   // Get usage metrics for the period
   const usageMetrics = await prisma.usageMetric.findMany({
     where: {
+      userId: {
+        in: userIds,
+      },
       timestamp: {
         gte: start,
         lte: end,
@@ -131,25 +142,33 @@ export async function getStudentProgress(
   courseId?: string
 ): Promise<StudentProgress[]> {
   try {
-    // Get all users (students)
-    // In a real implementation, filter by institutionId and role
+    // Get all users (students) for this institution
     const users = await prisma.user.findMany({
       where: {
         role: 'USER', // Students
+        institutionId,
       },
       select: {
         id: true,
-        documents: {
+      },
+    })
+
+    const userIds = users.map((u) => u.id)
+
+    const documents = await prisma.document.findMany({
+      where: {
+        userId: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        userId: true,
+        status: true,
+        updatedAt: true,
+        citations: {
           select: {
             id: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true,
-            citations: {
-              select: {
-                id: true,
-              },
-            },
           },
         },
       },
@@ -158,25 +177,27 @@ export async function getStudentProgress(
     const progressData: StudentProgress[] = []
 
     for (const user of users) {
-      const completedDocuments = user.documents.filter(
+      const userDocs = documents.filter((doc) => doc.userId === user.id)
+
+      const completedDocuments = userDocs.filter(
         (d) => d.status === 'COMPLETED'
       ).length
 
-      const totalCitations = user.documents.reduce(
+      const totalCitations = userDocs.reduce(
         (sum, doc) => sum + doc.citations.length,
         0
       )
 
       // Calculate integrity score based on citations per document
       const avgCitationsPerDoc =
-        user.documents.length > 0 ? totalCitations / user.documents.length : 0
+        userDocs.length > 0 ? totalCitations / userDocs.length : 0
       // Simple integrity score: 100 if avg >= 5 citations, scaled below
       const integrityScore = Math.min(100, Math.round((avgCitationsPerDoc / 5) * 100))
 
       const lastActivity =
-        user.documents.length > 0
+        userDocs.length > 0
           ? new Date(
-              Math.max(...user.documents.map((d) => d.updatedAt.getTime()))
+              Math.max(...userDocs.map((d) => d.updatedAt.getTime()))
             )
           : new Date()
 

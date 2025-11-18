@@ -21,6 +21,7 @@ model User {
   name        String?
   role        Role     @default(USER)
   status      UserStatus @default(ACTIVE)
+  institutionId String?
   lastLoginAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -31,11 +32,13 @@ model User {
   citations      Citation[]
   auditLogs      AuditLog[]
   roomACLs       RoomACL[]
+  integrationConnections IntegrationConnection[]
   
   @@index([email])
   @@index([role])
   @@index([createdAt])
   @@index([lastLoginAt])
+  @@index([institutionId])
 }
 
 enum Role {
@@ -117,6 +120,33 @@ model RoomACL {
   @@index([documentId])
   @@index([userId])
   @@index([permission])
+}
+
+// ============================================================================
+// Integrations & External Providers
+// ============================================================================
+
+model IntegrationConnection {
+  id             String               @id @default(cuid())
+  userId         String
+  provider       IntegrationProvider
+  accessToken    String
+  refreshToken   String?
+  expiresAt      DateTime?
+  externalUserId String?
+  metadata       String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([provider])
+}
+
+enum IntegrationProvider {
+  ZOTERO
+  MENDELEY
 }
 
 // ============================================================================

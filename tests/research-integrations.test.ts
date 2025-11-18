@@ -4,8 +4,8 @@
  * Tests for enhanced JSTOR and IEEE search implementations
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { searchJSTOR, searchIEEE } from '@/lib/research-integrations';
+import { describe, it, afterEach, expect, vi } from 'vitest';
+import { searchJSTOR, searchIEEE, getPaperByDOI } from '@/lib/research-integrations';
 
 // Mock the environment variables
 const originalEnv = process.env;
@@ -215,6 +215,47 @@ describe('Research Integrations', () => {
       const results = await searchIEEE('test query', 10);
       
       expect(results[0].url).toBe('https://doi.org/10.1109/test.2023.123');
+    });
+  });
+
+  describe('getPaperByDOI', () => {
+    it('should return null for invalid DOI format', async () => {
+      const paper = await getPaperByDOI('not-a-doi');
+      expect(paper).toBeNull();
+    });
+
+    it('should parse Crossref response and set source to crossref', async () => {
+      const mockWork = {
+        title: ['Test DOI Paper'],
+        author: [{ given: 'Ada', family: 'Lovelace' }],
+        abstract: 'Test abstract',
+        published: { 'date-parts': [[2024]] },
+        'container-title': ['Test Journal'],
+        URL: 'https://doi.org/10.1234/test-doi',
+        'is-referenced-by-count': 42,
+        type: 'journal-article',
+        publisher: 'Test Publisher',
+        ISSN: ['1234-5678'],
+      };
+
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ message: mockWork }),
+        } as Response)
+      );
+
+      const doi = '10.1234/test-doi';
+      const paper = await getPaperByDOI(doi);
+
+      expect(paper).not.toBeNull();
+      if (paper) {
+        expect(paper.source).toBe('crossref');
+        expect(paper.doi).toBe(doi);
+        expect(paper.title).toBe('Test DOI Paper');
+        expect(paper.authors).toEqual(['Ada Lovelace']);
+      }
     });
   });
 });

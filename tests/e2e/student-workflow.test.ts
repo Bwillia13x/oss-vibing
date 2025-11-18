@@ -14,7 +14,7 @@ describe('Student Workflow E2E Tests', () => {
   beforeEach(async () => {
     // Create a test student
     const student = await userRepo.create({
-      email: `student-${Date.now()}@test.edu`,
+      email: `student-${Date.now()}-${Math.random().toString(36).slice(2)}@test.edu`,
       name: 'Test Student',
       role: 'USER',
     })
