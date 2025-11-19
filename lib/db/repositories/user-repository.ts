@@ -12,6 +12,7 @@ export interface CreateUserData {
   name?: string
   role?: Role
   status?: UserStatus
+  lastLoginAt?: Date
 }
 
 export interface UpdateUserData {
@@ -19,6 +20,7 @@ export interface UpdateUserData {
   name?: string
   role?: Role
   status?: UserStatus
+  lastLoginAt?: Date
 }
 
 export interface UserFilters {
@@ -40,6 +42,7 @@ export class UserRepository extends BaseRepository {
             name: data.name,
             role: data.role ?? 'USER',
             status: data.status ?? 'ACTIVE',
+            lastLoginAt: data.lastLoginAt,
           },
         })
       },

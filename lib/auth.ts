@@ -20,9 +20,13 @@ export interface AuthenticatedRequest extends NextRequest {
   user?: AuthUser
 }
 
-// JWT secret key (in production, this should be an environment variable)
+// JWT secret key (must be set in production)
+const JWT_SECRET_RAW = process.env.JWT_SECRET
+if (!JWT_SECRET_RAW && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is not set')
+}
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'vibe-university-secret-key-change-in-production'
+  JWT_SECRET_RAW || 'vibe-university-secret-key-change-in-production'
 )
 
 /**
@@ -167,6 +171,10 @@ export function isInstructor(user: AuthUser): boolean {
  * In production, this would integrate with OAuth providers
  */
 export async function mockAuthenticate(email: string, role: UserRole, institutionId?: string): Promise<string> {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Mock authentication is disabled in production')
+  }
+
   const user: AuthUser = {
     id: `user-${Date.now()}`,
     email,

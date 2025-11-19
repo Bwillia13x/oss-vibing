@@ -16,10 +16,11 @@ import { Panel, PanelHeader } from '@/components/panels/panels'
 import { Settings } from '@/components/settings/settings'
 import { useChat } from '@ai-sdk/react'
 import { useLocalStorageValue } from '@/lib/use-local-storage-value'
-import { useCallback, useEffect, memo } from 'react'
+import { useCallback, useEffect, memo, useState } from 'react'
 import { useSharedChatContext } from '@/lib/chat-context'
 import { useSettings } from '@/components/settings/use-settings'
 import { useSandboxStore } from './state'
+import { useOnboardingStore } from '@/lib/stores/onboarding-store'
 
 interface Props {
   className: string
@@ -32,6 +33,12 @@ export const Chat = memo(function Chat({ className }: Props) {
   const { modelId, reasoningEffort } = useSettings()
   const { messages, sendMessage, status } = useChat<ChatUIMessage>({ chat })
   const { setChatStatus } = useSandboxStore()
+  const { currentStep } = useOnboardingStore()
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const validateAndSubmitMessage = useCallback(
     (text: string) => {
@@ -47,11 +54,19 @@ export const Chat = memo(function Chat({ className }: Props) {
     setChatStatus(status)
   }, [status, setChatStatus])
 
+  useEffect(() => {
+    const handlePastePrompt = (e: CustomEvent) => {
+      setInput(prev => prev + e.detail)
+    }
+    window.addEventListener('vibe-paste-prompt', handlePastePrompt as EventListener)
+    return () => window.removeEventListener('vibe-paste-prompt', handlePastePrompt as EventListener)
+  }, [setInput])
+
   // Announce status changes to screen readers
-  const statusMessage = 
-    status === 'streaming' ? 'Assistant is responding' : 
-    status === 'submitted' ? 'Message submitted, waiting for response' : 
-    'Ready to send message'
+  const statusMessage =
+    status === 'streaming' ? 'Assistant is responding' :
+      status === 'submitted' ? 'Message submitted, waiting for response' :
+        'Ready to send message'
 
   return (
     <Panel className={className}>
@@ -64,10 +79,10 @@ export const Chat = memo(function Chat({ className }: Props) {
       </PanelHeader>
 
       {/* Live region for screen reader announcements */}
-      <div 
-        role="status" 
-        aria-live="polite" 
-        aria-atomic="true" 
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
         className="sr-only"
       >
         {statusMessage}
@@ -115,7 +130,8 @@ export const Chat = memo(function Chat({ className }: Props) {
         <Settings />
         <ModelSelector />
         <Input
-          className="w-full font-mono text-sm rounded-sm border-0 bg-background"
+          className={`w-full font-mono text-sm rounded-sm border-0 bg-background ${isMounted && currentStep === 1 ? 'ring-2 ring-primary ring-offset-2 animate-pulse' : ''
+            }`}
           disabled={status === 'streaming' || status === 'submitted'}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
@@ -124,12 +140,12 @@ export const Chat = memo(function Chat({ className }: Props) {
           aria-describedby="chat-status"
         />
         <span id="chat-status" className="sr-only">
-          {status === 'streaming' ? 'Assistant is responding' : 
-           status === 'submitted' ? 'Message submitted' : 
-           'Ready to send message'}
+          {status === 'streaming' ? 'Assistant is responding' :
+            status === 'submitted' ? 'Message submitted' :
+              'Ready to send message'}
         </span>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={status !== 'ready' || !input.trim()}
           aria-label="Send message"
         >

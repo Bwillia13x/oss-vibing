@@ -45,8 +45,8 @@ export interface UpdateDocumentData {
   tags?: string[]
   metadata?: Record<string, unknown>
   // Optional in-memory fields used by some E2E tests
-  citations?: unknown[]
-  collaborativeState?: Record<string, unknown>
+  citations?: DocumentCitation[]
+  collaborativeState?: CollaborativeState
 }
 
 export interface DocumentFilters {
@@ -147,7 +147,7 @@ export class DocumentRepository extends BaseRepository {
   /**
    * Find document by ID with citations
    */
-  async findByIdWithCitations(id: string): Promise<(DocumentWithParsedFields & { citations: unknown[] }) | null> {
+  async findByIdWithCitations(id: string): Promise<DocumentWithParsedFields | null> {
     return this.withRetry(
       async () => {
         const doc = await this.prisma.document.findUnique({
@@ -160,12 +160,36 @@ export class DocumentRepository extends BaseRepository {
             },
           },
         })
+
         if (!doc) return null
-        const docWithCitations = doc as Document & { citations: unknown[] }
-        return {
-          ...this.parseDocument(doc),
-          citations: docWithCitations.citations,
-        }
+
+        const parsed = this.parseDocument(doc)
+
+        const rawCitations = (doc as unknown as {
+          citations: Array<{
+            id: string
+            reference?: {
+              doi?: string | null
+              title?: string | null
+              authors?: string | null
+              year?: number | null
+              journal?: string | null
+            } | null
+          }>
+        }).citations
+
+        parsed.citations = rawCitations.map(citation => ({
+          id: citation.id,
+          doi: citation.reference?.doi ?? undefined,
+          title: citation.reference?.title ?? undefined,
+          authors: citation.reference?.authors
+            ? this.safeJsonParse<string[]>(citation.reference.authors) ?? undefined
+            : undefined,
+          year: citation.reference?.year ?? undefined,
+          journal: citation.reference?.journal ?? undefined,
+        }))
+
+        return parsed
       },
       'findDocumentByIdWithCitations'
     )

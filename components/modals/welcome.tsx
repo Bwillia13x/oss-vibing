@@ -48,33 +48,19 @@ export function Welcome(props: {
         >
           <div className="p-6 space-y-4 ">
             <h1 className="text-2xl sans-serif font-semibold tracking-tight mb-7">
-              OSS Vibe Coding Platform
+              Welcome to Vibe University
             </h1>
             <p className="text-base text-primary">
-              This is a <strong>demo</strong> of an end-to-end coding platform
-              where the user can enter text prompts, and the agent will create a
-              full stack application.
+              Your AI-powered academic workspace for <strong>research, writing, and analysis</strong>.
             </p>
-            <p className="text-base text-secondary-foreground">
-              It uses Vercel&quot;s AI Cloud services like{' '}
-              <ExternalLink href="https://vercel.com/docs/vercel-sandbox">
-                Sandbox
-              </ExternalLink>{' '}
-              for secure code execution,{' '}
-              <ExternalLink href="https://vercel.com/docs/ai-gateway">
-                AI Gateway
-              </ExternalLink>{' '}
-              for GPT-5 and other models support,{' '}
-              <ExternalLink href="https://vercel.com/fluid">
-                Fluid Compute
-              </ExternalLink>{' '}
-              for efficient rendering and streaming, and it&quot;s built with{' '}
-              <ExternalLink href="https://nextjs.org/">Next.js</ExternalLink>{' '}
-              and the{' '}
-              <ExternalLink href="https://ai-sdk.dev/docs/introduction">
-                AI SDK
-              </ExternalLink>
-              .
+            <ul className="list-disc list-inside text-base text-secondary-foreground space-y-2">
+              <li><strong>Student Copilot:</strong> Intelligent assistance for all your academic tasks.</li>
+              <li><strong>Citation Management:</strong> Automatic formatting and source tracking.</li>
+              <li><strong>Integrity Checks:</strong> Built-in plagiarism detection and provenance.</li>
+              <li><strong>Data Analysis:</strong> Analyze spreadsheets and visualize data instantly.</li>
+            </ul>
+            <p className="text-sm text-muted-foreground mt-4">
+              Built with Next.js 15, Vercel AI SDK, and PostgreSQL.
             </p>
           </div>
           <footer className="bg-secondary flex justify-end p-4 border-t border-border">

@@ -31,6 +31,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
+    // Run tests in a single thread to avoid cross-file interference
+    // with the shared SQLite database and global deleteMany() cleanup.
+    maxWorkers: 1,
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

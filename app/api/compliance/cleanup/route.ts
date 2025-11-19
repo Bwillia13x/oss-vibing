@@ -10,7 +10,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runRetentionCleanup } from '@/lib/compliance/retention-cleanup';
 import { requireInstitutionAccess } from '@/lib/auth';
-import { UnauthorizedError, formatErrorResponse } from '@/lib/errors/api-errors';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,11 +44,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Retention cleanup failed:', error);
-    
-    if (error instanceof UnauthorizedError) {
-      return formatErrorResponse(error);
-    }
-    
+
     return NextResponse.json(
       {
         success: false,

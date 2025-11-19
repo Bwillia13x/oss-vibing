@@ -247,7 +247,7 @@ export const deckGenerate = ({ writer }: Params) =>
               index: i,
             })),
             speakerNotes: slides.map(s => s.notes || ''),
-            status: 'saving',
+            status: 'generating',
           },
         })
 
@@ -287,7 +287,6 @@ export const deckGenerate = ({ writer }: Params) =>
             })),
             speakerNotes: slides.map(s => s.notes || ''),
             status: 'done',
-            filepath: `decks/${filename}`,
           },
         })
 
@@ -303,7 +302,9 @@ export const deckGenerate = ({ writer }: Params) =>
             slides: [],
             speakerNotes: [],
             status: 'error',
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: {
+              message: error instanceof Error ? error.message : 'Unknown error',
+            },
           },
         })
 

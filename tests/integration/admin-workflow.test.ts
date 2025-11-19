@@ -75,7 +75,8 @@ describe('Admin Workflow Integration Tests', () => {
       expect(stats).not.toBeNull()
       expect(stats?.usedSeats).toBe(2)
       expect(stats?.availableSeats).toBe(8)
-      expect(stats?.utilizationRate).toBe(0.2)
+      expect(stats?.utilizationRate).toBe(20)
+
     })
 
     it('should prevent over-allocation of license seats', async () => {

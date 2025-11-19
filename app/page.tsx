@@ -24,8 +24,8 @@ const Horizontal = dynamic(() => import('@/components/layout/panels').then(mod =
 const Vertical = dynamic(() => import('@/components/layout/panels').then(mod => ({ default: mod.Vertical })), {
   loading: () => <div className="flex items-center justify-center h-full">Loading Layout...</div>
 })
-const Welcome = dynamic(() => import('@/components/modals/welcome').then(mod => ({ default: mod.Welcome })), {
-  loading: () => <div className="flex items-center justify-center h-full">Loading Welcome...</div>
+const OnboardingWizard = dynamic(() => import('@/components/onboarding/wizard').then(mod => ({ default: mod.OnboardingWizard })), {
+  loading: () => <div className="flex items-center justify-center h-full">Loading Onboarding Wizard...</div>
 })
 
 export default async function Page() {
@@ -35,7 +35,7 @@ export default async function Page() {
   const verticalSizes = getVertical(store)
   return (
     <>
-      <Welcome defaultOpen={banner} onDismissAction={hideBanner} />
+      <OnboardingWizard />
       <div className="flex flex-col h-screen max-h-screen overflow-hidden p-2 space-x-2">
         <Header className="flex items-center w-full" />
         <ul className="flex space-x-5 font-mono text-sm tracking-tight px-1 py-2 md:hidden">

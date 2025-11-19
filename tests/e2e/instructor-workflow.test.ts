@@ -14,8 +14,11 @@ describe('Instructor Workflow E2E Tests', () => {
 
   beforeEach(async () => {
     // Create test instructor
+    const timestamp = Date.now()
+    const uniqueSuffix = Math.random().toString(36).slice(2)
+
     const instructor = await userRepo.create({
-      email: `instructor-${Date.now()}@test.edu`,
+      email: `instructor-${timestamp}-${uniqueSuffix}@test.edu`,
       name: 'Test Instructor',
       role: 'INSTRUCTOR',
     })
@@ -23,7 +26,7 @@ describe('Instructor Workflow E2E Tests', () => {
 
     // Create test student
     const student = await userRepo.create({
-      email: `student-${Date.now()}@test.edu`,
+      email: `student-${timestamp}-${uniqueSuffix}@test.edu`,
       name: 'Test Student',
       role: 'USER',
     })
@@ -289,8 +292,8 @@ describe('Instructor Workflow E2E Tests', () => {
 
     it('should import roster from LMS', async () => {
       const roster = [
-        { lmsId: 'LMS-1', email: 'student1@test.edu', name: 'Student One' },
-        { lmsId: 'LMS-2', email: 'student2@test.edu', name: 'Student Two' },
+        { lmsId: 'LMS-1', email: `student1-${Date.now()}-${Math.random().toString(36).slice(2)}@test.edu`, name: 'Student One' },
+        { lmsId: 'LMS-2', email: `student2-${Date.now()}-${Math.random().toString(36).slice(2)}@test.edu`, name: 'Student Two' },
       ]
 
       // Simulate importing students
@@ -360,7 +363,7 @@ describe('Instructor Workflow E2E Tests', () => {
   describe('Instructor Collaboration', () => {
     it('should share assignments with co-instructors', async () => {
       const coInstructor = await userRepo.create({
-        email: `co-instructor-${Date.now()}@test.edu`,
+        email: `co-instructor-${Date.now()}-${Math.random().toString(36).slice(2)}@test.edu`,
         name: 'Co-Instructor',
         role: 'INSTRUCTOR',
       })
@@ -382,7 +385,7 @@ describe('Instructor Workflow E2E Tests', () => {
 
     it('should coordinate grading among TAs', async () => {
       const ta = await userRepo.create({
-        email: `ta-${Date.now()}@test.edu`,
+        email: `ta-${Date.now()}-${Math.random().toString(36).slice(2)}@test.edu`,
         name: 'Teaching Assistant',
         role: 'INSTRUCTOR',
       })

@@ -277,7 +277,7 @@ describe('SM2 Algorithm - Extended Tests', () => {
 
   describe('Edge Cases', () => {
     it('should handle maximum repetitions', () => {
-      let current: FlashcardReviewData = {
+      const current: FlashcardReviewData = {
         easeFactor: 2.5,
         interval: 100,
         repetitions: 50,
@@ -291,7 +291,7 @@ describe('SM2 Algorithm - Extended Tests', () => {
     });
 
     it('should handle minimum ease factor', () => {
-      let current: FlashcardReviewData = {
+      const current: FlashcardReviewData = {
         easeFactor: 1.3,
         interval: 1,
         repetitions: 0,
@@ -304,7 +304,7 @@ describe('SM2 Algorithm - Extended Tests', () => {
     });
 
     it('should handle very high ease factor', () => {
-      let current: FlashcardReviewData = {
+      const current: FlashcardReviewData = {
         easeFactor: 5.0,
         interval: 30,
         repetitions: 10,
@@ -318,7 +318,7 @@ describe('SM2 Algorithm - Extended Tests', () => {
     });
 
     it('should round intervals to nearest day', () => {
-      let current: FlashcardReviewData = {
+      const current: FlashcardReviewData = {
         easeFactor: 2.7,
         interval: 13,
         repetitions: 3,

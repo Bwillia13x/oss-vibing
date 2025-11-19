@@ -3,9 +3,7 @@
  * Shared utilities for integration testing
  */
 
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/db/client'
 
 /**
  * Test data factories for creating consistent test data
@@ -31,8 +29,10 @@ export const factories = {
     domain?: string
   }) => {
     const timestamp = Date.now()
+    const uniqueSuffix = Math.random().toString(36).slice(2)
+    const id = `inst-${timestamp}-${uniqueSuffix}`
     return {
-      id: `inst-${timestamp}`,
+      id,
       name: overrides?.name || `Test Institution ${timestamp}`,
       domain: overrides?.domain || `test-${timestamp}.edu`,
       createdAt: new Date(),
@@ -46,7 +46,8 @@ export const factories = {
     usedSeats?: number
   }) => {
     const timestamp = Date.now()
-    const institutionId = overrides?.institutionId || `inst-${timestamp}`
+    const defaultInstitutionId = `inst-${timestamp}-${Math.random().toString(36).slice(2)}`
+    const institutionId = overrides?.institutionId || defaultInstitutionId
     return await prisma.license.create({
       data: {
         institutionId,

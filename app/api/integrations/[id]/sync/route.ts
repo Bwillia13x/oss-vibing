@@ -17,10 +17,7 @@ export const dynamic = 'force-dynamic';
 /**
  * Sync data from an integration
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     // Authenticate user
     const user = await getUserFromRequest(request);
@@ -31,7 +28,9 @@ export async function POST(
       );
     }
 
-    const integrationId = params.id;
+    const pathname = request.nextUrl.pathname;
+    const segments = pathname.split('/').filter(Boolean);
+    const integrationId = segments[segments.length - 2];
 
     // Validate integration ID
     const validIntegrations = ['zotero', 'mendeley'];
