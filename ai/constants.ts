@@ -7,6 +7,8 @@ export enum Models {
   MoonshotKimiK2 = 'moonshotai/kimi-k2',
   OpenAIGPT5 = 'gpt-5',
   XaiGrok3Fast = 'xai/grok-3-fast',
+  MockGPT4o = 'mock-gpt-4o',
+  MockClaude35Sonnet = 'mock-claude-3-5-sonnet',
 }
 
 export const DEFAULT_MODEL = Models.OpenAIGPT5
@@ -18,6 +20,8 @@ export const SUPPORTED_MODELS: GatewayModelId[] = [
   Models.MoonshotKimiK2,
   Models.OpenAIGPT5,
   Models.XaiGrok3Fast,
+  Models.MockGPT4o,
+  Models.MockClaude35Sonnet,
 ]
 
 export const TEST_PROMPTS = [

@@ -4,14 +4,29 @@ import { createGatewayProvider } from '@ai-sdk/gateway'
 import { Models } from './constants'
 
 const gateway = createGatewayProvider({
-  baseURL: process.env.AI_GATEWAY_BASE_URL,
+  baseURL: process.env.AI_GATEWAY_BASE_URL || 'http://mock-gateway',
 })
 
 export async function getAvailableModels() {
-  const response = await gateway.getAvailableModels()
-  return response.models
-    .map((model) => ({ id: model.id, name: model.name }))
-    .concat([{ id: Models.OpenAIGPT5, name: 'GPT-5' }])
+  if (!process.env.AI_GATEWAY_BASE_URL) {
+    return [
+      { id: Models.MockGPT4o, name: 'Mock GPT-4o' },
+      { id: Models.MockClaude35Sonnet, name: 'Mock Claude 3.5 Sonnet' },
+    ]
+  }
+
+  try {
+    const response = await gateway.getAvailableModels()
+    return response.models
+      .map((model) => ({ id: model.id, name: model.name }))
+      .concat([{ id: Models.OpenAIGPT5, name: 'GPT-5' }])
+  } catch (error) {
+    console.warn('Failed to fetch models from gateway, falling back to defaults', error)
+    return [
+      { id: Models.MockGPT4o, name: 'Mock GPT-4o' },
+      { id: Models.MockClaude35Sonnet, name: 'Mock Claude 3.5 Sonnet' },
+    ]
+  }
 }
 
 export interface ModelOptions {

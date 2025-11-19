@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'react-pdf-highlighter/dist/style.css';
 
 /* Phase 3.2.1: Accessibility and Mobile UX Improvements */
 

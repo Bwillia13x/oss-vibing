@@ -6,7 +6,7 @@ import {
   stepCountIs,
   streamText,
 } from 'ai'
-import { DEFAULT_MODEL } from '@/ai/constants'
+import { DEFAULT_MODEL, Models } from '@/ai/constants'
 import { NextResponse } from 'next/server'
 import { getAvailableModels, getModelOptions } from '@/ai/gateway'
 import { checkBotId } from 'botid/server'
@@ -30,12 +30,12 @@ export async function POST(req: Request) {
   // Rate limiting - use IP address or session identifier
   const forwardedFor = req.headers.get('x-forwarded-for')
   const ip = forwardedFor ? forwardedFor.split(',')[0] : 'anonymous'
-  
+
   if (!apiRateLimiter.isAllowed(ip)) {
     const remaining = apiRateLimiter.remaining(ip)
     return NextResponse.json(
       { error: `Rate limit exceeded. Try again later.` },
-      { 
+      {
         status: 429,
         headers: {
           'X-RateLimit-Remaining': remaining.toString(),
@@ -56,13 +56,67 @@ export async function POST(req: Request) {
     )
   }
 
+  // Mock Mode Handling
+  if (modelId === Models.MockGPT4o || modelId === Models.MockClaude35Sonnet) {
+    return createUIMessageStreamResponse({
+      stream: createUIMessageStream({
+        originalMessages: messages,
+        execute: ({ writer }) => {
+          const streamWriter = writer as any
+          streamWriter.append({
+            type: 'text-delta',
+            textDelta: 'This is a mock response from the Vibe University AI. ',
+          })
+          setTimeout(() => {
+            streamWriter.append({
+              type: 'text-delta',
+              textDelta: 'I am functioning in development mode without an active API connection. ',
+            })
+          }, 500)
+          setTimeout(() => {
+            streamWriter.append({
+              type: 'text-delta',
+              textDelta: 'You can proceed with testing the UI and other features.',
+            })
+            streamWriter.close()
+          }, 1000)
+        },
+      }),
+    })
+  }
+
+  // RAG Integration
+  let systemContext = ''
+  // Check if we should perform RAG (e.g., based on a mode flag or always)
+  // For now, let's assume we do it if the user asks for it or if there's a specific header/flag
+  // Or we can just append it to the system prompt if found.
+
+  // Simple heuristic: If the message is long enough, try to find context.
+  const currentMessage = messages[messages.length - 1]
+  const textContent = currentMessage.parts
+    .filter(part => part.type === 'text')
+    .map(part => part.text)
+    .join(' ')
+
+  if (textContent.length > 10) {
+    const { ragService } = await import('@/lib/ai/rag')
+    const retrievedContext = await ragService.retrieveContext(textContent)
+    if (retrievedContext) {
+      systemContext = `\n\nRELEVANT CONTEXT FROM USER KNOWLEDGE BASE:\n${retrievedContext}\n\nUse the above context to answer the user's question if relevant.`
+    }
+  }
+
+  const systemMessage = `${prompt}
+  
+  ${systemContext}`
+
   return createUIMessageStreamResponse({
     stream: createUIMessageStream({
       originalMessages: messages,
       execute: ({ writer }) => {
         const result = streamText({
           ...getModelOptions(modelId, { reasoningEffort }),
-          system: prompt,
+          system: systemMessage,
           messages: convertToModelMessages(
             messages.map((message) => {
               message.parts = message.parts.map((part) => {
@@ -74,7 +128,7 @@ export async function POST(req: Request) {
                       `\`\`\`${part.data.summary}\`\`\`\n` +
                       (part.data.paths?.length
                         ? `The following files may contain errors:\n` +
-                          `\`\`\`${part.data.paths?.join('\n')}\`\`\`\n`
+                        `\`\`\`${part.data.paths?.join('\n')}\`\`\`\n`
                         : '') +
                       `Fix the errors reported.`,
                   }
